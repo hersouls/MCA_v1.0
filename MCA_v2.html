@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="ko" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Moonwave MCA</title>
+    <meta name="description" content="분할매수 전략 관리 도구 - Moonwave MCA">
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0f0f0f" media="(prefers-color-scheme: dark)">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'] },
+                    colors: {
+                        background: 'var(--background)',
+                        foreground: 'var(--foreground)',
+                        card: { DEFAULT: 'var(--card)', foreground: 'var(--card-foreground)' },
+                        primary: { DEFAULT: 'var(--primary)', foreground: 'var(--primary-foreground)' },
+                        secondary: { DEFAULT: 'var(--secondary)', foreground: 'var(--secondary-foreground)' },
+                        muted: { DEFAULT: 'var(--muted)', foreground: 'var(--muted-foreground)' },
+                        accent: { DEFAULT: 'var(--accent)', foreground: 'var(--accent-foreground)' },
+                        destructive: { DEFAULT: 'var(--destructive)', foreground: 'var(--destructive-foreground)' },
+                        border: 'var(--border)',
+                        input: 'var(--input)',
+                        ring: 'var(--ring)',
+                        success: { DEFAULT: 'var(--success)', foreground: 'var(--success-foreground)' },
+                        warning: { DEFAULT: 'var(--warning)', foreground: 'var(--warning-foreground)' },
+                    },
+                    borderRadius: {
+                        lg: 'var(--radius)',
+                        md: 'calc(var(--radius) - 2px)',
+                        sm: 'calc(var(--radius) - 4px)',
+                    },
+                    keyframes: {
+                        'fade-in': { '0%': { opacity: '0', transform: 'translateY(10px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+                        'slide-up': { '0%': { opacity: '0', transform: 'translateY(20px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+                        'pulse-soft': { '0%, 100%': { opacity: '1' }, '50%': { opacity: '0.7' } },
+                    },
+                    animation: {
+                        'fade-in': 'fade-in 0.3s ease-out',
+                        'slide-up': 'slide-up 0.4s ease-out',
+                        'pulse-soft': 'pulse-soft 2s ease-in-out infinite',
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --background: #ffffff;
+            --foreground: #0f172a;
+            --card: #ffffff;
+            --card-foreground: #0f172a;
+            --primary: #2563eb;
+            --primary-foreground: #ffffff;
+            --secondary: #f1f5f9;
+            --secondary-foreground: #475569;
+            --muted: #f1f5f9;
+            --muted-foreground: #64748b;
+            --accent: #dbeafe;
+            --accent-foreground: #1e40af;
+            --destructive: #ef4444;
+            --destructive-foreground: #ffffff;
+            --success: #22c55e;
+            --success-foreground: #ffffff;
+            --warning: #f59e0b;
+            --warning-foreground: #ffffff;
+            --border: #e2e8f0;
+            --input: #e2e8f0;
+            --ring: #2563eb;
+            --radius: 0.75rem;
+        }
+
+        .dark {
+            --background: #0f0f0f;
+            --foreground: #fafafa;
+            --card: #171717;
+            --card-foreground: #fafafa;
+            --primary: #3b82f6;
+            --primary-foreground: #ffffff;
+            --secondary: #262626;
+            --secondary-foreground: #a1a1aa;
+            --muted: #262626;
+            --muted-foreground: #a1a1aa;
+            --accent: #1e3a5f;
+            --accent-foreground: #93c5fd;
+            --destructive: #dc2626;
+            --destructive-foreground: #fafafa;
+            --success: #16a34a;
+            --success-foreground: #fafafa;
+            --warning: #d97706;
+            --warning-foreground: #fafafa;
+            --border: #262626;
+            --input: #262626;
+            --ring: #3b82f6;
+        }
+
+        * { border-color: var(--border); }
+        body {
+            background-color: var(--background);
+            color: var(--foreground);
+            -webkit-tap-highlight-color: transparent;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .card {
+            background: var(--card);
+            color: var(--card-foreground);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+        }
+
+        .dark .card {
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.3);
+        }
+
+        input, button { touch-action: manipulation; }
+
+        .checkbox-wrapper {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+        }
+
+        input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        input.order-checkbox { accent-color: var(--warning); }
+        input.exec-checkbox { accent-color: var(--success); }
+
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .param-label {
+            height: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .tab-active {
+            background-color: var(--background);
+            color: var(--foreground);
+            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        }
+
+        .tab-inactive {
+            background-color: transparent;
+            color: var(--muted-foreground);
+        }
+
+        .tab-inactive:hover {
+            color: var(--foreground);
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: var(--primary-foreground);
+            transition: all 0.2s ease;
+        }
+        .btn-primary:hover { filter: brightness(1.1); }
+        .btn-primary:active { filter: brightness(0.95); }
+
+        .input-field {
+            background-color: var(--background);
+            border: 1px solid var(--border);
+            border-radius: calc(var(--radius) - 2px);
+            transition: all 0.2s ease;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: var(--ring);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+        .dark .input-field:focus {
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 9999px;
+            padding: 0.125rem 0.625rem;
+            font-size: 0.625rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .dark .glass {
+            background: rgba(15, 15, 15, 0.8);
+        }
+    </style>
+    <script>
+        // 다크 모드 초기화 (FOUC 방지)
+        if (localStorage.getItem('darkMode') === 'true' ||
+            (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+</head>
+
+<body class="min-h-screen font-sans antialiased pb-20 bg-background text-foreground">
+
+    <div class="max-w-4xl mx-auto px-4 sm:px-6">
+
+        <!-- Global Header -->
+        <header class="sticky top-0 z-30 glass border-b py-3 -mx-4 sm:-mx-6 px-4 sm:px-6">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <h1 class="text-xl font-bold tracking-tight flex items-center gap-2 cursor-pointer"
+                        onclick="showDashboard()">
+                        <span class="bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">Moonwave</span>
+                        <span class="text-foreground">MCA</span>
+                        <span class="badge bg-secondary text-secondary-foreground">v3.0</span>
+                    </h1>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <!-- 다크 모드 토글 -->
+                    <button onclick="toggleDarkMode()"
+                            class="p-2 rounded-lg hover:bg-secondary transition-colors"
+                            aria-label="테마 전환">
+                        <svg class="w-5 h-5 hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        <svg class="w-5 h-5 dark:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg>
+                    </button>
+
+                    <!-- 네비게이션 탭 -->
+                    <div class="flex bg-secondary rounded-lg p-1">
+                        <button id="navDash" onclick="showDashboard()"
+                            class="px-3 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 tab-active">
+                            대시보드
+                        </button>
+                        <button id="navDetail" onclick="showDetail()"
+                            class="px-3 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 tab-inactive">
+                            개별관리
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- ================= DASHBOARD VIEW ================= -->
+        <div id="dashboardView" class="p-4 space-y-4 block animate-fade-in">
+            <div class="card p-5">
+                <div class="flex justify-between items-center mb-4 border-b border-gray-100 pb-3">
+                    <h2 class="text-sm font-bold text-foreground">통합 자금 현황</h2>
+                    <div class="flex items-center gap-2 bg-gray-50 px-2 py-1 rounded border border-gray-200">
+                        <span class="text-[10px] text-muted-foreground font-bold">초기 예수금 설정</span>
+                        <input type="text" id="initialCash" placeholder="0"
+                            class="w-24 text-right text-sm font-bold bg-transparent outline-none text-foreground"
+                            oninput="formatInput(this); updateDashboardStats();">
+                        <span class="text-[10px] text-foreground">원</span>
+                    </div>
+                </div>
+                <div class="bg-gray-800 rounded-lg p-4 text-white shadow-lg mb-4">
+                    <p class="text-xs text-gray-400 mb-1">현재 사용 가능 현금 (잔고)</p>
+                    <div class="flex justify-between items-end">
+                        <p id="dashRemainingCash" class="text-2xl font-bold text-white">0 원</p>
+                        <p id="cashBurnRate" class="text-xs text-primary font-bold">100% 남음</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <p class="text-xs text-muted-foreground">총 투입 금액 (체결)</p>
+                        <p id="dashTotalInvested" class="text-lg font-bold text-foreground">0 원</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-xs text-muted-foreground">미체결 주문 총액</p>
+                        <p id="dashTotalOrdered" class="text-lg font-bold text-foreground">0 원</p>
+                    </div>
+                </div>
+            </div>
+            <div class="space-y-3" id="portfolioListContainer"></div>
+            <div class="text-center pt-4">
+                <button onclick="addNewPortfolio(); showDetail();"
+                    class="text-xs font-bold text-gray-400 hover:text-foreground border border-dashed border-gray-300 rounded-lg w-full py-3 hover:bg-white transition">
+                    + 새 종목 추가
+                </button>
+            </div>
+        </div>
+
+        <!-- ================= DETAIL VIEW ================= -->
+        <div id="detailView" class="hidden p-4 space-y-4">
+
+            <!-- Portfolio Tabs -->
+            <div class="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
+                <div id="tabContainer" class="flex gap-2"></div>
+                <button onclick="addNewPortfolio()"
+                    class="flex-shrink-0 w-8 h-8 rounded-full bg-white border border-dashed border-gray-400 text-gray-400 flex items-center justify-center hover:bg-gray-50 hover:border-primary hover:text-foreground transition">+</button>
+            </div>
+
+            <!-- Controls -->
+            <div class="card p-5 relative overflow-hidden bg-white">
+                <div class="absolute top-0 left-0 w-1.5 h-full bg-success"></div>
+                <div class="flex justify-between items-start mb-4">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="text-xs font-bold text-muted-foreground">종목명</span>
+                            <input type="text" id="assetName"
+                                class="font-bold text-foreground text-lg border-b border-dashed border-gray-300 focus:border-primary focus:ring-2 focus:ring-ring/20 focus:outline-none w-32 md:w-48 bg-transparent"
+                                value="NAVER" onchange="updateCurrentTabName(); saveData();">
+                            <button id="favoriteBtn" onclick="toggleFavorite()"
+                                class="text-gray-300 hover:text-warning transition">★</button>
+                            <div class="h-4 w-px bg-gray-200 mx-1"></div>
+                            <button onclick="deleteCurrentPortfolio()"
+                                class="text-gray-300 hover:text-red-500">×</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 rounded-lg p-3 flex justify-between items-center border border-gray-100 mb-3">
+                    <span class="text-xs font-bold text-muted-foreground">목표 운용 예산</span>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="targetBudgetInput" value="10,000,000"
+                            class="text-right font-bold text-foreground bg-transparent focus:outline-none text-lg w-32"
+                            oninput="formatInput(this)">
+                        <span class="text-sm text-foreground">원</span>
+                    </div>
+                </div>
+                <button onclick="autoFitParams()"
+                    class="w-full py-2.5 bg-primary text-white text-sm font-bold rounded-lg shadow-sm active:bg-gray-800 transition mb-4">
+                    ⚡ 예산 맞춤 자동 최적화
+                </button>
+
+                <details class="group bg-white border border-gray-100 rounded-lg">
+                    <summary
+                        class="p-3 font-bold text-foreground cursor-pointer list-none flex justify-between items-center text-sm bg-gray-50 rounded-t-lg">
+                        <span>⚙️ 파라미터 & 기보유 설정</span>
+                        <span class="text-gray-400 text-xs group-open:rotate-180 transition-transform">▼</span>
+                    </summary>
+                    <div class="p-3 grid grid-cols-2 gap-3 bg-white">
+                        <div class="space-y-1">
+                            <div class="param-label"><label class="text-[10px] text-muted-foreground">기준 고점</label></div><input
+                                type="text" id="peakPrice"
+                                class="w-full h-9 p-2 rounded border border-gray-200 text-center font-bold text-sm focus:border-primary focus:ring-2 focus:ring-ring/20 focus:outline-none"
+                                oninput="formatInput(this); handlePeakChange();">
+                        </div>
+                        <div class="space-y-1">
+                            <div class="param-label"><label class="text-[10px] text-muted-foreground">투자 강도</label></div><input
+                                type="number" id="strength" step="0.01"
+                                class="w-full h-9 p-2 rounded border border-gray-200 text-center font-bold text-sm focus:border-primary focus:ring-2 focus:ring-ring/20 focus:outline-none"
+                                oninput="calculateMCA()">
+                        </div>
+                        <div class="space-y-1">
+                            <div class="param-label"><label class="text-[10px] text-muted-foreground">시작 하락률(%)</label></div>
+                            <input type="number" id="startDrop"
+                                class="w-full h-9 p-2 rounded border border-gray-200 text-center font-bold text-sm text-primary focus:border-primary focus:ring-2 focus:ring-ring/20 focus:outline-none"
+                                oninput="calculateMCA()">
+                        </div>
+                        <div class="space-y-1">
+                            <div class="param-label"><label class="text-[10px] text-muted-foreground">분할 횟수</label></div><input
+                                type="number" id="steps"
+                                class="w-full h-9 p-2 rounded border border-gray-200 text-center font-bold text-sm focus:border-primary focus:ring-2 focus:ring-ring/20 focus:outline-none"
+                                oninput="calculateMCA()">
+                        </div>
+                        <div class="col-span-2 mt-2 pt-2 border-t border-dashed border-gray-200">
+                            <label class="text-xs font-bold text-gray-500 mb-2 block flex items-center gap-1"><span
+                                    class="w-2 h-2 rounded-full bg-gray-400"></span> 0구간 (기존 보유 물량)</label>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="space-y-1"><label class="text-[10px] text-muted-foreground">기보유 수량</label><input
+                                        type="text" id="legacyQty" placeholder="0"
+                                        class="w-full h-9 p-2 rounded bg-gray-50 border border-gray-200 text-center font-bold text-sm text-gray-600 focus:border-gray-400 focus:outline-none"
+                                        oninput="formatInput(this)"></div>
+                                <div class="space-y-1"><label class="text-[10px] text-muted-foreground">기보유 평단가</label><input
+                                        type="text" id="legacyAvg" placeholder="0"
+                                        class="w-full h-9 p-2 rounded bg-gray-50 border border-gray-200 text-center font-bold text-sm text-gray-600 focus:border-gray-400 focus:outline-none"
+                                        oninput="formatInput(this)"></div>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+            </div>
+
+            <!-- Detail Stats -->
+            <div class="grid grid-cols-2 gap-3">
+                <div class="card p-4 flex flex-col justify-between">
+                    <div class="text-xs text-muted-foreground mb-1">현재 투입 금액 (체결)</div>
+                    <div id="currentInvested" class="text-lg font-bold text-foreground">0</div>
+                    <div class="w-full bg-gray-100 rounded-full h-1.5 mt-2 overflow-hidden">
+                        <div id="progressBar" class="bg-success h-full rounded-full transition-all duration-500"
+                            style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="card p-4 flex flex-col justify-between">
+                    <div class="text-xs text-muted-foreground mb-1">현재 내 평단가 (통합)</div>
+                    <div id="currentMyAvg" class="text-lg font-bold text-primary">0</div>
+                    <div class="text-[10px] text-gray-400 mt-1 text-right">보유: <span id="currentMyQty"
+                            class="text-foreground font-bold">0</span> 주</div>
+                </div>
+            </div>
+
+            <!-- Chart Card -->
+            <div class="card p-4">
+                <div class="flex justify-between items-end mb-2">
+                    <h3 class="text-xs font-bold text-muted-foreground flex items-center gap-2"><span
+                            class="w-2 h-2 rounded-full bg-success"></span> 평단가 방어선 <span
+                            class="text-gray-300">|</span> <span class="w-2 h-2 rounded-full bg-slate-400"></span> 괴리율
+                        곡선</h3>
+                </div>
+                <div class="h-64 relative"><canvas id="mcaChart"></canvas></div>
+            </div>
+
+            <!-- Table -->
+            <div class="card overflow-hidden">
+                <div
+                    class="p-3 bg-gray-50 border-b border-gray-200 flex justify-between items-center sticky top-0 z-20">
+                    <h3 class="text-xs font-bold text-foreground">매매 체결 리스트</h3>
+                    <div class="flex gap-2 text-[10px]">
+                        <span class="flex items-center gap-1"><span
+                                class="w-2 h-2 rounded-full bg-warning"></span>주문</span>
+                        <span class="flex items-center gap-1"><span
+                                class="w-2 h-2 rounded-full bg-success"></span>체결</span>
+                    </div>
+                </div>
+                <div class="overflow-x-auto max-h-[400px]">
+                    <table class="w-full text-right text-xs whitespace-nowrap">
+                        <thead class="bg-white text-muted-foreground border-b border-gray-200 sticky top-0 z-10">
+                            <tr>
+                                <th class="px-2 py-2 text-center bg-white w-10 text-[10px]">주문</th>
+                                <th class="px-2 py-2 text-center bg-white w-10 text-[10px]">체결</th>
+                                <th class="px-2 py-2 text-center bg-white">구간</th>
+                                <th class="px-2 py-2 text-center text-primary bg-white">하락</th>
+                                <th class="px-2 py-2 text-foreground bg-white">매수가</th>
+                                <th class="px-2 py-2 bg-white">수량</th>
+                                <th class="px-2 py-2 bg-white">금액</th>
+                                <th class="px-2 py-2 font-bold text-foreground bg-white border-l border-gray-100">총 수량
+                                </th>
+                                <th class="px-2 py-2 font-bold text-foreground bg-white border-l border-gray-100">총 금액
+                                </th>
+                                <th class="px-2 py-2 text-primary bg-white">평단가</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultBody" class="divide-y divide-gray-100"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Exit Plan -->
+            <div class="card p-4 bg-blue-50/30 border-blue-100">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-sm font-bold text-primary flex items-center gap-1">🎯 목표 매도 시뮬레이션</h3>
+                </div>
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div class="space-y-1"><label class="text-[10px] text-muted-foreground">120월선 가격</label><input type="text"
+                            id="ma120Price" placeholder="선택 입력"
+                            class="w-full h-9 p-2 text-center font-bold text-sm border border-gray-200 rounded focus:border-primary focus:ring-2 focus:ring-ring/20 focus:outline-none bg-white"
+                            oninput="formatInput(this)"></div>
+                    <div class="space-y-1"><label class="text-[10px] text-muted-foreground">멀티플 배수 (×)</label><input
+                            type="number" id="targetMultiple" placeholder="선택 입력" step="0.1"
+                            class="w-full h-9 p-2 text-center font-bold text-sm border border-gray-200 rounded focus:border-primary focus:ring-2 focus:ring-ring/20 focus:outline-none bg-white"
+                            oninput="calculateAutoTarget()"></div>
+                </div>
+                <div class="flex justify-between items-center bg-white p-2 rounded border border-blue-100 mb-3">
+                    <span class="text-xs text-muted-foreground ml-1 whitespace-nowrap">목표가격</span>
+                    <input type="text" id="manualTargetPrice" placeholder="0 원"
+                        class="text-right font-bold text-primary text-base bg-transparent focus:outline-none w-32"
+                        oninput="formatInput(this)">
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-center bg-white p-2 rounded border border-blue-100">
+                    <div>
+                        <div class="text-[10px] text-gray-400">예상 수익률</div>
+                        <div id="simRoe" class="font-bold text-destructive text-sm">-</div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] text-gray-400">예상 수익금</div>
+                        <div id="simProfit" class="font-bold text-destructive text-sm">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-center gap-4 py-4">
+                <button onclick="exportData()" class="text-xs font-bold text-primary">💾 데이터 백업</button>
+                <button onclick="triggerImport()" class="text-xs font-bold text-gray-400">📂 데이터 복구</button>
+                <input type="file" id="fileInput2" style="display:none" onchange="importData(this)" accept=".json">
+            </div>
+        </div>
+    </div>
+
+    <div id="toast"
+        class="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-gray-800/90 text-white px-4 py-2 rounded-full shadow-lg opacity-0 transition-opacity duration-300 pointer-events-none z-50 text-xs font-bold whitespace-nowrap">
+        알림 메시지</div>
+
+    <script>
+        const formatNum = (num) => new Intl.NumberFormat('ko-KR').format(num);
+        function parseFormattedNum(str) { if (!str) return 0; return parseFloat(str.replace(/,/g, '')); }
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.classList.remove('opacity-0');
+            setTimeout(() => { toast.classList.add('opacity-0'); }, 2000);
+        }
+
+        // 다크 모드 토글
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('darkMode', isDark);
+            // 차트 업데이트
+            if (mcaChart) {
+                setTimeout(() => calculateMCA(), 100);
+            }
+            showToast(isDark ? '다크 모드 활성화' : '라이트 모드 활성화');
+        }
+
+        // 다크 모드 감지
+        function isDarkMode() {
+            return document.documentElement.classList.contains('dark');
+        }
+
+        const STORAGE_KEY_V12 = 'Moonwave_MCA_v12_Data';
+        let portfolios = [];
+        let activePortfolioId = null;
+        let initialCash = 0;
+        let mcaChart = null;
+        let globalCalculatedData = [];
+
+        function showDashboard() {
+            document.getElementById('dashboardView').classList.remove('hidden');
+            document.getElementById('detailView').classList.add('hidden');
+            document.getElementById('navDash').classList.add('tab-active');
+            document.getElementById('navDash').classList.remove('tab-inactive');
+            document.getElementById('navDetail').classList.remove('tab-active');
+            document.getElementById('navDetail').classList.add('tab-inactive');
+            updateDashboardStats();
+        }
+
+        function showDetail(portfolioId) {
+            if (portfolioId) switchTab(portfolioId);
+            document.getElementById('dashboardView').classList.add('hidden');
+            document.getElementById('detailView').classList.remove('hidden');
+            document.getElementById('navDash').classList.remove('tab-active');
+            document.getElementById('navDash').classList.add('tab-inactive');
+            document.getElementById('navDetail').classList.add('tab-active');
+            document.getElementById('navDetail').classList.remove('tab-inactive');
+            setTimeout(() => { if (!mcaChart || mcaChart.ctx) calculateMCA(); }, 50);
+        }
+
+        function calculatePortfolioStats(p) {
+            const peak = parseFormattedNum(p.params.peakPrice || '0');
+            const strength = parseFloat(p.params.strength || '1.0');
+            const startDrop = parseFloat(p.params.startDrop || '10');
+            const tick = getAutoTick(peak);
+            const steps = parseInt(p.params.steps || '20');
+
+            let executedAmt = 0; let orderedAmt = 0;
+            let lastExecutedStep = 0; let lastOrderedStep = 0;
+            const executedSteps = p.executedSteps || [];
+            const orderedSteps = p.orderedSteps || [];
+
+            if (executedSteps.length > 0) lastExecutedStep = Math.max(...executedSteps);
+            if (orderedSteps.length > 0) lastOrderedStep = Math.max(...orderedSteps);
+
+            for (let i = 1; i <= steps; i++) {
+                const dropRate = startDrop + (i - 1);
+                const rawPrice = peak * (1 - (dropRate / 100));
+                const buyPrice = Math.floor(rawPrice / tick) * tick;
+                let qty = Math.trunc(strength * Math.exp(i / 3));
+                if (qty < 1) qty = 1;
+                const amt = buyPrice * qty;
+                if (executedSteps.includes(i)) executedAmt += amt;
+                else if (orderedSteps.includes(i)) orderedAmt += amt;
+            }
+            return { executedAmt, orderedAmt, lastExecutedStep, lastOrderedStep };
+        }
+
+        function updateDashboardStats() {
+            let totalExecutedAmt = 0; let totalOrderedAmt = 0;
+            const container = document.getElementById('portfolioListContainer');
+            container.innerHTML = '';
+            const sorted = [...portfolios].sort((a, b) => (a.isFavorite === b.isFavorite) ? a.id - b.id : (a.isFavorite ? -1 : 1));
+
+            sorted.forEach(p => {
+                const stats = calculatePortfolioStats(p);
+                totalExecutedAmt += stats.executedAmt;
+                totalOrderedAmt += stats.orderedAmt;
+                const gap = stats.lastOrderedStep - stats.lastExecutedStep;
+                let statusBadge = "", statusClass = "border-gray-200";
+
+                if (stats.lastOrderedStep > 0 && gap <= 3) {
+                    statusBadge = `<span class="text-[10px] font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded animate-pulse">🚨 추가 주문 필요</span>`;
+                    statusClass = "border-red-200 ring-1 ring-red-50";
+                } else if (stats.lastOrderedStep === 0) {
+                    statusBadge = `<span class="text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded">주문 없음</span>`;
+                } else {
+                    statusBadge = `<span class="text-[10px] font-bold text-primary bg-green-50 px-2 py-0.5 rounded">정상 운용 중</span>`;
+                }
+
+                const card = document.createElement('div');
+                card.className = `card p-4 hover:shadow-md transition cursor-pointer border ${statusClass}`;
+                card.onclick = () => showDetail(p.id);
+                card.innerHTML = `
+                    <div class="flex justify-between items-center mb-2"><h3 class="font-bold text-foreground flex items-center gap-1">${p.isFavorite ? '<span class="text-warning">★</span>' : ''} ${p.name}</h3>${statusBadge}</div>
+                    <div class="flex justify-between items-center text-xs text-gray-500 mb-1"><span>체결: <strong>${stats.lastExecutedStep}구간</strong></span><span>주문: <strong>${stats.lastOrderedStep}구간</strong></span></div>
+                    <div class="w-full bg-gray-100 rounded-full h-2 flex overflow-hidden">${renderBarSegments(stats.lastExecutedStep, stats.lastOrderedStep)}</div>`;
+                container.appendChild(card);
+            });
+
+            const setCash = parseFormattedNum(document.getElementById('initialCash').value);
+            const remainingCash = setCash - totalExecutedAmt;
+            document.getElementById('dashTotalInvested').innerText = formatNum(totalExecutedAmt) + " 원";
+            document.getElementById('dashTotalOrdered').innerText = formatNum(totalOrderedAmt) + " 원";
+            document.getElementById('dashRemainingCash').innerText = formatNum(remainingCash) + " 원";
+            const burnPct = setCash > 0 ? Math.round((remainingCash / setCash) * 100) : 0;
+            const burnEl = document.getElementById('cashBurnRate');
+            burnEl.innerText = `${burnPct}% 남음`;
+            burnEl.className = burnPct < 20 ? "text-xs font-bold text-red-400" : "text-xs font-bold text-primary";
+            initialCash = setCash;
+            saveData();
+        }
+
+        function renderBarSegments(exec, order) {
+            const max = 20; const execW = (exec / max) * 100; const orderW = ((order - exec) / max) * 100;
+            return `<div class="h-full bg-success" style="width: ${execW}%"></div><div class="h-full bg-warning" style="width: ${orderW}%"></div>`;
+        }
+
+        function getAutoTick(price) {
+            if (price < 2000) return 1; if (price < 5000) return 5; if (price < 20000) return 10;
+            if (price < 50000) return 50; if (price < 200000) return 100; if (price < 500000) return 500; return 1000;
+        }
+        function handlePeakChange() { calculateMCA(); }
+        function formatInput(input) {
+            let value = input.value.replace(/[^0-9]/g, '');
+            if (value) value = parseInt(value).toLocaleString('ko-KR');
+            input.value = value;
+            if (input.id === 'ma120Price') calculateAutoTarget();
+            else if (input.id === 'manualTargetPrice') calculateSimulation();
+            else if (input.id === 'initialCash') updateDashboardStats();
+            else calculateMCA();
+        }
+        function calculateAutoTarget() {
+            const ma120 = parseFormattedNum(document.getElementById('ma120Price').value);
+            const multiple = parseFloat(document.getElementById('targetMultiple').value);
+            if (ma120 && multiple) {
+                const autoTarget = Math.round(ma120 * multiple);
+                document.getElementById('manualTargetPrice').value = formatNum(autoTarget);
+            }
+            calculateSimulation();
+        }
+
+        // 백업 데이터 (2026-01-23)
+        const BACKUP_DATA = {"portfolios":[{"id":1768110513446,"name":"NAVER","params":{"peakPrice":"262,500","strength":"0.98","startDrop":"13.5","steps":"20","targetBudget":"500,000,000","ma120Price":"212,200","targetMultiple":"2.5","manualTargetPrice":"","legacyQty":"35","legacyAvg":"243,386"},"executedSteps":[],"orderedSteps":[1,2,3,4,5,6],"isFavorite":true},{"id":1768113895078,"name":"LG전자","params":{"peakPrice":"102,500","strength":"0.6","startDrop":"11","steps":"19","targetBudget":"200,000,000","ma120Price":"89,100","targetMultiple":"3","manualTargetPrice":"267,300","legacyQty":"30","legacyAvg":"91,808"},"orderedSteps":[1,3,2,4,5,6,7,8,9,10],"executedSteps":[1,3,2,4,5],"isFavorite":true},{"id":1768114143959,"name":"이크레더블","params":{"peakPrice":"18,490","strength":"5","startDrop":"16","steps":"20","targetBudget":"50,000,000","ma120Price":"","targetMultiple":"","manualTargetPrice":"","legacyQty":"71","legacyAvg":"16,960"},"orderedSteps":[1,2,5,6,7,4,3],"executedSteps":[1,2]},{"id":1768132674054,"name":"애경산업","isFavorite":true,"params":{"peakPrice":"19,230","strength":"10","startDrop":"28","steps":"20","targetBudget":"50,000,000","ma120Price":"17,000","targetMultiple":"1","manualTargetPrice":"17,000","legacyQty":"122","legacyAvg":"13,176"},"orderedSteps":[1,2,3,4,5,6,7,9,8,10,11],"executedSteps":[1,2,3,4,5,6,7,8]},{"id":1768165226034,"name":"LG전자","isFavorite":false,"params":{"peakPrice":"102,500","strength":"0.8","startDrop":"12","steps":"20","targetBudget":"10,000,000","ma120Price":"","targetMultiple":"","manualTargetPrice":"","legacyQty":"33","legacyAvg":"91,380"},"orderedSteps":[2,1,5,6,7,8,9],"executedSteps":[]},{"id":1768222518053,"name":"케이카","isFavorite":false,"params":{"peakPrice":"19,999","strength":"5","startDrop":"25.2","steps":"20","targetBudget":"50,000,000","ma120Price":"","targetMultiple":"","manualTargetPrice":"","legacyQty":"92","legacyAvg":"15,763"},"orderedSteps":[1,2,3,4,5],"executedSteps":[]},{"id":1768303417998,"name":"경방","isFavorite":true,"params":{"peakPrice":"14,310","strength":"10","startDrop":"35.5","steps":"20","targetBudget":"50,000,000","ma120Price":"","targetMultiple":"","manualTargetPrice":"","legacyQty":"62","legacyAvg":"9,225"},"orderedSteps":[1,2,3,4,5,6,7,8,9,10,11],"executedSteps":[1,2,3,4,5,6,7,8]},{"id":1768303742010,"name":"삼화폐인트 ","isFavorite":true,"params":{"peakPrice":"10,300","strength":"10","startDrop":"30","steps":"20","targetBudget":"50,000,000","ma120Price":"","targetMultiple":"","manualTargetPrice":"","legacyQty":"15","legacyAvg":"6,950"},"orderedSteps":[1,2,3,4,5,6,8,7,9,10],"executedSteps":[1,2,3,4,5,6,7]},{"id":1768304238627,"name":"KZ정밀","isFavorite":false,"params":{"peakPrice":"100,000","strength":"1.0","startDrop":"10","steps":"20","targetBudget":"10,000,000","ma120Price":"","targetMultiple":"","manualTargetPrice":"","legacyQty":"0","legacyAvg":"0"},"orderedSteps":[],"executedSteps":[]},{"id":1768382928364,"name":"무림페이퍼","isFavorite":false,"params":{"peakPrice":"2,140","strength":"20","startDrop":"12","steps":"20","targetBudget":"50,000,000","ma120Price":"","targetMultiple":"","manualTargetPrice":"","legacyQty":"329","legacyAvg":"1,998"},"orderedSteps":[1,2,3,4,5,6,7],"executedSteps":[]},{"id":1768384548030,"name":"HRS","isFavorite":false,"params":{"peakPrice":"5,640","strength":"7","startDrop":"12","steps":"20","targetBudget":"50,000,000","ma120Price":"","targetMultiple":"","manualTargetPrice":"","legacyQty":"240","legacyAvg":"5,303"},"orderedSteps":[3,2,1,4,5,6,7],"executedSteps":[]},{"id":1768384749135,"name":"종근당","isFavorite":false,"params":{"peakPrice":"91,000","strength":"1.0","startDrop":"12.1","steps":"20","targetBudget":"50,000,000","ma120Price":"","targetMultiple":"","manualTargetPrice":"","legacyQty":"8","legacyAvg":"86,175"},"orderedSteps":[3,2,1,7,6,5,4],"executedSteps":[],"portfolioMemo":"대성 토스계좌","executionDates":{"1":"2026-01-14"}},{"id":1768385382507,"name":"링네트","isFavorite":false,"params":{"peakPrice":"4,075","strength":"10","startDrop":"12","steps":"20","targetBudget":"50,000,000","legacyQty":"59","legacyAvg":"4,001","ma120Price":"","targetMultiple":"","manualTargetPrice":""},"orderedSteps":[1,2,4,3,7,6,5],"executedSteps":[],"stepMemos":{},"executionDates":{},"portfolioMemo":""},{"id":1768386034868,"name":"진양폴리","isFavorite":false,"params":{"peakPrice":"3,496","strength":"10","startDrop":"18","steps":"20","targetBudget":"10,000,000","legacyQty":"0","legacyAvg":"0","ma120Price":"","targetMultiple":"","manualTargetPrice":""},"orderedSteps":[1,2,3,4,5,6,7,8,9],"executedSteps":[],"stepMemos":{},"executionDates":{"1":"2026-01-15","2":"2026-01-15"},"portfolioMemo":""},{"id":1768386045578,"name":"SOOP","isFavorite":false,"params":{"peakPrice":"98,500","strength":"3","startDrop":"30","steps":"20","targetBudget":"50,000,000","legacyQty":"4","legacyAvg":"67,400","ma120Price":"","targetMultiple":"","manualTargetPrice":""},"orderedSteps":[6,7,8,9,4,5,3,2,1,10],"executedSteps":[5,4,3,2,1],"stepMemos":{},"executionDates":{"1":"2026-01-14","2":"2026-01-14","3":"2026-01-14","4":"2026-01-14","5":"2026-01-14"},"portfolioMemo":""},{"id":1768522966973,"name":"LG씨앤에스","isFavorite":false,"params":{"peakPrice":"76,200","strength":"1.0","startDrop":"12","steps":"20","targetBudget":"10,000,000","legacyQty":"0","legacyAvg":"0","ma120Price":"","targetMultiple":"","manualTargetPrice":""},"orderedSteps":[],"executedSteps":[],"stepMemos":{},"executionDates":{},"portfolioMemo":""},{"id":1768689829036,"name":"TEST","isFavorite":false,"params":{"peakPrice":"270,000","strength":"1","startDrop":"12","steps":"20","targetBudget":"100,000,000","legacyQty":"0","legacyAvg":"0","ma120Price":"","targetMultiple":"","manualTargetPrice":""},"orderedSteps":[],"executedSteps":[],"stepMemos":{},"executionDates":{"1":"2026-01-17","2":"2026-01-17","3":"2026-01-17","4":"2026-01-17","5":"2026-01-17","6":"2026-01-17","7":"2026-01-17","8":"2026-01-17","9":"2026-01-17","10":"2026-01-17","11":"2026-01-17","12":"2026-01-17","13":"2026-01-17","14":"2026-01-17","15":"2026-01-17","16":"2026-01-17","17":"2026-01-17","18":"2026-01-17","19":"2026-01-17","20":"2026-01-17"},"portfolioMemo":""}],"activeId":1768304238627,"initialCash":90000000};
+
+        function initData() {
+            const saved = localStorage.getItem(STORAGE_KEY_V12);
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                portfolios = parsed.portfolios || [];
+                activePortfolioId = parsed.activeId;
+                initialCash = parsed.initialCash || 0;
+            } else {
+                // 백업 데이터로 초기화
+                portfolios = BACKUP_DATA.portfolios;
+                activePortfolioId = BACKUP_DATA.activeId;
+                initialCash = BACKUP_DATA.initialCash;
+                localStorage.setItem(STORAGE_KEY_V12, JSON.stringify(BACKUP_DATA));
+            }
+            if (portfolios.length === 0) addNewPortfolio(false);
+            if (!activePortfolioId || !portfolios.find(p => p.id === activePortfolioId)) activePortfolioId = portfolios[0].id;
+            document.getElementById('initialCash').value = formatNum(initialCash);
+            renderTabs(); loadActivePortfolio(); showDashboard();
+        }
+
+        function addNewPortfolio(shouldRender = true) {
+            const newId = Date.now();
+            portfolios.push({
+                id: newId, name: "새 종목", isFavorite: false,
+                params: { peakPrice: '100,000', strength: '1.0', startDrop: '10', steps: '20', targetBudget: '10,000,000', legacyQty: '0', legacyAvg: '0', ma120Price: '', targetMultiple: '', manualTargetPrice: '' },
+                orderedSteps: [], executedSteps: []
+            });
+            activePortfolioId = newId;
+            if (shouldRender) { renderTabs(); loadActivePortfolio(); saveData(); updateDashboardStats(); showToast("추가됨"); }
+        }
+
+        function switchTab(id) { activePortfolioId = id; renderTabs(); loadActivePortfolio(); saveData(); }
+        function deleteCurrentPortfolio() {
+            if (portfolios.length <= 1) { alert("최소 하나 필요"); return; }
+            if (confirm("삭제하시겠습니까?")) {
+                portfolios = portfolios.filter(p => p.id !== activePortfolioId);
+                activePortfolioId = portfolios[0].id;
+                renderTabs(); loadActivePortfolio(); saveData(); updateDashboardStats();
+            }
+        }
+        function updateCurrentTabName() {
+            const p = portfolios.find(p => p.id === activePortfolioId);
+            if (p) { p.name = document.getElementById('assetName').value; renderTabs(); updateDashboardStats(); }
+        }
+        function toggleFavorite() {
+            const p = portfolios.find(p => p.id === activePortfolioId);
+            if (p) { p.isFavorite = !p.isFavorite; updateFavoriteUI(); renderTabs(); saveData(); updateDashboardStats(); }
+        }
+        function updateFavoriteUI() {
+            const p = portfolios.find(p => p.id === activePortfolioId);
+            const btn = document.getElementById('favoriteBtn');
+            btn.className = p && p.isFavorite ? "text-warning hover:text-[#E5C158] transition" : "text-gray-300 hover:text-warning transition";
+        }
+        function renderTabs() {
+            const container = document.getElementById('tabContainer');
+            container.innerHTML = '';
+            const sorted = [...portfolios].sort((a, b) => (a.isFavorite === b.isFavorite) ? a.id - b.id : (a.isFavorite ? -1 : 1));
+            sorted.forEach(p => {
+                const isActive = p.id === activePortfolioId;
+                const div = document.createElement('div');
+                div.className = `px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer whitespace-nowrap transition-all border flex items-center gap-1 ${isActive ? 'tab-active' : 'tab-inactive'}`;
+                div.innerHTML = `${p.isFavorite ? '<span class="text-warning">★</span>' : ''}${p.name}`;
+                div.onclick = () => { switchTab(p.id); showDetail(); };
+                container.appendChild(div);
+            });
+        }
+        function saveData() {
+            const p = portfolios.find(p => p.id === activePortfolioId);
+            if (p) {
+                p.name = document.getElementById('assetName').value;
+                p.params = {
+                    peakPrice: document.getElementById('peakPrice').value,
+                    strength: document.getElementById('strength').value,
+                    startDrop: document.getElementById('startDrop').value,
+                    steps: document.getElementById('steps').value,
+                    targetBudget: document.getElementById('targetBudgetInput').value,
+                    ma120Price: document.getElementById('ma120Price').value,
+                    targetMultiple: document.getElementById('targetMultiple').value,
+                    manualTargetPrice: document.getElementById('manualTargetPrice').value,
+                    legacyQty: document.getElementById('legacyQty').value,
+                    legacyAvg: document.getElementById('legacyAvg').value
+                };
+            }
+            localStorage.setItem(STORAGE_KEY_V12, JSON.stringify({ portfolios: portfolios, activeId: activePortfolioId, initialCash: initialCash }));
+        }
+        function loadActivePortfolio() {
+            const p = portfolios.find(p => p.id === activePortfolioId);
+            if (!p) return;
+            const params = p.params || {};
+            document.getElementById('assetName').value = p.name;
+            document.getElementById('peakPrice').value = params.peakPrice || '100,000';
+            document.getElementById('strength').value = params.strength || '1.0';
+            document.getElementById('startDrop').value = params.startDrop || '10';
+            document.getElementById('steps').value = params.steps || '20';
+            document.getElementById('targetBudgetInput').value = params.targetBudget || '10,000,000';
+            document.getElementById('ma120Price').value = params.ma120Price || '';
+            document.getElementById('targetMultiple').value = params.targetMultiple || '';
+            document.getElementById('manualTargetPrice').value = params.manualTargetPrice || '';
+            document.getElementById('legacyQty').value = params.legacyQty || '0';
+            document.getElementById('legacyAvg').value = params.legacyAvg || '0';
+            updateFavoriteUI(); calculateMCA();
+        }
+
+        function calculateMCA() {
+            const p = portfolios.find(p => p.id === activePortfolioId);
+            if (!p) return;
+            const peak = parseFormattedNum(document.getElementById('peakPrice').value);
+            const strength = parseFloat(document.getElementById('strength').value);
+            const startDrop = parseFloat(document.getElementById('startDrop').value);
+            const tick = getAutoTick(peak);
+            const steps = parseInt(document.getElementById('steps').value);
+            const legacyQty = parseFormattedNum(document.getElementById('legacyQty').value);
+            const legacyAvg = parseFormattedNum(document.getElementById('legacyAvg').value);
+            const legacyAmt = legacyQty * legacyAvg;
+            const orderedSteps = p.orderedSteps || [];
+            const executedSteps = p.executedSteps || [];
+
+            if (!peak || !steps) return;
+
+            const tbody = document.getElementById('resultBody');
+            tbody.innerHTML = '';
+
+            const labels = [], buyPrices = [], avgPrices = [], gaps = [];
+            globalCalculatedData = [];
+
+            let cumulativeQty = legacyQty;
+            let cumulativeAmt = legacyAmt;
+
+            if (legacyQty > 0) {
+                const tr = document.createElement('tr');
+                tr.className = 'bg-gray-100 text-gray-500 font-bold';
+                tr.innerHTML = `<td class="px-2 py-2 text-center border-r border-gray-200">-</td><td class="px-2 py-2 text-center border-r border-gray-200"><span class="text-[10px] bg-gray-200 px-1 rounded">보유</span></td><td class="px-2 py-2 text-center">0</td><td class="px-2 py-2 text-center">-</td><td class="px-2 py-2">-</td><td class="px-2 py-2">${formatNum(legacyQty)}</td><td class="px-2 py-2">${formatNum(legacyAmt)}</td><td class="px-2 py-2 border-l border-gray-100 font-bold text-foreground">${formatNum(legacyQty)}</td><td class="px-2 py-2 font-bold text-foreground">${formatNum(legacyAmt)}</td><td class="px-2 py-2 font-bold text-primary">${formatNum(legacyAvg)}</td>`;
+                tbody.appendChild(tr);
+            }
+
+            for (let i = 1; i <= steps; i++) {
+                const dropRate = startDrop + (i - 1);
+                const rawPrice = peak * (1 - (dropRate / 100));
+                const buyPrice = Math.floor(rawPrice / tick) * tick;
+                let qty = Math.trunc(strength * Math.exp(i / 3));
+                if (qty < 1) qty = 1;
+                const buyAmt = buyPrice * qty;
+
+                const isExecuted = executedSteps.includes(i);
+
+                if (isExecuted) {
+                    cumulativeQty += qty;
+                    cumulativeAmt += buyAmt;
+                }
+
+                const realAvg = cumulativeQty > 0 ? Math.round(cumulativeAmt / cumulativeQty) : 0;
+
+                let displayTotalQty = "-";
+                let displayTotalAmt = "-";
+                let displayAvg = "-";
+
+                if (isExecuted) {
+                    displayTotalQty = formatNum(cumulativeQty);
+                    displayTotalAmt = formatNum(cumulativeAmt);
+                    displayAvg = formatNum(realAvg);
+                } else {
+                    displayTotalQty = `<span class="text-gray-400">${formatNum(cumulativeQty)}</span>`;
+                    displayTotalAmt = `<span class="text-gray-400">${formatNum(cumulativeAmt)}</span>`;
+                    displayAvg = `<span class="text-gray-400">${formatNum(realAvg)}</span>`;
+                }
+
+                labels.push(i);
+                avgPrices.push(realAvg);
+
+                const gap = realAvg > 0 ? ((buyPrice - realAvg) / realAvg * 100).toFixed(2) : 0;
+                gaps.push(gap);
+
+                const isOrdered = orderedSteps.includes(i) ? 'checked' : '';
+                const isExecutedChecked = isExecuted ? 'checked' : '';
+                let rowClass = isExecuted ? 'bg-green-50' : (isOrdered ? 'bg-yellow-50' : '');
+
+                const tr = document.createElement('tr');
+                tr.className = rowClass;
+                tr.innerHTML = `
+                    <td class="px-2 py-2 text-center border-r border-gray-100"><div class="checkbox-wrapper"><input type="checkbox" class="order-checkbox" data-type="order" data-step="${i}" ${isOrdered} onchange="updateDashboard(this)"></div></td>
+                    <td class="px-2 py-2 text-center border-r border-gray-100"><div class="checkbox-wrapper"><input type="checkbox" class="exec-checkbox" data-type="exec" data-step="${i}" data-amt="${buyAmt}" data-qty="${qty}" ${isExecutedChecked} onchange="updateDashboard(this)"></div></td>
+                    <td class="px-2 py-2 text-center text-muted-foreground">${i}</td>
+                    <td class="px-2 py-2 text-center text-primary font-bold">-${dropRate}%</td>
+                    <td class="px-2 py-2 text-foreground font-medium">${formatNum(buyPrice)}</td>
+                    <td class="px-2 py-2 text-muted-foreground">${formatNum(qty)}</td>
+                    <td class="px-2 py-2 text-foreground text-[11px]">${formatNum(buyAmt)}</td>
+                    <td class="px-2 py-2 font-bold text-foreground border-l border-gray-100">${displayTotalQty}</td>
+                    <td class="px-2 py-2 font-bold text-foreground">${displayTotalAmt}</td>
+                    <td class="px-2 py-2 font-bold text-primary">${displayAvg}</td>
+                `;
+                tbody.appendChild(tr);
+            }
+            updateChart(labels, avgPrices, executedSteps, gaps);
+            updateDashboard(null);
+            calculateSimulation();
+        }
+
+        function updateDashboard(checkbox) {
+            const p = portfolios.find(p => p.id === activePortfolioId);
+            if (!p) return;
+            if (checkbox) {
+                const step = parseInt(checkbox.dataset.step);
+                const type = checkbox.dataset.type;
+                if (checkbox.checked) {
+                    if (type === 'order') p.orderedSteps.push(step);
+                    if (type === 'exec') { p.executedSteps.push(step); if (!p.orderedSteps.includes(step)) p.orderedSteps.push(step); }
+                } else {
+                    if (type === 'order') p.orderedSteps = p.orderedSteps.filter(s => s !== step);
+                    if (type === 'exec') p.executedSteps = p.executedSteps.filter(s => s !== step);
+                }
+                saveData(); calculateMCA(); updateDashboardStats(); return;
+            }
+            const legacyQty = parseFormattedNum(document.getElementById('legacyQty').value);
+            const legacyAvg = parseFormattedNum(document.getElementById('legacyAvg').value);
+            let currentAmt = legacyQty * legacyAvg;
+            let currentQty = legacyQty;
+            const executedChecks = document.querySelectorAll('.exec-checkbox:checked');
+            executedChecks.forEach(cb => { currentAmt += parseInt(cb.dataset.amt); currentQty += parseInt(cb.dataset.qty); });
+
+            document.getElementById('currentInvested').innerText = formatNum(currentAmt) + " 원";
+            document.getElementById('currentMyQty').innerText = formatNum(currentQty);
+            const myAvg = currentQty > 0 ? Math.round(currentAmt / currentQty) : 0;
+            document.getElementById('currentMyAvg').innerText = formatNum(myAvg) + " 원";
+        }
+
+        function updateChart(labels, avgPrices, executedSteps, gaps) {
+            if (typeof Chart === 'undefined') return;
+            const ctx = document.getElementById('mcaChart').getContext('2d');
+            if (mcaChart) mcaChart.destroy();
+
+            // 다크 모드 대응 색상
+            const dark = isDarkMode();
+            const executedColor = dark ? '#fbbf24' : '#f59e0b';  // warning
+            const lineColor = dark ? '#3b82f6' : '#2563eb';       // primary
+            const gapColor = dark ? '#22c55e' : '#16a34a';        // success
+            const textColor = dark ? '#fafafa' : '#0f172a';
+            const gridColor = dark ? '#262626' : '#e2e8f0';
+
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, dark ? 'rgba(34, 197, 94, 0.2)' : 'rgba(22, 163, 74, 0.2)');
+            gradient.addColorStop(1, 'rgba(34, 197, 94, 0)');
+
+            // Logic: Min/Max Gap in whole series (not dependent on check)
+            const numericGaps = gaps.map(g => parseFloat(g));
+            const maxGap = Math.max(...numericGaps);
+            const minGap = Math.min(...numericGaps);
+            const maxIdx = numericGaps.indexOf(maxGap);
+            const minIdx = numericGaps.indexOf(minGap); // find first occurrence
+
+            mcaChart = new Chart(ctx, {
+                type: 'line', plugins: [ChartDataLabels],
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: '평단가 방어선', data: avgPrices, yAxisID: 'y',
+                            borderColor: lineColor, backgroundColor: lineColor, borderWidth: 2, pointRadius: 0, tension: 0.1, order: 2, datalabels: { display: false }
+                        },
+                        {
+                            label: '괴리율(Gap%)', data: gaps, yAxisID: 'y1',
+                            borderColor: gapColor, borderWidth: 2, tension: 0.4, fill: true, backgroundColor: gradient,
+                            pointBackgroundColor: ctx => executedSteps.includes(ctx.dataIndex + 1) ? executedColor : 'transparent',
+                            pointBorderColor: ctx => executedSteps.includes(ctx.dataIndex + 1) ? '#fff' : 'transparent',
+                            pointBorderWidth: 2,
+                            pointRadius: ctx => executedSteps.includes(ctx.dataIndex + 1) ? 5 : 0,
+                            order: 1,
+                            datalabels: {
+                                display: (c) => c.dataIndex === minIdx || c.dataIndex === maxIdx,
+                                align: (c) => c.dataIndex === minIdx ? 'bottom' : 'top',
+                                color: gapColor, font: { size: 10, weight: 'bold', family: '"Nanum Gothic"' },
+                                formatter: (v) => v + '%', offset: 4
+                            }
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    layout: { padding: { top: 20, bottom: 20, right: 0, left: 0 } },
+                    plugins: {
+                        legend: {
+                            display: true, position: 'bottom',
+                            labels: { usePointStyle: true, color: textColor, font: { family: 'Inter' } }
+                        }
+                    },
+                    scales: {
+                        x: { display: true, grid: { display: false }, ticks: { stepSize: 2, color: textColor } },
+                        y: { position: 'left', grid: { display: false }, display: true, ticks: { color: textColor } },
+                        y1: { position: 'right', grid: { display: false }, display: true, ticks: { color: textColor }, title: { display: true, text: '수익률(%)', color: textColor } }
+                    }
+                }
+            });
+        }
+
+        function autoFitParams() {
+            const targetBudget = parseFormattedNum(document.getElementById('targetBudgetInput').value);
+            const peak = parseFormattedNum(document.getElementById('peakPrice').value);
+            const startDrop = parseFloat(document.getElementById('startDrop').value);
+            const tick = getAutoTick(peak);
+            let currentSteps = parseInt(document.getElementById('steps').value);
+            if (!targetBudget) return;
+            showToast("최적화 중...");
+            function simulate(s, st, sd) {
+                let sum = 0;
+                for (let i = 1; i <= s; i++) {
+                    let d = sd + (i - 1);
+                    let p = Math.round(peak * (1 - d / 100) / tick) * tick;
+                    let q = Math.trunc(st * Math.exp(i / 3)) || 1;
+                    sum += p * q;
+                }
+                return sum;
+            }
+            let low = 0.01, high = 50.0, bestStrength = 1.0;
+            for (let i = 0; i < 30; i++) {
+                let mid = (low + high) / 2;
+                let simTotal = simulate(currentSteps, mid, startDrop);
+                if (simTotal > targetBudget) high = mid; else low = mid;
+                bestStrength = mid;
+            }
+            if (bestStrength < 0.5) {
+                bestStrength = 0.5;
+                for (let s = currentSteps; s >= 1; s--) {
+                    if (simulate(s, bestStrength, startDrop) <= targetBudget * 1.1) { currentSteps = s; break; }
+                }
+            }
+            document.getElementById('strength').value = bestStrength.toFixed(2);
+            document.getElementById('steps').value = currentSteps;
+            calculateMCA();
+            showToast(`최적화: 강도 ${bestStrength.toFixed(2)}, 구간 ${currentSteps}`);
+        }
+
+        function calculateSimulation() {
+            const targetPrice = parseFormattedNum(document.getElementById('manualTargetPrice').value);
+            const currentAmt = parseFormattedNum(document.getElementById('currentInvested').innerText.replace(' 원', ''));
+            const currentQty = parseFormattedNum(document.getElementById('currentMyQty').innerText);
+            if (!currentQty || !targetPrice) {
+                document.getElementById('simRoe').innerText = "-";
+                document.getElementById('simProfit').innerText = "-";
+                return;
+            }
+            const profit = (targetPrice * currentQty) - currentAmt;
+            const roe = (profit / currentAmt) * 100;
+            document.getElementById('simRoe').innerText = roe.toFixed(2) + "%";
+            document.getElementById('simProfit').innerText = formatNum(Math.round(profit)) + " 원";
+        }
+
+        function exportData() {
+            const dataStr = localStorage.getItem(STORAGE_KEY_V12);
+            if (!dataStr) { showToast("데이터 없음"); return; }
+            const dateStr = new Date().toISOString().slice(0, 10);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = `Moonwave_Portfolio_${dateStr}.json`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        }
+        function triggerImport() { document.getElementById('fileInput').click(); document.getElementById('fileInput2').click(); }
+        function importData(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const content = e.target.result;
+                    const data = JSON.parse(content);
+                    if (!data.portfolios) throw new Error("Invalid");
+                    localStorage.setItem(STORAGE_KEY_V12, content);
+                    initData(); showToast("복구 완료");
+                } catch (err) { alert("올바른 파일이 아닙니다."); }
+            };
+            reader.readAsText(file);
+            input.value = '';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => { initData(); });
+    </script>
+</body>
+
+</html>
