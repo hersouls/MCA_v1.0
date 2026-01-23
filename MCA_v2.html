@@ -107,7 +107,10 @@
             --ring: #3b82f6;
         }
 
-        * { border-color: var(--border); }
+        * {
+            border-color: var(--border);
+        }
+
         body {
             background-color: var(--background);
             color: var(--foreground);
@@ -127,7 +130,10 @@
             box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.3);
         }
 
-        input, button { touch-action: manipulation; }
+        input,
+        button {
+            touch-action: manipulation;
+        }
 
         .checkbox-wrapper {
             display: inline-flex;
@@ -144,11 +150,22 @@
             accent-color: var(--primary);
         }
 
-        input.order-checkbox { accent-color: var(--warning); }
-        input.exec-checkbox { accent-color: var(--success); }
+        input.order-checkbox {
+            accent-color: var(--warning);
+        }
 
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        input.exec-checkbox {
+            accent-color: var(--success);
+        }
+
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
 
         .param-label {
             height: 1.25rem;
@@ -177,8 +194,14 @@
             color: var(--primary-foreground);
             transition: all 0.2s ease;
         }
-        .btn-primary:hover { filter: brightness(1.1); }
-        .btn-primary:active { filter: brightness(0.95); }
+
+        .btn-primary:hover {
+            filter: brightness(1.1);
+        }
+
+        .btn-primary:active {
+            filter: brightness(0.95);
+        }
 
         .input-field {
             background-color: var(--background);
@@ -186,11 +209,13 @@
             border-radius: calc(var(--radius) - 2px);
             transition: all 0.2s ease;
         }
+
         .input-field:focus {
             outline: none;
             border-color: var(--ring);
             box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
         }
+
         .dark .input-field:focus {
             box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
         }
@@ -210,6 +235,7 @@
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
         }
+
         .dark .glass {
             background: rgba(15, 15, 15, 0.8);
         }
@@ -233,7 +259,8 @@
                 <div class="flex items-center gap-3">
                     <h1 class="text-xl font-bold tracking-tight flex items-center gap-2 cursor-pointer"
                         onclick="showDashboard()">
-                        <span class="bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">Moonwave</span>
+                        <span
+                            class="bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">Moonwave</span>
                         <span class="text-foreground">MCA</span>
                         <span class="badge bg-secondary text-secondary-foreground">v3.0</span>
                     </h1>
@@ -241,14 +268,15 @@
 
                 <div class="flex items-center gap-2">
                     <!-- 다크 모드 토글 -->
-                    <button onclick="toggleDarkMode()"
-                            class="p-2 rounded-lg hover:bg-secondary transition-colors"
-                            aria-label="테마 전환">
+                    <button onclick="toggleDarkMode()" class="p-2 rounded-lg hover:bg-secondary transition-colors"
+                        aria-label="테마 전환">
                         <svg class="w-5 h-5 hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                         </svg>
                         <svg class="w-5 h-5 dark:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                         </svg>
                     </button>
 
@@ -358,26 +386,27 @@
                     </summary>
                     <div class="p-3 grid grid-cols-2 gap-3 bg-white">
                         <div class="space-y-1">
-                            <div class="param-label"><label class="text-[10px] text-muted-foreground">기준 고점</label></div><input
-                                type="text" id="peakPrice"
+                            <div class="param-label"><label class="text-[10px] text-muted-foreground">기준 고점</label>
+                            </div><input type="text" id="peakPrice"
                                 class="w-full h-9 p-2 rounded border border-gray-200 text-center font-bold text-sm focus:border-primary focus:ring-2 focus:ring-ring/20 focus:outline-none"
                                 oninput="formatInput(this); handlePeakChange();">
                         </div>
                         <div class="space-y-1">
-                            <div class="param-label"><label class="text-[10px] text-muted-foreground">투자 강도</label></div><input
-                                type="number" id="strength" step="0.01"
+                            <div class="param-label"><label class="text-[10px] text-muted-foreground">투자 강도</label>
+                            </div><input type="number" id="strength" step="0.01"
                                 class="w-full h-9 p-2 rounded border border-gray-200 text-center font-bold text-sm focus:border-primary focus:ring-2 focus:ring-ring/20 focus:outline-none"
                                 oninput="calculateMCA()">
                         </div>
                         <div class="space-y-1">
-                            <div class="param-label"><label class="text-[10px] text-muted-foreground">시작 하락률(%)</label></div>
+                            <div class="param-label"><label class="text-[10px] text-muted-foreground">시작 하락률(%)</label>
+                            </div>
                             <input type="number" id="startDrop"
                                 class="w-full h-9 p-2 rounded border border-gray-200 text-center font-bold text-sm text-primary focus:border-primary focus:ring-2 focus:ring-ring/20 focus:outline-none"
                                 oninput="calculateMCA()">
                         </div>
                         <div class="space-y-1">
-                            <div class="param-label"><label class="text-[10px] text-muted-foreground">분할 횟수</label></div><input
-                                type="number" id="steps"
+                            <div class="param-label"><label class="text-[10px] text-muted-foreground">분할 횟수</label>
+                            </div><input type="number" id="steps"
                                 class="w-full h-9 p-2 rounded border border-gray-200 text-center font-bold text-sm focus:border-primary focus:ring-2 focus:ring-ring/20 focus:outline-none"
                                 oninput="calculateMCA()">
                         </div>
@@ -385,12 +414,12 @@
                             <label class="text-xs font-bold text-gray-500 mb-2 block flex items-center gap-1"><span
                                     class="w-2 h-2 rounded-full bg-gray-400"></span> 0구간 (기존 보유 물량)</label>
                             <div class="grid grid-cols-2 gap-3">
-                                <div class="space-y-1"><label class="text-[10px] text-muted-foreground">기보유 수량</label><input
-                                        type="text" id="legacyQty" placeholder="0"
+                                <div class="space-y-1"><label class="text-[10px] text-muted-foreground">기보유
+                                        수량</label><input type="text" id="legacyQty" placeholder="0"
                                         class="w-full h-9 p-2 rounded bg-gray-50 border border-gray-200 text-center font-bold text-sm text-gray-600 focus:border-gray-400 focus:outline-none"
                                         oninput="formatInput(this)"></div>
-                                <div class="space-y-1"><label class="text-[10px] text-muted-foreground">기보유 평단가</label><input
-                                        type="text" id="legacyAvg" placeholder="0"
+                                <div class="space-y-1"><label class="text-[10px] text-muted-foreground">기보유
+                                        평단가</label><input type="text" id="legacyAvg" placeholder="0"
                                         class="w-full h-9 p-2 rounded bg-gray-50 border border-gray-200 text-center font-bold text-sm text-gray-600 focus:border-gray-400 focus:outline-none"
                                         oninput="formatInput(this)"></div>
                             </div>
@@ -421,8 +450,8 @@
             <div class="card p-4">
                 <div class="flex justify-between items-end mb-2">
                     <h3 class="text-xs font-bold text-muted-foreground flex items-center gap-2"><span
-                            class="w-2 h-2 rounded-full bg-success"></span> 평단가 방어선 <span
-                            class="text-gray-300">|</span> <span class="w-2 h-2 rounded-full bg-slate-400"></span> 괴리율
+                            class="w-2 h-2 rounded-full bg-success"></span> 평단가 방어선 <span class="text-gray-300">|</span>
+                        <span class="w-2 h-2 rounded-full bg-slate-400"></span> 괴리율
                         곡선</h3>
                 </div>
                 <div class="h-64 relative"><canvas id="mcaChart"></canvas></div>
@@ -469,8 +498,8 @@
                     <h3 class="text-sm font-bold text-primary flex items-center gap-1">🎯 목표 매도 시뮬레이션</h3>
                 </div>
                 <div class="grid grid-cols-2 gap-3 mb-3">
-                    <div class="space-y-1"><label class="text-[10px] text-muted-foreground">120월선 가격</label><input type="text"
-                            id="ma120Price" placeholder="선택 입력"
+                    <div class="space-y-1"><label class="text-[10px] text-muted-foreground">120월선 가격</label><input
+                            type="text" id="ma120Price" placeholder="선택 입력"
                             class="w-full h-9 p-2 text-center font-bold text-sm border border-gray-200 rounded focus:border-primary focus:ring-2 focus:ring-ring/20 focus:outline-none bg-white"
                             oninput="formatInput(this)"></div>
                     <div class="space-y-1"><label class="text-[10px] text-muted-foreground">멀티플 배수 (×)</label><input
@@ -492,6 +521,154 @@
                     <div>
                         <div class="text-[10px] text-gray-400">예상 수익금</div>
                         <div id="simProfit" class="font-bold text-destructive text-sm">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fundamental Grade -->
+            <div class="card p-4 bg-purple-50/30 border-purple-100">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-sm font-bold text-purple-600 flex items-center gap-1">📊 Fundamental Grade</h3>
+                    <div id="gradeDisplay" class="text-2xl font-bold text-purple-600">-</div>
+                </div>
+
+                <!-- 점수 표시 -->
+                <div class="flex justify-between items-center bg-white p-3 rounded border border-purple-100 mb-3">
+                    <span class="text-xs text-muted-foreground">총점</span>
+                    <div class="flex items-baseline gap-1">
+                        <span id="fundamentalScore" class="text-xl font-bold text-purple-600">0</span>
+                        <span class="text-xs text-gray-400">/100</span>
+                    </div>
+                </div>
+
+                <!-- I. 가치평가 (35점) -->
+                <div class="mb-3">
+                    <div class="text-[10px] font-bold text-blue-600 mb-2 flex items-center gap-1">
+                        <span class="w-2 h-2 rounded-full bg-blue-500"></span> I. 가치평가 (35점)
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 mb-2">
+                        <div class="space-y-1">
+                            <label class="text-[10px] text-muted-foreground">PER</label>
+                            <input type="number" id="fgPer" placeholder="예: 8.5" step="0.1"
+                                class="w-full h-8 p-2 text-center text-sm border border-gray-200 rounded focus:border-purple-400 focus:ring-1 focus:ring-purple-200 focus:outline-none bg-white"
+                                oninput="calculateFundamentalGrade()">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] text-muted-foreground">PBR</label>
+                            <input type="number" id="fgPbr" placeholder="예: 0.8" step="0.1"
+                                class="w-full h-8 p-2 text-center text-sm border border-gray-200 rounded focus:border-purple-400 focus:ring-1 focus:ring-purple-200 focus:outline-none bg-white"
+                                oninput="calculateFundamentalGrade()">
+                        </div>
+                    </div>
+                    <div class="flex gap-3 text-[11px]">
+                        <label class="flex items-center gap-1 cursor-pointer">
+                            <input type="checkbox" id="fgEarnings" class="w-3.5 h-3.5 rounded border-gray-300 text-purple-500" onchange="calculateFundamentalGrade()">
+                            <span>3년 연속 흑자</span>
+                        </label>
+                        <label class="flex items-center gap-1 cursor-pointer">
+                            <input type="checkbox" id="fgDualListed" class="w-3.5 h-3.5 rounded border-gray-300 text-purple-500" onchange="calculateFundamentalGrade()">
+                            <span>이중상장</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- II. 주주환원 (40점) -->
+                <div class="mb-3">
+                    <div class="text-[10px] font-bold text-green-600 mb-2 flex items-center gap-1">
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span> II. 주주환원 (40점)
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 mb-2">
+                        <div class="space-y-1">
+                            <label class="text-[10px] text-muted-foreground">배당수익률 (%)</label>
+                            <input type="number" id="fgDividend" placeholder="예: 3.5" step="0.1"
+                                class="w-full h-8 p-2 text-center text-sm border border-gray-200 rounded focus:border-purple-400 focus:ring-1 focus:ring-purple-200 focus:outline-none bg-white"
+                                oninput="calculateFundamentalGrade()">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] text-muted-foreground">연속배당 년수</label>
+                            <input type="number" id="fgDividendYears" placeholder="예: 10" min="0"
+                                class="w-full h-8 p-2 text-center text-sm border border-gray-200 rounded focus:border-purple-400 focus:ring-1 focus:ring-purple-200 focus:outline-none bg-white"
+                                oninput="calculateFundamentalGrade()">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 mb-2">
+                        <div class="space-y-1">
+                            <label class="text-[10px] text-muted-foreground">자사주 소각률 (%)</label>
+                            <input type="number" id="fgBuyback" placeholder="예: 1.5" step="0.1"
+                                class="w-full h-8 p-2 text-center text-sm border border-gray-200 rounded focus:border-purple-400 focus:ring-1 focus:ring-purple-200 focus:outline-none bg-white"
+                                oninput="calculateFundamentalGrade()">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] text-muted-foreground">자사주 비율 (%)</label>
+                            <input type="number" id="fgTreasury" placeholder="예: 10" step="0.1"
+                                class="w-full h-8 p-2 text-center text-sm border border-gray-200 rounded focus:border-purple-400 focus:ring-1 focus:ring-purple-200 focus:outline-none bg-white"
+                                oninput="calculateFundamentalGrade()">
+                        </div>
+                    </div>
+                    <div class="flex gap-3 text-[11px]">
+                        <label class="flex items-center gap-1 cursor-pointer">
+                            <input type="checkbox" id="fgQuarterly" class="w-3.5 h-3.5 rounded border-gray-300 text-purple-500" onchange="calculateFundamentalGrade()">
+                            <span>분기배당</span>
+                        </label>
+                        <label class="flex items-center gap-1 cursor-pointer">
+                            <input type="checkbox" id="fgBuybackProgram" class="w-3.5 h-3.5 rounded border-gray-300 text-purple-500" onchange="calculateFundamentalGrade()">
+                            <span>자사주 매입 프로그램</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- III. 성장/경영 (25점) -->
+                <div class="mb-3">
+                    <div class="text-[10px] font-bold text-amber-600 mb-2 flex items-center gap-1">
+                        <span class="w-2 h-2 rounded-full bg-amber-500"></span> III. 성장/경영 (25점)
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 mb-2">
+                        <div class="space-y-1">
+                            <label class="text-[10px] text-muted-foreground">성장 잠재력</label>
+                            <select id="fgGrowth" class="w-full h-8 px-2 text-sm border border-gray-200 rounded focus:border-purple-400 focus:outline-none bg-white" onchange="calculateFundamentalGrade()">
+                                <option value="10">매우 높음 (10점)</option>
+                                <option value="7">높음 (7점)</option>
+                                <option value="5" selected>보통 (5점)</option>
+                                <option value="3">낮음 (3점)</option>
+                            </select>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] text-muted-foreground">경영진 품질</label>
+                            <select id="fgManagement" class="w-full h-8 px-2 text-sm border border-gray-200 rounded focus:border-purple-400 focus:outline-none bg-white" onchange="calculateFundamentalGrade()">
+                                <option value="10">우수 (10점)</option>
+                                <option value="5" selected>전문경영인 (5점)</option>
+                                <option value="0">오너리스크 (0점)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <label class="flex items-center gap-1 cursor-pointer text-[11px]">
+                        <input type="checkbox" id="fgGlobalBrand" class="w-3.5 h-3.5 rounded border-gray-300 text-purple-500" onchange="calculateFundamentalGrade()">
+                        <span>글로벌 브랜드 보유</span>
+                    </label>
+                </div>
+
+                <!-- 점수 바 -->
+                <div class="space-y-1.5 bg-white p-2 rounded border border-purple-100">
+                    <div class="flex items-center gap-2">
+                        <span class="w-20 text-[10px] text-gray-500">가치평가</span>
+                        <div class="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                            <div id="barValuation" class="h-full bg-blue-500 rounded-full transition-all" style="width: 0%"></div>
+                        </div>
+                        <span id="scoreValuation" class="w-10 text-[10px] text-right font-medium">0/35</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-20 text-[10px] text-gray-500">주주환원</span>
+                        <div class="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                            <div id="barShareholder" class="h-full bg-green-500 rounded-full transition-all" style="width: 0%"></div>
+                        </div>
+                        <span id="scoreShareholder" class="w-10 text-[10px] text-right font-medium">0/40</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-20 text-[10px] text-gray-500">성장/경영</span>
+                        <div class="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                            <div id="barGrowth" class="h-full bg-amber-500 rounded-full transition-all" style="width: 0%"></div>
+                        </div>
+                        <span id="scoreGrowth" class="w-10 text-[10px] text-right font-medium">0/25</span>
                     </div>
                 </div>
             </div>
@@ -666,7 +843,7 @@
         }
 
         // 백업 데이터 (2026-01-23)
-        const BACKUP_DATA = {"portfolios":[{"id":1768110513446,"name":"NAVER","params":{"peakPrice":"262,500","strength":"0.98","startDrop":"13.5","steps":"20","targetBudget":"500,000,000","ma120Price":"212,200","targetMultiple":"2.5","manualTargetPrice":"","legacyQty":"35","legacyAvg":"243,386"},"executedSteps":[],"orderedSteps":[1,2,3,4,5,6],"isFavorite":true},{"id":1768113895078,"name":"LG전자","params":{"peakPrice":"102,500","strength":"0.6","startDrop":"11","steps":"19","targetBudget":"200,000,000","ma120Price":"89,100","targetMultiple":"3","manualTargetPrice":"267,300","legacyQty":"30","legacyAvg":"91,808"},"orderedSteps":[1,3,2,4,5,6,7,8,9,10],"executedSteps":[1,3,2,4,5],"isFavorite":true},{"id":1768114143959,"name":"이크레더블","params":{"peakPrice":"18,490","strength":"5","startDrop":"16","steps":"20","targetBudget":"50,000,000","ma120Price":"","targetMultiple":"","manualTargetPrice":"","legacyQty":"71","legacyAvg":"16,960"},"orderedSteps":[1,2,5,6,7,4,3],"executedSteps":[1,2]},{"id":1768132674054,"name":"애경산업","isFavorite":true,"params":{"peakPrice":"19,230","strength":"10","startDrop":"28","steps":"20","targetBudget":"50,000,000","ma120Price":"17,000","targetMultiple":"1","manualTargetPrice":"17,000","legacyQty":"122","legacyAvg":"13,176"},"orderedSteps":[1,2,3,4,5,6,7,9,8,10,11],"executedSteps":[1,2,3,4,5,6,7,8]},{"id":1768165226034,"name":"LG전자","isFavorite":false,"params":{"peakPrice":"102,500","strength":"0.8","startDrop":"12","steps":"20","targetBudget":"10,000,000","ma120Price":"","targetMultiple":"","manualTargetPrice":"","legacyQty":"33","legacyAvg":"91,380"},"orderedSteps":[2,1,5,6,7,8,9],"executedSteps":[]},{"id":1768222518053,"name":"케이카","isFavorite":false,"params":{"peakPrice":"19,999","strength":"5","startDrop":"25.2","steps":"20","targetBudget":"50,000,000","ma120Price":"","targetMultiple":"","manualTargetPrice":"","legacyQty":"92","legacyAvg":"15,763"},"orderedSteps":[1,2,3,4,5],"executedSteps":[]},{"id":1768303417998,"name":"경방","isFavorite":true,"params":{"peakPrice":"14,310","strength":"10","startDrop":"35.5","steps":"20","targetBudget":"50,000,000","ma120Price":"","targetMultiple":"","manualTargetPrice":"","legacyQty":"62","legacyAvg":"9,225"},"orderedSteps":[1,2,3,4,5,6,7,8,9,10,11],"executedSteps":[1,2,3,4,5,6,7,8]},{"id":1768303742010,"name":"삼화폐인트 ","isFavorite":true,"params":{"peakPrice":"10,300","strength":"10","startDrop":"30","steps":"20","targetBudget":"50,000,000","ma120Price":"","targetMultiple":"","manualTargetPrice":"","legacyQty":"15","legacyAvg":"6,950"},"orderedSteps":[1,2,3,4,5,6,8,7,9,10],"executedSteps":[1,2,3,4,5,6,7]},{"id":1768304238627,"name":"KZ정밀","isFavorite":false,"params":{"peakPrice":"100,000","strength":"1.0","startDrop":"10","steps":"20","targetBudget":"10,000,000","ma120Price":"","targetMultiple":"","manualTargetPrice":"","legacyQty":"0","legacyAvg":"0"},"orderedSteps":[],"executedSteps":[]},{"id":1768382928364,"name":"무림페이퍼","isFavorite":false,"params":{"peakPrice":"2,140","strength":"20","startDrop":"12","steps":"20","targetBudget":"50,000,000","ma120Price":"","targetMultiple":"","manualTargetPrice":"","legacyQty":"329","legacyAvg":"1,998"},"orderedSteps":[1,2,3,4,5,6,7],"executedSteps":[]},{"id":1768384548030,"name":"HRS","isFavorite":false,"params":{"peakPrice":"5,640","strength":"7","startDrop":"12","steps":"20","targetBudget":"50,000,000","ma120Price":"","targetMultiple":"","manualTargetPrice":"","legacyQty":"240","legacyAvg":"5,303"},"orderedSteps":[3,2,1,4,5,6,7],"executedSteps":[]},{"id":1768384749135,"name":"종근당","isFavorite":false,"params":{"peakPrice":"91,000","strength":"1.0","startDrop":"12.1","steps":"20","targetBudget":"50,000,000","ma120Price":"","targetMultiple":"","manualTargetPrice":"","legacyQty":"8","legacyAvg":"86,175"},"orderedSteps":[3,2,1,7,6,5,4],"executedSteps":[],"portfolioMemo":"대성 토스계좌","executionDates":{"1":"2026-01-14"}},{"id":1768385382507,"name":"링네트","isFavorite":false,"params":{"peakPrice":"4,075","strength":"10","startDrop":"12","steps":"20","targetBudget":"50,000,000","legacyQty":"59","legacyAvg":"4,001","ma120Price":"","targetMultiple":"","manualTargetPrice":""},"orderedSteps":[1,2,4,3,7,6,5],"executedSteps":[],"stepMemos":{},"executionDates":{},"portfolioMemo":""},{"id":1768386034868,"name":"진양폴리","isFavorite":false,"params":{"peakPrice":"3,496","strength":"10","startDrop":"18","steps":"20","targetBudget":"10,000,000","legacyQty":"0","legacyAvg":"0","ma120Price":"","targetMultiple":"","manualTargetPrice":""},"orderedSteps":[1,2,3,4,5,6,7,8,9],"executedSteps":[],"stepMemos":{},"executionDates":{"1":"2026-01-15","2":"2026-01-15"},"portfolioMemo":""},{"id":1768386045578,"name":"SOOP","isFavorite":false,"params":{"peakPrice":"98,500","strength":"3","startDrop":"30","steps":"20","targetBudget":"50,000,000","legacyQty":"4","legacyAvg":"67,400","ma120Price":"","targetMultiple":"","manualTargetPrice":""},"orderedSteps":[6,7,8,9,4,5,3,2,1,10],"executedSteps":[5,4,3,2,1],"stepMemos":{},"executionDates":{"1":"2026-01-14","2":"2026-01-14","3":"2026-01-14","4":"2026-01-14","5":"2026-01-14"},"portfolioMemo":""},{"id":1768522966973,"name":"LG씨앤에스","isFavorite":false,"params":{"peakPrice":"76,200","strength":"1.0","startDrop":"12","steps":"20","targetBudget":"10,000,000","legacyQty":"0","legacyAvg":"0","ma120Price":"","targetMultiple":"","manualTargetPrice":""},"orderedSteps":[],"executedSteps":[],"stepMemos":{},"executionDates":{},"portfolioMemo":""},{"id":1768689829036,"name":"TEST","isFavorite":false,"params":{"peakPrice":"270,000","strength":"1","startDrop":"12","steps":"20","targetBudget":"100,000,000","legacyQty":"0","legacyAvg":"0","ma120Price":"","targetMultiple":"","manualTargetPrice":""},"orderedSteps":[],"executedSteps":[],"stepMemos":{},"executionDates":{"1":"2026-01-17","2":"2026-01-17","3":"2026-01-17","4":"2026-01-17","5":"2026-01-17","6":"2026-01-17","7":"2026-01-17","8":"2026-01-17","9":"2026-01-17","10":"2026-01-17","11":"2026-01-17","12":"2026-01-17","13":"2026-01-17","14":"2026-01-17","15":"2026-01-17","16":"2026-01-17","17":"2026-01-17","18":"2026-01-17","19":"2026-01-17","20":"2026-01-17"},"portfolioMemo":""}],"activeId":1768304238627,"initialCash":90000000};
+        const BACKUP_DATA = { "portfolios": [{ "id": 1768110513446, "name": "NAVER", "params": { "peakPrice": "262,500", "strength": "0.98", "startDrop": "13.5", "steps": "20", "targetBudget": "500,000,000", "ma120Price": "212,200", "targetMultiple": "2.5", "manualTargetPrice": "", "legacyQty": "35", "legacyAvg": "243,386" }, "executedSteps": [], "orderedSteps": [1, 2, 3, 4, 5, 6], "isFavorite": true }, { "id": 1768113895078, "name": "LG전자", "params": { "peakPrice": "102,500", "strength": "0.6", "startDrop": "11", "steps": "19", "targetBudget": "200,000,000", "ma120Price": "89,100", "targetMultiple": "3", "manualTargetPrice": "267,300", "legacyQty": "30", "legacyAvg": "91,808" }, "orderedSteps": [1, 3, 2, 4, 5, 6, 7, 8, 9, 10], "executedSteps": [1, 3, 2, 4, 5], "isFavorite": true }, { "id": 1768114143959, "name": "이크레더블", "params": { "peakPrice": "18,490", "strength": "5", "startDrop": "16", "steps": "20", "targetBudget": "50,000,000", "ma120Price": "", "targetMultiple": "", "manualTargetPrice": "", "legacyQty": "71", "legacyAvg": "16,960" }, "orderedSteps": [1, 2, 5, 6, 7, 4, 3], "executedSteps": [1, 2] }, { "id": 1768132674054, "name": "애경산업", "isFavorite": true, "params": { "peakPrice": "19,230", "strength": "10", "startDrop": "28", "steps": "20", "targetBudget": "50,000,000", "ma120Price": "17,000", "targetMultiple": "1", "manualTargetPrice": "17,000", "legacyQty": "122", "legacyAvg": "13,176" }, "orderedSteps": [1, 2, 3, 4, 5, 6, 7, 9, 8, 10, 11], "executedSteps": [1, 2, 3, 4, 5, 6, 7, 8] }, { "id": 1768165226034, "name": "LG전자", "isFavorite": false, "params": { "peakPrice": "102,500", "strength": "0.8", "startDrop": "12", "steps": "20", "targetBudget": "10,000,000", "ma120Price": "", "targetMultiple": "", "manualTargetPrice": "", "legacyQty": "33", "legacyAvg": "91,380" }, "orderedSteps": [2, 1, 5, 6, 7, 8, 9], "executedSteps": [] }, { "id": 1768222518053, "name": "케이카", "isFavorite": false, "params": { "peakPrice": "19,999", "strength": "5", "startDrop": "25.2", "steps": "20", "targetBudget": "50,000,000", "ma120Price": "", "targetMultiple": "", "manualTargetPrice": "", "legacyQty": "92", "legacyAvg": "15,763" }, "orderedSteps": [1, 2, 3, 4, 5], "executedSteps": [] }, { "id": 1768303417998, "name": "경방", "isFavorite": true, "params": { "peakPrice": "14,310", "strength": "10", "startDrop": "35.5", "steps": "20", "targetBudget": "50,000,000", "ma120Price": "", "targetMultiple": "", "manualTargetPrice": "", "legacyQty": "62", "legacyAvg": "9,225" }, "orderedSteps": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], "executedSteps": [1, 2, 3, 4, 5, 6, 7, 8] }, { "id": 1768303742010, "name": "삼화폐인트 ", "isFavorite": true, "params": { "peakPrice": "10,300", "strength": "10", "startDrop": "30", "steps": "20", "targetBudget": "50,000,000", "ma120Price": "", "targetMultiple": "", "manualTargetPrice": "", "legacyQty": "15", "legacyAvg": "6,950" }, "orderedSteps": [1, 2, 3, 4, 5, 6, 8, 7, 9, 10], "executedSteps": [1, 2, 3, 4, 5, 6, 7] }, { "id": 1768304238627, "name": "KZ정밀", "isFavorite": false, "params": { "peakPrice": "100,000", "strength": "1.0", "startDrop": "10", "steps": "20", "targetBudget": "10,000,000", "ma120Price": "", "targetMultiple": "", "manualTargetPrice": "", "legacyQty": "0", "legacyAvg": "0" }, "orderedSteps": [], "executedSteps": [] }, { "id": 1768382928364, "name": "무림페이퍼", "isFavorite": false, "params": { "peakPrice": "2,140", "strength": "20", "startDrop": "12", "steps": "20", "targetBudget": "50,000,000", "ma120Price": "", "targetMultiple": "", "manualTargetPrice": "", "legacyQty": "329", "legacyAvg": "1,998" }, "orderedSteps": [1, 2, 3, 4, 5, 6, 7], "executedSteps": [] }, { "id": 1768384548030, "name": "HRS", "isFavorite": false, "params": { "peakPrice": "5,640", "strength": "7", "startDrop": "12", "steps": "20", "targetBudget": "50,000,000", "ma120Price": "", "targetMultiple": "", "manualTargetPrice": "", "legacyQty": "240", "legacyAvg": "5,303" }, "orderedSteps": [3, 2, 1, 4, 5, 6, 7], "executedSteps": [] }, { "id": 1768384749135, "name": "종근당", "isFavorite": false, "params": { "peakPrice": "91,000", "strength": "1.0", "startDrop": "12.1", "steps": "20", "targetBudget": "50,000,000", "ma120Price": "", "targetMultiple": "", "manualTargetPrice": "", "legacyQty": "8", "legacyAvg": "86,175" }, "orderedSteps": [3, 2, 1, 7, 6, 5, 4], "executedSteps": [], "portfolioMemo": "대성 토스계좌", "executionDates": { "1": "2026-01-14" } }, { "id": 1768385382507, "name": "링네트", "isFavorite": false, "params": { "peakPrice": "4,075", "strength": "10", "startDrop": "12", "steps": "20", "targetBudget": "50,000,000", "legacyQty": "59", "legacyAvg": "4,001", "ma120Price": "", "targetMultiple": "", "manualTargetPrice": "" }, "orderedSteps": [1, 2, 4, 3, 7, 6, 5], "executedSteps": [], "stepMemos": {}, "executionDates": {}, "portfolioMemo": "" }, { "id": 1768386034868, "name": "진양폴리", "isFavorite": false, "params": { "peakPrice": "3,496", "strength": "10", "startDrop": "18", "steps": "20", "targetBudget": "10,000,000", "legacyQty": "0", "legacyAvg": "0", "ma120Price": "", "targetMultiple": "", "manualTargetPrice": "" }, "orderedSteps": [1, 2, 3, 4, 5, 6, 7, 8, 9], "executedSteps": [], "stepMemos": {}, "executionDates": { "1": "2026-01-15", "2": "2026-01-15" }, "portfolioMemo": "" }, { "id": 1768386045578, "name": "SOOP", "isFavorite": false, "params": { "peakPrice": "98,500", "strength": "3", "startDrop": "30", "steps": "20", "targetBudget": "50,000,000", "legacyQty": "4", "legacyAvg": "67,400", "ma120Price": "", "targetMultiple": "", "manualTargetPrice": "" }, "orderedSteps": [6, 7, 8, 9, 4, 5, 3, 2, 1, 10], "executedSteps": [5, 4, 3, 2, 1], "stepMemos": {}, "executionDates": { "1": "2026-01-14", "2": "2026-01-14", "3": "2026-01-14", "4": "2026-01-14", "5": "2026-01-14" }, "portfolioMemo": "" }, { "id": 1768522966973, "name": "LG씨앤에스", "isFavorite": false, "params": { "peakPrice": "76,200", "strength": "1.0", "startDrop": "12", "steps": "20", "targetBudget": "10,000,000", "legacyQty": "0", "legacyAvg": "0", "ma120Price": "", "targetMultiple": "", "manualTargetPrice": "" }, "orderedSteps": [], "executedSteps": [], "stepMemos": {}, "executionDates": {}, "portfolioMemo": "" }, { "id": 1768689829036, "name": "TEST", "isFavorite": false, "params": { "peakPrice": "270,000", "strength": "1", "startDrop": "12", "steps": "20", "targetBudget": "100,000,000", "legacyQty": "0", "legacyAvg": "0", "ma120Price": "", "targetMultiple": "", "manualTargetPrice": "" }, "orderedSteps": [], "executedSteps": [], "stepMemos": {}, "executionDates": { "1": "2026-01-17", "2": "2026-01-17", "3": "2026-01-17", "4": "2026-01-17", "5": "2026-01-17", "6": "2026-01-17", "7": "2026-01-17", "8": "2026-01-17", "9": "2026-01-17", "10": "2026-01-17", "11": "2026-01-17", "12": "2026-01-17", "13": "2026-01-17", "14": "2026-01-17", "15": "2026-01-17", "16": "2026-01-17", "17": "2026-01-17", "18": "2026-01-17", "19": "2026-01-17", "20": "2026-01-17" }, "portfolioMemo": "" }], "activeId": 1768304238627, "initialCash": 90000000 };
 
         function initData() {
             const saved = localStorage.getItem(STORAGE_KEY_V12);
@@ -750,8 +927,94 @@
                     legacyQty: document.getElementById('legacyQty').value,
                     legacyAvg: document.getElementById('legacyAvg').value
                 };
+                // Fundamental Grade 데이터 저장
+                p.fundamentalData = {
+                    per: parseFloat(document.getElementById('fgPer').value) || null,
+                    pbr: parseFloat(document.getElementById('fgPbr').value) || null,
+                    earningsSustainability: document.getElementById('fgEarnings').checked,
+                    isDualListed: document.getElementById('fgDualListed').checked,
+                    dividendYield: parseFloat(document.getElementById('fgDividend').value) || null,
+                    consecutiveDividendYears: parseInt(document.getElementById('fgDividendYears').value) || 0,
+                    hasQuarterlyDividend: document.getElementById('fgQuarterly').checked,
+                    hasBuybackProgram: document.getElementById('fgBuybackProgram').checked,
+                    annualCancellationRate: parseFloat(document.getElementById('fgBuyback').value) || 0,
+                    treasuryStockRatio: parseFloat(document.getElementById('fgTreasury').value) || 0,
+                    growthPotential: parseInt(document.getElementById('fgGrowth').value) || 5,
+                    managementQuality: parseInt(document.getElementById('fgManagement').value) || 5,
+                    hasGlobalBrand: document.getElementById('fgGlobalBrand').checked
+                };
+                const gradeResult = calculateFundamentalGrade();
+                p.fundamentalScore = gradeResult.totalScore;
+                p.fundamentalGrade = gradeResult.grade;
             }
             localStorage.setItem(STORAGE_KEY_V12, JSON.stringify({ portfolios: portfolios, activeId: activePortfolioId, initialCash: initialCash }));
+        }
+
+        // Fundamental Grade 계산
+        function calculateFundamentalGrade() {
+            // I. 가치평가 (35점)
+            let valuation = 0;
+            const per = parseFloat(document.getElementById('fgPer').value);
+            const pbr = parseFloat(document.getElementById('fgPbr').value);
+
+            if (!isNaN(per)) {
+                if (per <= 10) valuation += 10;
+                else if (per <= 15) valuation += 5;
+            }
+            if (!isNaN(pbr)) {
+                if (pbr <= 1) valuation += 10;
+                else if (pbr <= 2) valuation += 5;
+            }
+            if (document.getElementById('fgEarnings').checked) valuation += 10;
+            if (document.getElementById('fgDualListed').checked) valuation += 5;
+
+            // II. 주주환원 (40점)
+            let shareholder = 0;
+            const dividend = parseFloat(document.getElementById('fgDividend').value);
+            const dividendYears = parseInt(document.getElementById('fgDividendYears').value) || 0;
+            const buyback = parseFloat(document.getElementById('fgBuyback').value) || 0;
+            const treasury = parseFloat(document.getElementById('fgTreasury').value) || 0;
+
+            if (!isNaN(dividend)) {
+                if (dividend >= 3) shareholder += 10;
+                else if (dividend >= 1) shareholder += 5;
+            }
+            if (document.getElementById('fgQuarterly').checked) shareholder += 5;
+            if (dividendYears >= 5) shareholder += 5;
+            if (document.getElementById('fgBuybackProgram').checked) shareholder += 5;
+            if (buyback >= 1) shareholder += 5;
+            if (treasury >= 10) shareholder += 10;
+            else if (treasury >= 5) shareholder += 5;
+
+            // III. 성장/경영 (25점)
+            let growth = 0;
+            growth += parseInt(document.getElementById('fgGrowth').value) || 5;
+            growth += parseInt(document.getElementById('fgManagement').value) || 5;
+            if (document.getElementById('fgGlobalBrand').checked) growth += 5;
+
+            const totalScore = valuation + shareholder + growth;
+            let grade = 'F';
+            let gradeColor = '#ef4444';
+            if (totalScore >= 90) { grade = 'S'; gradeColor = '#8b5cf6'; }
+            else if (totalScore >= 80) { grade = 'A'; gradeColor = '#22c55e'; }
+            else if (totalScore >= 70) { grade = 'B'; gradeColor = '#3b82f6'; }
+            else if (totalScore >= 60) { grade = 'C'; gradeColor = '#f59e0b'; }
+            else if (totalScore >= 50) { grade = 'D'; gradeColor = '#f97316'; }
+
+            // UI 업데이트
+            document.getElementById('fundamentalScore').innerText = totalScore;
+            document.getElementById('gradeDisplay').innerText = grade;
+            document.getElementById('gradeDisplay').style.color = gradeColor;
+            document.getElementById('fundamentalScore').style.color = gradeColor;
+
+            document.getElementById('barValuation').style.width = (valuation / 35 * 100) + '%';
+            document.getElementById('barShareholder').style.width = (shareholder / 40 * 100) + '%';
+            document.getElementById('barGrowth').style.width = (growth / 25 * 100) + '%';
+            document.getElementById('scoreValuation').innerText = valuation + '/35';
+            document.getElementById('scoreShareholder').innerText = shareholder + '/40';
+            document.getElementById('scoreGrowth').innerText = growth + '/25';
+
+            return { totalScore, grade, valuation, shareholder, growth };
         }
         function loadActivePortfolio() {
             const p = portfolios.find(p => p.id === activePortfolioId);
@@ -768,6 +1031,24 @@
             document.getElementById('manualTargetPrice').value = params.manualTargetPrice || '';
             document.getElementById('legacyQty').value = params.legacyQty || '0';
             document.getElementById('legacyAvg').value = params.legacyAvg || '0';
+
+            // Fundamental Grade 데이터 로드
+            const fg = p.fundamentalData || {};
+            document.getElementById('fgPer').value = fg.per || '';
+            document.getElementById('fgPbr').value = fg.pbr || '';
+            document.getElementById('fgEarnings').checked = fg.earningsSustainability || false;
+            document.getElementById('fgDualListed').checked = fg.isDualListed || false;
+            document.getElementById('fgDividend').value = fg.dividendYield || '';
+            document.getElementById('fgDividendYears').value = fg.consecutiveDividendYears || '';
+            document.getElementById('fgQuarterly').checked = fg.hasQuarterlyDividend || false;
+            document.getElementById('fgBuybackProgram').checked = fg.hasBuybackProgram || false;
+            document.getElementById('fgBuyback').value = fg.annualCancellationRate || '';
+            document.getElementById('fgTreasury').value = fg.treasuryStockRatio || '';
+            document.getElementById('fgGrowth').value = fg.growthPotential || '5';
+            document.getElementById('fgManagement').value = fg.managementQuality || '5';
+            document.getElementById('fgGlobalBrand').checked = fg.hasGlobalBrand || false;
+            calculateFundamentalGrade();
+
             updateFavoriteUI(); calculateMCA();
         }
 
