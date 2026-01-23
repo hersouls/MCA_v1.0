@@ -185,31 +185,50 @@ export function PortfolioDetail() {
   const handleSaveName = async () => {
     if (portfolio?.id && editedName.trim()) {
       const name = editedName.trim();
-
-      // 종목코드 추출 시도
-      // 1. 6자리 숫자만 입력한 경우: "035420"
-      // 2. 괄호 안에 종목코드: "삼성전자 (005930)" 또는 "NAVER(035420)"
       let stockCode: string | undefined;
+      let displayName = name;
+
+      // 1. 6자리 숫자만 입력: "035420"
       if (/^\d{6}$/.test(name)) {
         stockCode = name;
-      } else {
+        setNameToast(`종목코드 ${stockCode} 조회 중...`);
+      }
+      // 2. 괄호 안 종목코드: "삼성전자 (005930)"
+      else {
         const match = name.match(/\((\d{6})\)/);
         if (match) {
           stockCode = match[1];
+          setNameToast(`종목코드 ${stockCode} 조회 중...`);
+        }
+      }
+
+      // 3. 종목명으로 API 검색
+      if (!stockCode) {
+        setNameToast(`"${name}" 검색 중...`);
+        try {
+          const res = await fetch(`/api/stock/search?q=${encodeURIComponent(name)}&limit=1`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.results?.length > 0) {
+              const found = data.results[0];
+              stockCode = found.ticker;
+              displayName = `${found.name} (${found.ticker})`;
+              setNameToast(`${found.name} (${found.ticker}) 찾음`);
+            } else {
+              setNameToast(`"${name}" 검색 결과 없음`);
+            }
+          }
+        } catch {
+          setNameToast(`검색 실패`);
         }
       }
 
       await updatePortfolio(portfolio.id, {
-        name,
+        name: displayName,
         ...(stockCode && { stockCode }),
       });
       setIsEditingName(false);
-
-      // 피드백 토스트
-      if (stockCode) {
-        setNameToast(`종목코드 ${stockCode} 감지됨 - 아래 Fundamental Grade에서 데이터 조회 중...`);
-        setTimeout(() => setNameToast(null), 4000);
-      }
+      setTimeout(() => setNameToast(null), 3000);
     }
   };
 
