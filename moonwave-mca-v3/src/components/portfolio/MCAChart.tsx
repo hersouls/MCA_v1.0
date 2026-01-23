@@ -268,7 +268,7 @@ export function MCAChart({
         },
       },
     },
-  }), [colors, isDark, chartTrades.length]);
+  }), [colors, isDark, chartTrades]);
 
   // Update chart on theme change
   useEffect(() => {

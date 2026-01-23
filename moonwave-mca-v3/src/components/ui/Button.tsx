@@ -5,8 +5,8 @@
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { clsx } from 'clsx';
 
-type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'success';
-type ButtonSize = 'sm' | 'md' | 'lg' | 'icon';
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'success';
+export type ButtonSize = 'sm' | 'md' | 'lg' | 'icon';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;

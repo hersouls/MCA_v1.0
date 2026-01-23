@@ -49,12 +49,10 @@ export function PortfolioDetail() {
     }
   }, [id, setActivePortfolio, loadTradesForPortfolio]);
 
-  // Sync memo with portfolio
-  useEffect(() => {
-    if (portfolio) {
-      setPortfolioMemo(portfolio.memo || '');
-    }
-  }, [portfolio]);
+  // portfolioMemo 초기값은 useState에서 설정하지 않고
+  // portfolio 변경 시 별도로 처리 (controlled pattern 권장)
+  // 현재는 portfolio.memo를 직접 표시하고 수정 시에만 로컬 상태 사용
+  const displayMemo = portfolioMemo || portfolio?.memo || '';
 
   // Derived data
   const orderedSteps = useMemo(
@@ -98,22 +96,25 @@ export function PortfolioDetail() {
     }
   };
 
+  // portfolio.id를 미리 추출하여 안정적인 의존성 제공
+  const portfolioId = portfolio?.id;
+
   const handleToggleOrdered = useCallback(
     (step: number) => {
-      if (portfolio?.id) {
-        toggleOrderedStep(portfolio.id, step);
+      if (portfolioId !== undefined) {
+        toggleOrderedStep(portfolioId, step);
       }
     },
-    [portfolio?.id, toggleOrderedStep]
+    [portfolioId, toggleOrderedStep]
   );
 
   const handleToggleExecuted = useCallback(
     (step: number) => {
-      if (portfolio?.id) {
-        toggleExecutedStep(portfolio.id, step);
+      if (portfolioId !== undefined) {
+        toggleExecutedStep(portfolioId, step);
       }
     },
-    [portfolio?.id, toggleExecutedStep]
+    [portfolioId, toggleExecutedStep]
   );
 
   const handleSaveParams = async (params: Partial<PortfolioParams>) => {
@@ -351,7 +352,7 @@ export function PortfolioDetail() {
           <div className="flex items-start gap-3">
             <FileText className="w-5 h-5 text-zinc-400 dark:text-zinc-500 flex-shrink-0 mt-0.5" />
             <textarea
-              value={portfolioMemo}
+              value={displayMemo}
               onChange={(e) => setPortfolioMemo(e.target.value)}
               onBlur={handleMemoBlur}
               placeholder="이 종목에 대한 메모를 입력하세요..."

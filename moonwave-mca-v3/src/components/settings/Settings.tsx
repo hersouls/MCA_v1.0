@@ -58,7 +58,7 @@ export function Settings() {
       URL.revokeObjectURL(url);
 
       toastSuccess('데이터를 성공적으로 내보냈습니다');
-    } catch (error) {
+    } catch {
       toastError('데이터 내보내기에 실패했습니다');
     } finally {
       setIsExporting(false);
@@ -84,7 +84,7 @@ export function Settings() {
 
         // TODO: Implement actual import logic
         toastInfo('데이터 가져오기 기능은 준비 중입니다');
-      } catch (error) {
+      } catch {
         toastError('파일을 읽는 중 오류가 발생했습니다');
       }
     };
@@ -106,7 +106,7 @@ export function Settings() {
 
       toastSuccess('모든 데이터가 삭제되었습니다. 페이지를 새로고침합니다.');
       setTimeout(() => window.location.reload(), 1500);
-    } catch (error) {
+    } catch {
       toastError('데이터 삭제 중 오류가 발생했습니다');
     }
   };

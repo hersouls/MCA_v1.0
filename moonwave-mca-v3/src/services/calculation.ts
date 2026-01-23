@@ -162,7 +162,10 @@ export function calculateAutoTargetPrice(
   ma120Price: number | undefined,
   targetMultiple: number | undefined
 ): number | undefined {
-  if (!ma120Price || !targetMultiple) return undefined;
+  // Use explicit undefined checks to allow 0 values
+  if (ma120Price === undefined || ma120Price === null) return undefined;
+  if (targetMultiple === undefined || targetMultiple === null) return undefined;
+  if (targetMultiple <= 0) return undefined; // Multiple should be positive
   return Math.round(ma120Price * targetMultiple);
 }
 

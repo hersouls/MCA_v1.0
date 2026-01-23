@@ -46,10 +46,14 @@ export function getV2Data(): V2Data | null {
  * Convert v2 portfolio to v3 format
  */
 function convertV2Portfolio(v2: V2Portfolio): Omit<Portfolio, 'id'> {
+  // V2 portfolio ID was a timestamp (Date.now()), validate before converting
+  const createdDate = new Date(v2.id);
+  const isValidDate = !isNaN(createdDate.getTime()) && v2.id > 0;
+
   return {
     name: v2.name,
     isFavorite: v2.isFavorite || false,
-    createdAt: new Date(v2.id),
+    createdAt: isValidDate ? createdDate : new Date(),
     updatedAt: new Date(),
     params: {
       peakPrice: parseFormattedNumber(v2.params.peakPrice),

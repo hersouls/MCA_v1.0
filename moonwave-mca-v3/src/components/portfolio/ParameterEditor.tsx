@@ -3,7 +3,7 @@
 // Edit portfolio MCA parameters
 // ============================================
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { clsx } from 'clsx';
 import { Zap, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button, NumericInput, Input } from '@/components/ui';
@@ -25,19 +25,32 @@ export function ParameterEditor({
   onClose,
   onSave,
 }: ParameterEditorProps) {
-  const [params, setParams] = useState<PortfolioParams>({ ...portfolio.params });
+  // 모달이 열릴 때 params를 portfolio에서 가져오지만,
+  // 모달이 닫혀있을 때는 상태 업데이트하지 않음
+  // key prop을 사용하여 모달 열릴 때 폼 상태를 리셋
+  return (
+    <Dialog open={isOpen} onClose={onClose} size="lg">
+      <ParameterEditorContent
+        key={`${portfolio.id}-${isOpen}`}
+        portfolio={portfolio}
+        onClose={onClose}
+        onSave={onSave}
+      />
+    </Dialog>
+  );
+}
+
+// 분리된 폼 컴포넌트 - key가 변경되면 리마운트되어 상태 초기화
+function ParameterEditorContent({
+  portfolio,
+  onClose,
+  onSave,
+}: Omit<ParameterEditorProps, 'isOpen'>) {
+  const [params, setParams] = useState<PortfolioParams>(() => ({ ...portfolio.params }));
   const [showLegacy, setShowLegacy] = useState(
-    portfolio.params.legacyQty > 0 || portfolio.params.legacyAvg > 0
+    () => portfolio.params.legacyQty > 0 || portfolio.params.legacyAvg > 0
   );
   const [isOptimizing, setIsOptimizing] = useState(false);
-
-  // Reset params when modal opens or portfolio changes
-  useEffect(() => {
-    if (isOpen) {
-      setParams({ ...portfolio.params });
-      setShowLegacy(portfolio.params.legacyQty > 0 || portfolio.params.legacyAvg > 0);
-    }
-  }, [isOpen, portfolio.params]);
 
   // Calculate estimated budget
   const estimatedBudget = useMemo(() => {
@@ -86,7 +99,7 @@ export function ParameterEditor({
     : 0;
 
   return (
-    <Dialog open={isOpen} onClose={onClose} size="lg">
+    <>
       <DialogHeader title="매매 파라미터 설정" onClose={onClose} />
       <DialogBody>
         <div className="space-y-6">
@@ -233,6 +246,6 @@ export function ParameterEditor({
           </div>
         </div>
       </DialogBody>
-    </Dialog>
+    </>
   );
 }

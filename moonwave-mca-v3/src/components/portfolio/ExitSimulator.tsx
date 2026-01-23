@@ -3,7 +3,7 @@
 // Target price and profit simulation
 // ============================================
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { clsx } from 'clsx';
 import { Target, TrendingUp, Calculator } from 'lucide-react';
 import { Card, NumericInput, Input } from '@/components/ui';
@@ -29,16 +29,12 @@ export function ExitSimulator({
   avgPrice,
   onUpdateParams,
 }: ExitSimulatorProps) {
-  const [ma120Price, setMa120Price] = useState(params.ma120Price || 0);
-  const [targetMultiple, setTargetMultiple] = useState(params.targetMultiple || 2.5);
-  const [manualTargetPrice, setManualTargetPrice] = useState(params.manualTargetPrice || 0);
-
-  // Sync with params
-  useEffect(() => {
-    setMa120Price(params.ma120Price || 0);
-    setTargetMultiple(params.targetMultiple || 2.5);
-    setManualTargetPrice(params.manualTargetPrice || 0);
-  }, [params.ma120Price, params.targetMultiple, params.manualTargetPrice]);
+  // 로컬 상태로 입력값 관리 (props를 초기값으로 사용)
+  // key prop을 사용하여 params 변경 시 컴포넌트를 리셋하거나,
+  // 또는 controlled 방식으로 부모에서 관리할 수 있음
+  const [ma120Price, setMa120Price] = useState(() => params.ma120Price || 0);
+  const [targetMultiple, setTargetMultiple] = useState(() => params.targetMultiple || 2.5);
+  const [manualTargetPrice, setManualTargetPrice] = useState(() => params.manualTargetPrice || 0);
 
   // Auto-calculated target price
   const autoTargetPrice = useMemo(

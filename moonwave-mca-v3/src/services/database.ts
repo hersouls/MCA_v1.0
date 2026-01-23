@@ -84,24 +84,27 @@ export async function upsertTrade(
   step: number,
   updates: Partial<Trade>
 ): Promise<void> {
-  const existing = await db.trades
-    .where(['portfolioId', 'step'])
-    .equals([portfolioId, step])
-    .first();
+  // Use transaction to prevent race conditions
+  await db.transaction('rw', db.trades, async () => {
+    const existing = await db.trades
+      .where(['portfolioId', 'step'])
+      .equals([portfolioId, step])
+      .first();
 
-  if (existing) {
-    await db.trades.update(existing.id!, updates);
-  } else {
-    await db.trades.add({
-      portfolioId,
-      step,
-      status: 'pending',
-      price: 0,
-      quantity: 0,
-      amount: 0,
-      ...updates,
-    } as Trade);
-  }
+    if (existing && existing.id !== undefined) {
+      await db.trades.update(existing.id, updates);
+    } else {
+      await db.trades.add({
+        portfolioId,
+        step,
+        status: 'pending',
+        price: 0,
+        quantity: 0,
+        amount: 0,
+        ...updates,
+      } as Trade);
+    }
+  });
 }
 
 export async function bulkUpdateTrades(
