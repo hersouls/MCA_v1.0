@@ -41,7 +41,7 @@ export function PageContainer({
   );
 }
 
-// Page Header
+// Page Header (Golden Ratio Typography: 26px title)
 interface PageHeaderProps {
   title: string;
   description?: string;
@@ -55,7 +55,7 @@ export function PageHeader({ title, description, action, breadcrumb }: PageHeade
       {breadcrumb && <div className="mb-2">{breadcrumb}</div>}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+          <h1 className="text-[1.625rem] font-bold text-zinc-900 dark:text-zinc-100">
             {title}
           </h1>
           {description && (
@@ -77,24 +77,32 @@ interface SectionProps {
   description?: string;
   action?: ReactNode;
   className?: string;
+  icon?: ReactNode;
 }
 
-export function Section({ children, title, description, action, className }: SectionProps) {
+export function Section({ children, title, description, action, className, icon }: SectionProps) {
   return (
     <section className={clsx('mb-8', className)}>
       {(title || action) && (
         <div className="flex items-center justify-between mb-4">
-          <div>
-            {title && (
-              <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-                {title}
-              </h2>
+          <div className="flex items-center gap-2">
+            {icon && (
+              <span className="flex-shrink-0 text-zinc-500 dark:text-zinc-400">
+                {icon}
+              </span>
             )}
-            {description && (
-              <p className="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">
-                {description}
-              </p>
-            )}
+            <div>
+              {title && (
+                <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+                  {title}
+                </h2>
+              )}
+              {description && (
+                <p className="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">
+                  {description}
+                </p>
+              )}
+            </div>
           </div>
           {action && <div className="flex-shrink-0">{action}</div>}
         </div>
@@ -172,6 +180,24 @@ export function LoadingState({ message = '불러오는 중...' }: LoadingStatePr
     <div className="flex flex-col items-center justify-center py-12">
       <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
       <p className="mt-4 text-sm text-zinc-500 dark:text-zinc-400">{message}</p>
+    </div>
+  );
+}
+
+// Golden Ratio Split Layout (62:38)
+interface GoldenSplitProps {
+  children: [ReactNode, ReactNode];
+  /** Reverse the ratio (38:62 instead of 62:38) */
+  reversed?: boolean;
+  className?: string;
+}
+
+export function GoldenSplit({ children, reversed = false, className }: GoldenSplitProps) {
+  const [main, side] = reversed ? [children[1], children[0]] : children;
+  return (
+    <div className={clsx('flex flex-col lg:flex-row gap-6', className)}>
+      <div className="w-full lg:w-[61.8%]">{main}</div>
+      <div className="w-full lg:w-[38.2%]">{side}</div>
     </div>
   );
 }

@@ -15,9 +15,18 @@ class MCADatabase extends Dexie {
   constructor() {
     super(DB_NAME);
 
+    // Version 1 - Initial schema
     this.version(1).stores({
       portfolios: '++id, name, isFavorite, updatedAt',
       trades: '++id, portfolioId, step, status',
+      settings: 'id',
+      history: '++id, timestamp, portfolioId',
+    });
+
+    // Version 2 - Add compound index for trades (portfolioId + step)
+    this.version(2).stores({
+      portfolios: '++id, name, isFavorite, updatedAt',
+      trades: '++id, portfolioId, step, status, [portfolioId+step]',
       settings: 'id',
       history: '++id, timestamp, portfolioId',
     });

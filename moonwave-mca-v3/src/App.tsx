@@ -12,6 +12,8 @@ import { usePortfolioStore } from '@/stores/portfolioStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useUIStore } from '@/stores/uiStore';
 import { migrateFromV2 } from '@/services/migration';
+import { STORAGE_KEYS } from '@/utils/constants';
+import { TEXTS } from '@/utils/texts';
 
 export function App() {
   const [isInitialized, setIsInitialized] = useState(false);
@@ -28,17 +30,17 @@ export function App() {
 
     async function init() {
       try {
-        useUIStore.getState().setGlobalLoading(true, '앱 초기화 중...');
+        useUIStore.getState().setGlobalLoading(true, TEXTS.COMMON.APP_INIT);
 
         // Check for v2 migration
-        const migrated = localStorage.getItem('MCA_V3_MIGRATED');
+        const migrated = localStorage.getItem(STORAGE_KEYS.V3_MIGRATED);
         if (!migrated) {
           setIsMigrating(true);
-          useUIStore.getState().setGlobalLoading(true, '기존 데이터 마이그레이션 중...');
+          useUIStore.getState().setGlobalLoading(true, TEXTS.COMMON.MIGRATION_IN_PROGRESS);
 
           const result = await migrateFromV2();
           if (result.success) {
-            console.log('v2 → v3 마이그레이션 완료');
+            console.log(TEXTS.COMMON.MIGRATION_COMPLETE);
           }
 
           setIsMigrating(false);
@@ -52,7 +54,7 @@ export function App() {
 
         setIsInitialized(true);
       } catch (error) {
-        console.error('초기화 실패:', error);
+        console.error(TEXTS.COMMON.INIT_FAILED, error);
         setIsInitialized(true); // Still show app even on error
       } finally {
         useUIStore.getState().setGlobalLoading(false);
@@ -70,7 +72,7 @@ export function App() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950">
         <LoadingState
-          message={isMigrating ? '기존 데이터를 마이그레이션 중입니다...' : '앱을 초기화하는 중...'}
+          message={isMigrating ? TEXTS.COMMON.MIGRATION_IN_PROGRESS_LONG : TEXTS.COMMON.APP_INIT_LONG}
         />
       </div>
     );

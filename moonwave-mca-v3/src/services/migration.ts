@@ -153,7 +153,7 @@ export async function migrateFromV2(): Promise<{
     }
 
     // Migrate settings
-    const isDarkMode = localStorage.getItem('darkMode') === 'true';
+    const isDarkMode = localStorage.getItem(STORAGE_KEYS.DARK_MODE) === 'true';
     await updateSettings({
       id: 'main',
       theme: isDarkMode ? 'dark' : 'light',

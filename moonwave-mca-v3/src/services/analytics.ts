@@ -9,13 +9,7 @@ import type {
   FeatureUsageStats,
   UsageAnalytics,
 } from '@/types';
-
-// ============================================
-// Storage Keys
-// ============================================
-
-const STORAGE_KEY = 'mca-analytics';
-const SESSION_START_KEY = 'mca-session-start';
+import { STORAGE_KEYS } from '@/utils/constants';
 
 // ============================================
 // Default Values
@@ -58,7 +52,7 @@ function getDefaultDailyStats(date: string): DailyUsageStats {
  */
 export function loadAnalytics(): UsageAnalytics {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = localStorage.getItem(STORAGE_KEYS.ANALYTICS);
     if (!stored) return createDefaultAnalytics();
 
     const parsed = JSON.parse(stored);
@@ -104,7 +98,7 @@ export function saveAnalytics(analytics: UsageAnalytics): void {
       lastUpdated: analytics.lastUpdated.toISOString(),
     };
 
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+    localStorage.setItem(STORAGE_KEYS.ANALYTICS, JSON.stringify(toSave));
   } catch (error) {
     console.error('Failed to save analytics:', error);
   }
@@ -119,7 +113,7 @@ export function saveAnalytics(analytics: UsageAnalytics): void {
  */
 export function startSession(): void {
   const now = Date.now();
-  sessionStorage.setItem(SESSION_START_KEY, now.toString());
+  sessionStorage.setItem(STORAGE_KEYS.SESSION_START, now.toString());
 
   // 앱 오픈 카운트 증가
   const analytics = loadAnalytics();
@@ -140,7 +134,7 @@ export function startSession(): void {
  * 세션 종료 시 시간 기록
  */
 export function endSession(): void {
-  const startTime = sessionStorage.getItem(SESSION_START_KEY);
+  const startTime = sessionStorage.getItem(STORAGE_KEYS.SESSION_START);
   if (!startTime) return;
 
   const duration = Math.floor((Date.now() - Number(startTime)) / 1000); // 초 단위
@@ -158,7 +152,7 @@ export function endSession(): void {
   analytics.lastUpdated = new Date();
   saveAnalytics(analytics);
 
-  sessionStorage.removeItem(SESSION_START_KEY);
+  sessionStorage.removeItem(STORAGE_KEYS.SESSION_START);
 }
 
 // ============================================
@@ -374,20 +368,20 @@ export function generateInsights(): string[] {
 
   // 앱 사용 빈도
   if (weeklyStats.appOpens >= 7) {
-    insights.push('🏆 이번 주 매일 앱을 사용하셨네요! 꾸준한 투자 습관이 좋습니다.');
+    insights.push('[EXCELLENT] 이번 주 매일 앱을 사용하셨네요! 꾸준한 투자 습관이 좋습니다.');
   } else if (weeklyStats.appOpens < 3) {
-    insights.push('💡 정기적인 포트폴리오 점검을 권장합니다. 주 3회 이상 확인해보세요.');
+    insights.push('[TIP] 정기적인 포트폴리오 점검을 권장합니다. 주 3회 이상 확인해보세요.');
   }
 
   // 체결 활동
   if (weeklyStats.tradesExecuted > 0) {
-    insights.push(`📈 이번 주 ${weeklyStats.tradesExecuted}건의 체결이 있었습니다.`);
+    insights.push(`[TRADE] 이번 주 ${weeklyStats.tradesExecuted}건의 체결이 있었습니다.`);
   }
 
   // 자주 보는 종목
   const mostViewed = getMostViewedPortfolios(1);
   if (mostViewed.length > 0 && mostViewed[0].viewCount > 10) {
-    insights.push(`🔍 가장 자주 확인하는 종목이 있네요. (조회 ${mostViewed[0].viewCount}회)`);
+    insights.push(`[FOCUS] 가장 자주 확인하는 종목이 있네요. (조회 ${mostViewed[0].viewCount}회)`);
   }
 
   // 기능 사용 권장
@@ -444,8 +438,8 @@ export function removePortfolioStats(portfolioId: number): void {
  * 모든 분석 데이터 초기화
  */
 export function resetAnalytics(): void {
-  localStorage.removeItem(STORAGE_KEY);
-  sessionStorage.removeItem(SESSION_START_KEY);
+  localStorage.removeItem(STORAGE_KEYS.ANALYTICS);
+  sessionStorage.removeItem(STORAGE_KEYS.SESSION_START);
 }
 
 // ============================================

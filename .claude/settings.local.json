@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh:*)",
+      "Bash(npm create:*)",
+      "Bash(npm install)",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm test:*)",
+      "Bash(npm run test:run:*)",
+      "Bash(npm run build:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: Add MCA v3.0 React PWA with GitHub Pages deployment\n\n- Complete React + Vite + TypeScript rewrite\n- Zustand state management with IndexedDB persistence\n- Catalyst-inspired UI components with Tailwind CSS\n- Dark mode support with system theme detection\n- Logo and favicon integration\n- GitHub Actions workflow for automatic deployment\n- SPA routing support for GitHub Pages\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "Bash(git commit:*)",
+      "Bash(xargs cat:*)",
+      "Bash(npm run lint)",
+      "Bash(timeout 15 npm run dev:*)",
+      "Bash(npm run dev:*)",
+      "Bash(timeout:*)",
+      "Bash(curl:*)",
+      "WebFetch(domain:fonts.google.com)",
+      "WebSearch",
+      "Bash(npm run typecheck:*)",
+      "Bash(vercel login)",
+      "Bash(vercel link:*)",
+      "Bash(vercel --version:*)",
+      "Bash(dir:*)",
+      "Bash(vercel git connect:*)",
+      "Bash(vercel --yes)",
+      "Bash(vercel:*)",
+      "Bash(git config:*)",
+      "Bash(find:*)",
+      "WebFetch(domain:vercel.com)"
+    ]
+  }
+}

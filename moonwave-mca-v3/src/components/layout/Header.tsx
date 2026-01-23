@@ -95,7 +95,8 @@ export function Header({ onAddPortfolio }: HeaderProps) {
         <div className="flex items-center gap-1">
           {/* Mobile search toggle */}
           <IconButton
-            variant="ghost"
+            plain
+            color="secondary"
             onClick={() => setIsSearchOpen(!isSearchOpen)}
             className="lg:hidden"
             aria-label="검색"
@@ -105,7 +106,7 @@ export function Header({ onAddPortfolio }: HeaderProps) {
 
           {/* Alert button */}
           <div className="relative">
-            <IconButton variant="ghost" aria-label="알림">
+            <IconButton plain color="secondary" aria-label="알림">
               <Bell className="w-5 h-5" />
             </IconButton>
             {alertCount > 0 && (
@@ -117,7 +118,8 @@ export function Header({ onAddPortfolio }: HeaderProps) {
 
           {/* Theme toggle */}
           <IconButton
-            variant="ghost"
+            plain
+            color="secondary"
             onClick={cycleTheme}
             aria-label={`테마 변경 (현재: ${theme})`}
           >
@@ -139,7 +141,7 @@ export function Header({ onAddPortfolio }: HeaderProps) {
           {/* Mobile add button */}
           {onAddPortfolio && (
             <IconButton
-              variant="primary"
+              color="primary"
               onClick={onAddPortfolio}
               className="sm:hidden"
               aria-label="새 종목 추가"

@@ -37,8 +37,8 @@ const typeConfig: Record<
   },
   info: {
     icon: Info,
-    className: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800',
-    iconClassName: 'text-blue-500',
+    className: 'bg-primary-50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-800',
+    iconClassName: 'text-primary-500',
   },
 };
 

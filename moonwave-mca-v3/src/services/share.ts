@@ -64,7 +64,7 @@ export async function shareWithWebShare(data: ShareData): Promise<boolean> {
  */
 export function generatePortfolioShareText(portfolio: Portfolio): string {
   const lines = [
-    `📈 ${portfolio.name} MCA 전략`,
+    `[MCA] ${portfolio.name} MCA 전략`,
     ``,
     `▸ 고점가격: ${portfolio.params.peakPrice.toLocaleString()}원`,
     `▸ 투자강도: ${portfolio.params.strength}`,
@@ -75,11 +75,11 @@ export function generatePortfolioShareText(portfolio: Portfolio): string {
 
   if (portfolio.fundamentalGrade && portfolio.fundamentalScore !== undefined) {
     lines.push(``);
-    lines.push(`📊 Fundamental Grade: ${portfolio.fundamentalGrade} (${portfolio.fundamentalScore}점)`);
+    lines.push(`[SCORE] Fundamental Grade: ${portfolio.fundamentalGrade} (${portfolio.fundamentalScore}점)`);
   }
 
   lines.push(``);
-  lines.push(`🌙 Moonwave MCA로 생성됨`);
+  lines.push(`- Moonwave MCA`);
 
   return lines.join('\n');
 }
@@ -353,13 +353,13 @@ export async function generateQRCodeSVG(data: string, size = 200): Promise<strin
     const dataPreview = data.length > 20 ? data.substring(0, 20) + '...' : data;
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}">
       <rect fill="white" width="${size}" height="${size}"/>
-      <text x="50%" y="45%" text-anchor="middle" fill="#666" font-size="12">
+      <text x="50%" y="45%" text-anchor="middle" fill="#64748b" font-size="12">
         QR Code
       </text>
-      <text x="50%" y="55%" text-anchor="middle" fill="#999" font-size="8">
+      <text x="50%" y="55%" text-anchor="middle" fill="#94a3b8" font-size="8">
         ${dataPreview}
       </text>
-      <text x="50%" y="70%" text-anchor="middle" fill="#999" font-size="10">
+      <text x="50%" y="70%" text-anchor="middle" fill="#94a3b8" font-size="10">
         (Install qrcode library)
       </text>
     </svg>`;

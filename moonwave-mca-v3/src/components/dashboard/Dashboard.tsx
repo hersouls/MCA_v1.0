@@ -7,11 +7,12 @@ import { useNavigate } from 'react-router-dom';
 import {
   Wallet,
   TrendingUp,
-  TrendingDown,
+  PiggyBank,
   AlertTriangle,
   Briefcase,
   Plus,
   Star,
+  ClipboardList,
 } from 'lucide-react';
 
 import {
@@ -24,7 +25,8 @@ import {
 import { Card, StatsCard, Button, PortfolioStatusBadge } from '@/components/ui';
 import { usePortfolioStore, useSortedPortfolios } from '@/stores/portfolioStore';
 import { useSettingsStore } from '@/stores/settingsStore';
-import { formatCurrency, formatCompact, formatPercent } from '@/utils/format';
+import { formatCurrency, formatKoreanUnit, formatKoreanCurrency, formatPercent } from '@/utils/format';
+import { TEXTS } from '@/utils/texts';
 
 export function Dashboard() {
   const navigate = useNavigate();
@@ -80,38 +82,42 @@ export function Dashboard() {
   return (
     <PageContainer>
       <PageHeader
-        title="대시보드"
-        description="포트폴리오 현황을 한눈에 확인하세요"
+        title={TEXTS.DASHBOARD.TITLE}
+        description={TEXTS.DASHBOARD.DESCRIPTION}
         action={
           <Button leftIcon={<Plus className="w-4 h-4" />} onClick={handleAddPortfolio}>
-            새 종목 추가
+            {TEXTS.DASHBOARD.ADD_PORTFOLIO}
           </Button>
         }
       />
 
       {/* Fund Summary */}
-      <Section title="💰 자금 현황">
+      <Section title={TEXTS.DASHBOARD.FUND_STATUS} icon={<Wallet className="w-5 h-5" />}>
         <Grid cols={4} gap="md">
           <StatsCard
-            label="초기 예수금"
-            value={formatCompact(dashboardStats.initialCash)}
+            label={TEXTS.DASHBOARD.INITIAL_CASH}
+            value={formatKoreanCurrency(dashboardStats.initialCash)}
             icon={<Wallet className="w-5 h-5" />}
+            align="left"
           />
           <StatsCard
-            label="잔여 현금"
-            value={formatCompact(dashboardStats.remainingCash)}
-            subValue={`투입률 ${formatPercent(dashboardStats.investmentRate)}`}
-            icon={<TrendingDown className="w-5 h-5" />}
+            label={TEXTS.DASHBOARD.REMAINING_CASH}
+            value={formatKoreanCurrency(dashboardStats.remainingCash)}
+            subValue={`${TEXTS.DASHBOARD.INVESTMENT_RATE} ${formatPercent(dashboardStats.investmentRate)}`}
+            icon={<PiggyBank className="w-5 h-5" />}
+            align="left"
           />
           <StatsCard
-            label="체결 총액"
-            value={formatCompact(dashboardStats.totalExecuted)}
+            label={TEXTS.DASHBOARD.TOTAL_EXECUTED}
+            value={formatKoreanCurrency(dashboardStats.totalExecuted)}
             icon={<TrendingUp className="w-5 h-5" />}
+            align="left"
           />
           <StatsCard
-            label="주문 총액"
-            value={formatCompact(dashboardStats.totalOrdered)}
-            icon={<Briefcase className="w-5 h-5" />}
+            label={TEXTS.DASHBOARD.TOTAL_ORDERED}
+            value={formatKoreanCurrency(dashboardStats.totalOrdered)}
+            icon={<ClipboardList className="w-5 h-5" />}
+            align="left"
           />
         </Grid>
       </Section>
@@ -124,10 +130,10 @@ export function Dashboard() {
               <AlertTriangle className="w-5 h-5 text-danger-500 flex-shrink-0 mt-0.5" />
               <div>
                 <h3 className="font-semibold text-danger-700 dark:text-danger-300">
-                  주의가 필요한 종목 ({dashboardStats.alertCount}개)
+                  {TEXTS.DASHBOARD.ALERT_TITLE(dashboardStats.alertCount)}
                 </h3>
                 <p className="text-sm text-danger-600 dark:text-danger-400 mt-1">
-                  주문/체결 구간에 갭이 발생한 종목이 있습니다. 추가 주문을 고려해주세요.
+                  {TEXTS.DASHBOARD.ALERT_DESC}
                 </p>
               </div>
             </div>
@@ -139,11 +145,11 @@ export function Dashboard() {
       {portfolios.length === 0 ? (
         <EmptyState
           icon={<Briefcase className="w-8 h-8" />}
-          title="등록된 종목이 없습니다"
-          description="새 종목을 추가하여 MCA 전략을 시작하세요"
+          title={TEXTS.DASHBOARD.EMPTY_TITLE}
+          description={TEXTS.DASHBOARD.EMPTY_DESC}
           action={
             <Button leftIcon={<Plus className="w-4 h-4" />} onClick={handleAddPortfolio}>
-              첫 종목 추가하기
+              {TEXTS.DASHBOARD.ADD_PORTFOLIO}
             </Button>
           }
         />
@@ -151,7 +157,7 @@ export function Dashboard() {
         <>
           {/* Favorites */}
           {favoritePortfolios.length > 0 && (
-            <Section title="⭐ 즐겨찾기">
+            <Section title={TEXTS.DASHBOARD.FAVORITES} icon={<Star className="w-5 h-5" />}>
               <Grid cols={3} gap="md">
                 {favoritePortfolios.map((portfolio) => (
                   <PortfolioCard
@@ -167,7 +173,7 @@ export function Dashboard() {
 
           {/* Other Portfolios */}
           {otherPortfolios.length > 0 && (
-            <Section title="📈 전체 종목">
+            <Section title={TEXTS.DASHBOARD.ALL_PORTFOLIOS} icon={<TrendingUp className="w-5 h-5" />}>
               <Grid cols={3} gap="md">
                 {otherPortfolios.map((portfolio) => (
                   <PortfolioCard
@@ -240,13 +246,13 @@ function PortfolioCard({ portfolio, stats, onClick }: PortfolioCardProps) {
         <div className="grid grid-cols-2 gap-2 text-sm">
           <div>
             <span className="text-zinc-500 dark:text-zinc-400">투입금액</span>
-            <p className="font-medium text-zinc-900 dark:text-zinc-100">
-              {formatCompact(stats.totalExecutedAmount)}
+            <p className="font-medium text-zinc-900 dark:text-zinc-100 text-right tabular-nums">
+              {formatKoreanUnit(stats.totalExecutedAmount)}
             </p>
           </div>
           <div>
             <span className="text-zinc-500 dark:text-zinc-400">평균단가</span>
-            <p className="font-medium text-zinc-900 dark:text-zinc-100">
+            <p className="font-medium text-zinc-900 dark:text-zinc-100 text-right tabular-nums">
               {stats.averagePrice ? formatCurrency(stats.averagePrice) : '-'}
             </p>
           </div>

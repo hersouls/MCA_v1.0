@@ -2,13 +2,13 @@
 // Dialog Component (Catalyst-style with Headless UI)
 // ============================================
 
-import { Fragment, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import {
   Dialog as HeadlessDialog,
   DialogPanel,
   DialogTitle,
-  Transition,
-  TransitionChild,
+  DialogBackdrop,
+  Description,
 } from '@headlessui/react';
 import { clsx } from 'clsx';
 import { X } from 'lucide-react';
@@ -18,62 +18,55 @@ interface DialogProps {
   open: boolean;
   onClose: () => void;
   children: ReactNode;
-  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl';
 }
 
 const sizeStyles = {
-  sm: 'max-w-sm',
-  md: 'max-w-md',
-  lg: 'max-w-lg',
-  xl: 'max-w-xl',
-  full: 'max-w-4xl',
+  xs: 'sm:max-w-xs',
+  sm: 'sm:max-w-sm',
+  md: 'sm:max-w-md',
+  lg: 'sm:max-w-lg',
+  xl: 'sm:max-w-xl',
+  '2xl': 'sm:max-w-2xl',
+  '3xl': 'sm:max-w-3xl',
+  '4xl': 'sm:max-w-4xl',
+  '5xl': 'sm:max-w-5xl',
 };
 
-export function Dialog({ open, onClose, children, size = 'md' }: DialogProps) {
+export function Dialog({ open, onClose, children, size = 'lg' }: DialogProps) {
   return (
-    <Transition show={open} as={Fragment}>
-      <HeadlessDialog onClose={onClose} className="relative z-50">
-        {/* Backdrop */}
-        <TransitionChild
-          as={Fragment}
-          enter="ease-out duration-300"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-200"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
-          <div className="fixed inset-0 bg-zinc-900/50 dark:bg-zinc-950/75 backdrop-blur-sm" />
-        </TransitionChild>
+    <HeadlessDialog open={open} onClose={onClose} className="relative z-50">
+      {/* Backdrop - rgba(0,0,0,0.4) with blur(2px) */}
+      <DialogBackdrop
+        transition
+        className={clsx(
+          'fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-[2px]',
+          'transition data-[closed]:opacity-0 data-[enter]:duration-300 data-[leave]:duration-200 data-[enter]:ease-out data-[leave]:ease-in'
+        )}
+      />
 
-        {/* Dialog Container */}
-        <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
-            <TransitionChild
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
-            >
-              <DialogPanel
-                className={clsx(
-                  'w-full rounded-2xl bg-white dark:bg-zinc-900',
-                  'border border-zinc-200 dark:border-zinc-800',
-                  'shadow-2xl',
-                  'transform transition-all',
-                  sizeStyles[size]
-                )}
-              >
-                {children}
-              </DialogPanel>
-            </TransitionChild>
-          </div>
+      {/* Dialog Container */}
+      <div className="fixed inset-0 w-screen overflow-y-auto pt-6 sm:pt-0">
+        <div className="grid min-h-full grid-rows-[1fr_auto] justify-items-center sm:grid-rows-[1fr_auto_3fr] sm:p-4">
+          <DialogPanel
+            transition
+            className={clsx(
+              // Base styles - Enhanced shadow & border for clear boundary
+              'row-start-2 w-full min-w-0 rounded-t-2xl bg-white p-6 sm:p-8 shadow-2xl ring-1 ring-zinc-200',
+              'dark:bg-zinc-900 dark:ring-zinc-700',
+              // Responsive - 12px border-radius
+              'sm:mb-auto sm:rounded-xl',
+              sizeStyles[size],
+              // Transition
+              'transition duration-300 data-[closed]:translate-y-12 data-[closed]:opacity-0 data-[enter]:ease-out data-[leave]:ease-in',
+              'sm:data-[closed]:translate-y-0 sm:data-[closed]:scale-95 sm:data-[closed]:data-[enter]:duration-300 sm:data-[closed]:data-[leave]:duration-200'
+            )}
+          >
+            {children}
+          </DialogPanel>
         </div>
-      </HeadlessDialog>
-    </Transition>
+      </div>
+    </HeadlessDialog>
   );
 }
 
@@ -86,21 +79,21 @@ interface DialogHeaderProps {
 
 export function DialogHeader({ title, description, onClose }: DialogHeaderProps) {
   return (
-    <div className="flex items-start justify-between gap-4 p-6 pb-0">
-      <div>
-        <DialogTitle className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-          {title}
-        </DialogTitle>
-        {description && (
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            {description}
-          </p>
-        )}
-      </div>
+    <div className="relative">
+      <DialogTitle className="text-balance text-lg/6 font-semibold text-zinc-950 dark:text-white sm:text-base/6">
+        {title}
+      </DialogTitle>
+      {description && (
+        <Description className="mt-2 text-pretty text-sm/6 text-zinc-500 dark:text-zinc-400">
+          {description}
+        </Description>
+      )}
       {onClose && (
-        <IconButton variant="ghost" onClick={onClose} aria-label="닫기">
-          <X className="w-5 h-5" />
-        </IconButton>
+        <div className="absolute right-0 top-0">
+          <IconButton plain color="secondary" onClick={onClose} aria-label="닫기">
+            <X className="size-5" />
+          </IconButton>
+        </div>
       )}
     </div>
   );
@@ -113,7 +106,7 @@ interface DialogBodyProps {
 }
 
 export function DialogBody({ children, className }: DialogBodyProps) {
-  return <div className={clsx('p-6', className)}>{children}</div>;
+  return <div className={clsx('mt-8', className)}>{children}</div>;
 }
 
 // Dialog Footer
@@ -126,7 +119,7 @@ export function DialogFooter({ children, className }: DialogFooterProps) {
   return (
     <div
       className={clsx(
-        'flex items-center justify-end gap-3 p-6 pt-0',
+        'mt-8 flex flex-col-reverse items-center justify-end gap-3 *:w-full sm:flex-row sm:*:w-auto',
         className
       )}
     >
@@ -134,6 +127,9 @@ export function DialogFooter({ children, className }: DialogFooterProps) {
     </div>
   );
 }
+
+// Dialog Actions (alias for Footer)
+export const DialogActions = DialogFooter;
 
 // Confirm Dialog
 interface ConfirmDialogProps {
@@ -163,11 +159,11 @@ export function ConfirmDialog({
     <Dialog open={open} onClose={onClose} size="sm">
       <DialogHeader title={title} description={description} />
       <DialogFooter>
-        <Button variant="secondary" onClick={onClose} disabled={isLoading}>
+        <Button plain color="secondary" onClick={onClose} disabled={isLoading}>
           {cancelText}
         </Button>
         <Button
-          variant={variant === 'danger' ? 'danger' : 'primary'}
+          color={variant === 'danger' ? 'danger' : 'primary'}
           onClick={onConfirm}
           isLoading={isLoading}
         >
@@ -198,7 +194,7 @@ export function AlertDialog({
     <Dialog open={open} onClose={onClose} size="sm">
       <DialogHeader title={title} description={description} />
       <DialogFooter>
-        <Button variant="primary" onClick={onClose}>
+        <Button color="primary" onClick={onClose}>
           {confirmText}
         </Button>
       </DialogFooter>

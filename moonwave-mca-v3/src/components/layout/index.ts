@@ -10,6 +10,7 @@ export {
   PageHeader,
   Section,
   Grid,
+  GoldenSplit,
   EmptyState,
   LoadingState,
   ErrorState,

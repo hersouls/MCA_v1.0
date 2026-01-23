@@ -4,6 +4,7 @@
 // ============================================
 
 import type { BroadcastMessage, BroadcastEventType, Portfolio, Settings } from '@/types';
+import { STORAGE_KEYS } from '@/utils/constants';
 
 // 채널 이름
 const CHANNEL_NAME = 'moonwave-mca-sync';
@@ -82,8 +83,6 @@ export function closeBroadcastChannel(): void {
 // LocalStorage Fallback
 // ============================================
 
-const STORAGE_KEY = 'mca-broadcast-message';
-
 /**
  * localStorage 폴백 초기화
  */
@@ -98,7 +97,7 @@ function initLocalStorageFallback(): void {
  * localStorage 이벤트 핸들러
  */
 function handleStorageEvent(event: StorageEvent): void {
-  if (event.key !== STORAGE_KEY || !event.newValue) return;
+  if (event.key !== STORAGE_KEYS.BROADCAST_MESSAGE || !event.newValue) return;
 
   try {
     const message: BroadcastMessage = JSON.parse(event.newValue);
@@ -117,9 +116,9 @@ function handleStorageEvent(event: StorageEvent): void {
 function sendViaLocalStorage(message: BroadcastMessage): void {
   if (typeof window === 'undefined') return;
 
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(message));
+  localStorage.setItem(STORAGE_KEYS.BROADCAST_MESSAGE, JSON.stringify(message));
   // 즉시 삭제하여 다음 메시지 전송 가능하게 함
-  setTimeout(() => localStorage.removeItem(STORAGE_KEY), 100);
+  setTimeout(() => localStorage.removeItem(STORAGE_KEYS.BROADCAST_MESSAGE), 100);
 }
 
 // ============================================

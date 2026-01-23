@@ -11,20 +11,16 @@ import type {
   FundamentalGrade,
   FundamentalData,
 } from '@/types';
+import { FUNDAMENTAL_GRADE_CONFIG } from '@/utils/constants';
 
-// Grade 설정
-const GRADE_CONFIG = {
-  A: { min: 81, label: '적극 매수', color: '#22c55e' },
-  B: { min: 70, label: '매수 고려', color: '#3b82f6' },
-  C: { min: 50, label: '신중 진입', color: '#f59e0b' },
-  D: { min: 0, label: '매수 금지', color: '#ef4444' },
-};
+// Grade 설정 - centralized config 참조
+const GRADE_CONFIG = FUNDAMENTAL_GRADE_CONFIG.GRADES;
 
 const ACTION_GUIDELINES = {
   A: 'Step 4(기술적 분석)로 무조건 진행. Zone 3/4 진입 시 MCA/DCA 가동. 포트폴리오 핵심 종목으로 편입(10-20%).',
   B: 'Step 4 진행. 멀티플 1.2 이하 시 적극 고려. 포트폴리오 편입 권장(5-10%).',
   C: 'Step 4 진행 가능. 멀티플 1.0 이하 + Zone 3 한정 + 소량 매수. 기존 보유자 홀딩 가능.',
-  D: '⚠️ 어떤 조건에서도 매수 불가. 기존 보유 시 매도 또는 교체 권고. 차트가 아무리 좋아도 매수 금지.',
+  D: '[경고] 어떤 조건에서도 매수 불가. 기존 보유 시 매도 또는 교체 권고. 차트가 아무리 좋아도 매수 금지.',
 };
 
 /**
@@ -119,9 +115,9 @@ function calculateManagementScore(quality: FundamentalInput['managementQuality']
  * Grade 판정
  */
 function determineGrade(totalScore: number): FundamentalGrade {
-  if (totalScore > 80) return 'A';
-  if (totalScore >= 70) return 'B';
-  if (totalScore >= 50) return 'C';
+  if (totalScore >= GRADE_CONFIG.A.min) return 'A';
+  if (totalScore >= GRADE_CONFIG.B.min) return 'B';
+  if (totalScore >= GRADE_CONFIG.C.min) return 'C';
   return 'D';
 }
 
@@ -298,13 +294,13 @@ export function validateFundamentalInput(input: Partial<FundamentalInput>): stri
  */
 export function generateScoreSummary(result: FundamentalResult): string {
   const lines = [
-    `📊 Fundamental Grade: ${result.grade} (${result.totalScore}점)`,
+    `[SCORE] Fundamental Grade: ${result.grade} (${result.totalScore}점)`,
     ``,
     `▸ 밸류에이션: ${result.categoryScores.valuation}/35점`,
     `▸ 주주환원: ${result.categoryScores.shareholderReturn}/40점`,
     `▸ 성장/경영: ${result.categoryScores.growthManagement}/25점`,
     ``,
-    `💡 ${result.gradeLabel}`,
+    `[TIP] ${result.gradeLabel}`,
     result.actionGuideline,
   ];
 

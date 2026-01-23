@@ -22,6 +22,9 @@ import { Line } from 'react-chartjs-2';
 import type { PortfolioParams } from '@/types';
 import { calculateTrades } from '@/services/calculation';
 import { useSettingsStore } from '@/stores/settingsStore';
+import { CHART_COLORS, CHART_CONFIG } from '@/utils/constants';
+import { TEXTS } from '@/utils/texts';
+import { formatKoreanUnit } from '@/utils/format';
 
 // Register Chart.js components
 ChartJS.register(
@@ -47,7 +50,7 @@ export function MCAChart({
   params,
   orderedSteps,
   executedSteps,
-  height = 300,
+  height = CHART_CONFIG.DEFAULT_HEIGHT,
 }: MCAChartProps) {
   const chartRef = useRef<ChartJS<'line'>>(null);
   const theme = useSettingsStore((state) => state.settings.theme);
@@ -70,16 +73,15 @@ export function MCAChart({
     return trades.filter((t) => t.isOrdered || t.isExecuted);
   }, [trades]);
 
-  // Chart colors based on theme
+  // Chart colors based on theme - using centralized CHART_COLORS
+  const themeColors = isDark ? CHART_COLORS.dark : CHART_COLORS.light;
   const colors = useMemo(() => ({
-    primary: isDark ? '#60a5fa' : '#2563eb',
-    success: isDark ? '#4ade80' : '#22c55e',
-    warning: isDark ? '#fbbf24' : '#f59e0b',
-    text: isDark ? '#f4f4f5' : '#0f172a',
+    ...themeColors,
     textMuted: isDark ? '#a1a1aa' : '#64748b',
-    grid: isDark ? '#3f3f46' : '#e2e8f0',
-    background: isDark ? 'rgba(59, 130, 246, 0.1)' : 'rgba(37, 99, 235, 0.05)',
-  }), [isDark]);
+    background: isDark
+      ? `rgba(46, 255, 180, ${CHART_CONFIG.BACKGROUND_ALPHA.DARK})`
+      : `rgba(0, 168, 107, ${CHART_CONFIG.BACKGROUND_ALPHA.LIGHT})`,
+  }), [isDark, themeColors]);
 
   // Find min/max gaps for labels
   const { minGapIdx, maxGapIdx } = useMemo(() => {
@@ -98,41 +100,41 @@ export function MCAChart({
 
   // Chart data
   const data: ChartData<'line'> = useMemo(() => {
-    const labels = chartTrades.map((t) => `${t.step}구간`);
+    const labels = chartTrades.map((t) => TEXTS.CHART.STEP_LABEL(t.step));
 
     return {
       labels,
       datasets: [
         {
-          label: '평단가 방어선',
+          label: TEXTS.CHART.AVG_PRICE_LINE,
           data: chartTrades.map((t) => t.avgPrice),
           borderColor: colors.primary,
           backgroundColor: 'transparent',
           yAxisID: 'y',
           tension: 0.2,
-          pointRadius: 0,
-          pointHoverRadius: 6,
-          borderWidth: 2.5,
+          pointRadius: CHART_CONFIG.POINT_RADIUS,
+          pointHoverRadius: CHART_CONFIG.POINT_HOVER_RADIUS,
+          borderWidth: CHART_CONFIG.BORDER_WIDTH,
           datalabels: {
             display: false,
           },
         },
         {
-          label: '괴리율',
+          label: TEXTS.CHART.GAP_RATE,
           data: chartTrades.map((t) => t.gap),
           borderColor: colors.success,
           backgroundColor: colors.background,
           yAxisID: 'y1',
           fill: true,
           tension: 0.2,
-          pointRadius: chartTrades.map((t) => (t.isExecuted ? 6 : 0)),
+          pointRadius: chartTrades.map((t) => (t.isExecuted ? CHART_CONFIG.EXECUTED_POINT_RADIUS : 0)),
           pointBackgroundColor: chartTrades.map((t) =>
             t.isExecuted ? colors.warning : 'transparent'
           ),
           pointBorderColor: chartTrades.map((t) =>
             t.isExecuted ? colors.warning : 'transparent'
           ),
-          pointBorderWidth: 2,
+          pointBorderWidth: CHART_CONFIG.POINT_BORDER_WIDTH,
           borderWidth: 2,
           datalabels: {
             display: (context) => {
@@ -141,16 +143,16 @@ export function MCAChart({
             },
             formatter: (value: number) => `${value.toFixed(1)}%`,
             color: colors.text,
-            backgroundColor: isDark ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.9)',
-            borderRadius: 4,
-            padding: { top: 4, bottom: 4, left: 6, right: 6 },
+            backgroundColor: isDark ? 'rgba(3,3,3,0.7)' : 'rgba(237,236,232,0.9)',
+            borderRadius: CHART_CONFIG.DATA_LABEL.BORDER_RADIUS,
+            padding: CHART_CONFIG.DATA_LABEL.PADDING,
             font: {
-              size: 11,
-              weight: 'bold',
+              size: CHART_CONFIG.DATA_LABEL.FONT_SIZE,
+              weight: CHART_CONFIG.DATA_LABEL.FONT_WEIGHT,
             },
             anchor: 'end',
             align: 'top',
-            offset: 4,
+            offset: CHART_CONFIG.DATA_LABEL.OFFSET,
           },
         },
       ],
@@ -174,26 +176,27 @@ export function MCAChart({
           color: colors.textMuted,
           usePointStyle: true,
           pointStyle: 'circle',
-          padding: 16,
+          padding: CHART_CONFIG.LEGEND_PADDING,
           font: {
             size: 12,
           },
         },
       },
       tooltip: {
-        backgroundColor: isDark ? '#1f1f22' : '#ffffff',
+        backgroundColor: isDark ? '#0f0f0f' : '#EDECE8',
         titleColor: colors.text,
         bodyColor: colors.textMuted,
         borderColor: colors.grid,
         borderWidth: 1,
-        padding: 12,
+        padding: CHART_CONFIG.TOOLTIP_PADDING,
         displayColors: true,
         callbacks: {
           label: (context) => {
             const label = context.dataset.label || '';
             const value = context.raw as number;
             if (context.datasetIndex === 0) {
-              return `${label}: ₩${value.toLocaleString()}`;
+              // 평균단가: 한국식 단위 사용
+              return `${label}: ${formatKoreanUnit(value)}`;
             }
             return `${label}: ${value.toFixed(2)}%`;
           },
@@ -210,11 +213,11 @@ export function MCAChart({
           font: {
             size: 11,
           },
-          maxRotation: 0,
+          maxRotation: CHART_CONFIG.X_AXIS_MAX_ROTATION,
           callback: function(_value, index) {
             // Show every 2nd label on small screens
             const step = chartTrades[index]?.step;
-            if (chartTrades.length > 10) {
+            if (chartTrades.length > CHART_CONFIG.LABEL_SKIP_THRESHOLD) {
               return index % 2 === 0 ? step : '';
             }
             return step;
@@ -227,7 +230,7 @@ export function MCAChart({
         position: 'left',
         title: {
           display: true,
-          text: '평단가 (원)',
+          text: TEXTS.CHART.Y_AXIS_AVG_PRICE,
           color: colors.textMuted,
           font: {
             size: 11,
@@ -241,7 +244,8 @@ export function MCAChart({
           font: {
             size: 11,
           },
-          callback: (value) => `₩${(Number(value) / 1000).toFixed(0)}K`,
+          // 한국식 단위 사용 (만, 억)
+          callback: (value) => formatKoreanUnit(Number(value)),
         },
       },
       y1: {
@@ -250,7 +254,7 @@ export function MCAChart({
         position: 'right',
         title: {
           display: true,
-          text: '괴리율 (%)',
+          text: TEXTS.CHART.Y_AXIS_GAP_RATE,
           color: colors.textMuted,
           font: {
             size: 11,
@@ -284,8 +288,8 @@ export function MCAChart({
         style={{ height }}
       >
         <div className="text-center text-zinc-500 dark:text-zinc-400">
-          <p className="text-sm">주문 또는 체결된 구간이 없습니다</p>
-          <p className="text-xs mt-1">매매 테이블에서 주문을 등록하세요</p>
+          <p className="text-sm">{TEXTS.CHART.EMPTY_TITLE}</p>
+          <p className="text-xs mt-1">{TEXTS.CHART.EMPTY_DESC}</p>
         </div>
       </div>
     );

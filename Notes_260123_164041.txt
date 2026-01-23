@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MCA: v1.5 Final</title>
+    
+    <!-- Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
+
+    <!-- Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['"Nanum Gothic"', 'sans-serif'] },
+                    colors: {
+                        naver: {
+                            bg: '#F5F6F7',
+                            green: '#03C75A',
+                            blue: '#0051C7',
+                            red: '#F04452',
+                            yellow: '#F59E0B',
+                            text: '#191919',
+                            sub: '#8E949F',
+                            border: '#E4E8EB',
+                            card: '#FFFFFF'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #F5F6F7; color: #191919; touch-action: manipulation; }
+        .naver-card {
+            background: #FFFFFF; border: 1px solid #E4E8EB; border-radius: 12px;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+        input, button { touch-action: manipulation; }
+        .checkbox-wrapper { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; }
+        input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: #03C75A; }
+        input.order-checkbox { accent-color: #F59E0B; } 
+        input.exec-checkbox { accent-color: #03C75A; } 
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .param-label { height: 1.25rem; display: flex; align-items: center; justify-content: space-between; }
+        .tab-active { background-color: #191919; color: white; border-color: #191919; }
+        .tab-inactive { background-color: white; color: #8E949F; border-color: #E4E8EB; }
+        .animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased pb-20">
+
+    <div class="max-w-4xl mx-auto">
+        
+        <!-- Global Header -->
+        <div class="sticky top-0 z-30 bg-[#F5F6F7]/95 backdrop-blur-md px-4 py-3 border-b border-gray-200 flex justify-between items-center shadow-sm transition-all">
+            <div class="flex items-center gap-3">
+                <h1 class="text-xl font-bold tracking-tight text-naver-text flex items-center gap-1 cursor-pointer" onclick="app.showDashboard()">
+                    <span class="text-naver-green">MCA</span>
+                    <span class="text-[10px] px-1.5 py-0.5 bg-gray-200 rounded text-gray-500 font-normal">v1.5</span>
+                </h1>
+                <a href="https://blog.naver.com/her_soul" target="_blank" class="flex items-center gap-1 px-2 py-0.5 rounded-full bg-naver-green/10 text-naver-green text-[11px] font-bold hover:bg-naver-green hover:text-white transition">
+                    Blog
+                </a>
+            </div>
+            
+            <div class="flex bg-white rounded-lg p-1 border border-gray-200">
+                <button id="navDash" onclick="app.showDashboard()" class="px-3 py-1.5 rounded-md text-xs font-bold transition-colors tab-active">
+                    대시보드
+                </button>
+                <button id="navDetail" onclick="app.showDetail()" class="px-3 py-1.5 rounded-md text-xs font-bold transition-colors tab-inactive">
+                    개별관리
+                </button>
+                <button id="navHistory" onclick="app.showHistory()" class="px-3 py-1.5 rounded-md text-xs font-bold transition-colors tab-inactive">
+                    히스토리
+                </button>
+            </div>
+        </div>
+
+        <!-- ================= DASHBOARD VIEW ================= -->
+        <div id="dashboardView" class="p-4 space-y-4 block animate-fade-in">
+            <div class="naver-card p-5">
+                <div class="flex justify-between items-center mb-4 border-b border-gray-100 pb-3">
+                    <h2 class="text-sm font-bold text-naver-text">통합 자금 현황</h2>
+                    <div class="flex items-center gap-2 bg-gray-50 px-2 py-1 rounded border border-gray-200">
+                        <span class="text-[10px] text-naver-sub font-bold">초기 예수금 설정</span>
+                        <input type="text" id="initialCash" placeholder="0" class="w-24 text-right text-sm font-bold bg-transparent outline-none text-naver-text" oninput="app.formatInput(this)">
+                        <span class="text-[10px] text-naver-text">원</span>
+                    </div>
+                </div>
+                <div class="bg-gray-800 rounded-lg p-4 text-white shadow-lg mb-4">
+                    <p class="text-xs text-gray-400 mb-1">현재 사용 가능 현금 (잔고)</p>
+                    <div class="flex justify-between items-end">
+                        <p id="dashRemainingCash" class="text-2xl font-bold text-white">0 원</p>
+                        <p id="cashBurnRate" class="text-xs text-naver-green font-bold">100% 남음</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <p class="text-xs text-naver-sub">총 투입 금액 (보유분 포함)</p>
+                        <p id="dashTotalInvested" class="text-lg font-bold text-naver-text">0 원</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-xs text-naver-sub">미체결 주문 총액</p>
+                        <p id="dashTotalOrdered" class="text-lg font-bold text-naver-text">0 원</p>
+                    </div>
+                </div>
+            </div>
+            <div class="space-y-3" id="portfolioListContainer"></div>
+            <div class="text-center pt-4">
+                <button onclick="app.addNewPortfolio();" class="text-xs font-bold text-gray-400 hover:text-naver-text border border-dashed border-gray-300 rounded-lg w-full py-3 hover:bg-white transition">
+                    + 새 종목 추가
+                </button>
+            </div>
+        </div>
+
+        <!-- ================= DETAIL VIEW ================= -->
+        <div id="detailView" class="hidden p-4 space-y-4 animate-fade-in">
+            
+            <!-- Portfolio Tabs -->
+            <div class="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
+                <div id="tabContainer" class="flex gap-2"></div>
+                <button onclick="app.addNewPortfolio()" class="flex-shrink-0 w-8 h-8 rounded-full bg-white border border-dashed border-gray-400 text-gray-400 flex items-center justify-center hover:bg-gray-50 hover:border-naver-text hover:text-naver-text transition">+</button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <!-- Left Column: Controls -->
+                <div class="lg:col-span-1 space-y-4">
+                    <!-- Controls -->
+                    <div class="naver-card p-5 relative overflow-hidden bg-white">
+                        <div class="absolute top-0 left-0 w-1.5 h-full bg-naver-green"></div>
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-xs font-bold text-naver-sub">종목명</span>
+                                    <input type="text" id="assetName" class="font-bold text-naver-text text-lg border-b border-dashed border-gray-300 focus:border-naver-green focus:outline-none w-28 bg-transparent" value="NAVER" onchange="app.updateCurrentTabName()">
+                                    <button id="favoriteBtn" onclick="app.toggleFavorite()" class="text-gray-300 hover:text-yellow-400 transition">★</button>
+                                    <div class="h-4 w-px bg-gray-200 mx-1"></div>
+                                    <button onclick="app.deleteCurrentPortfolio()" class="text-gray-300 hover:text-red-500">×</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gray-50 rounded-lg p-3 flex justify-between items-center border border-gray-100 mb-3">
+                            <span class="text-xs font-bold text-naver-sub">목표 예산</span>
+                            <div class="flex items-center gap-2">
+                                <input type="text" id="targetBudgetInput" value="10,000,000" class="text-right font-bold text-naver-text bg-transparent focus:outline-none text-base w-24" oninput="app.formatInput(this)">
+                                <span class="text-xs text-naver-text">원</span>
+                            </div>
+                        </div>
+                        <button onclick="app.autoFitParams()" class="w-full py-2.5 bg-naver-text text-white text-xs font-bold rounded-lg shadow-sm active:bg-gray-800 transition mb-4">
+                            ⚡ 예산 맞춤 자동 최적화
+                        </button>
+
+                        <details class="group bg-white border border-gray-100 rounded-lg">
+                            <summary class="p-3 font-bold text-naver-text cursor-pointer list-none flex justify-between items-center text-xs bg-gray-50 rounded-t-lg">
+                                <span>⚙️ 파라미터 설정</span>
+                                <span class="text-gray-400 text-xs group-open:rotate-180 transition-transform">▼</span>
+                            </summary>
+                            <div class="p-3 grid grid-cols-2 gap-3 bg-white">
+                                <div class="space-y-1"><div class="param-label"><label class="text-[10px] text-naver-sub">기준 고점</label></div><input type="text" id="peakPrice" class="w-full h-8 p-2 rounded border border-gray-200 text-center font-bold text-xs focus:border-naver-green focus:outline-none" oninput="app.formatInput(this)"></div>
+                                <div class="space-y-1"><div class="param-label"><label class="text-[10px] text-naver-sub">투자 강도</label></div><input type="number" id="strength" step="0.01" class="w-full h-8 p-2 rounded border border-gray-200 text-center font-bold text-xs focus:border-naver-green focus:outline-none" oninput="app.formatInput(this)"></div>
+                                <div class="space-y-1"><div class="param-label"><label class="text-[10px] text-naver-sub">시작 하락률(%)</label></div><input type="number" id="startDrop" class="w-full h-8 p-2 rounded border border-gray-200 text-center font-bold text-xs text-naver-blue focus:border-naver-blue focus:outline-none" oninput="app.formatInput(this)"></div>
+                                <div class="space-y-1"><div class="param-label"><label class="text-[10px] text-naver-sub">분할 횟수</label></div><input type="number" id="steps" class="w-full h-8 p-2 rounded border border-gray-200 text-center font-bold text-xs focus:border-naver-green focus:outline-none" oninput="app.formatInput(this)"></div>
+                                <div class="col-span-2 mt-2 pt-2 border-t border-dashed border-gray-200">
+                                    <label class="text-xs font-bold text-gray-500 mb-2 block flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-gray-400"></span> 0구간 (기존 보유)</label>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div class="space-y-1"><label class="text-[10px] text-naver-sub">보유 수량</label><input type="text" id="legacyQty" placeholder="0" class="w-full h-8 p-2 rounded bg-gray-50 border border-gray-200 text-center font-bold text-xs text-gray-600 focus:border-gray-400 focus:outline-none" oninput="app.formatInput(this)"></div>
+                                        <div class="space-y-1"><label class="text-[10px] text-naver-sub">보유 평단</label><input type="text" id="legacyAvg" placeholder="0" class="w-full h-8 p-2 rounded bg-gray-50 border border-gray-200 text-center font-bold text-xs text-gray-600 focus:border-gray-400 focus:outline-none" oninput="app.formatInput(this)"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </details>
+                    </div>
+                    
+                    <!-- Portfolio Memo -->
+                    <div class="naver-card p-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="text-xs font-bold text-naver-text">💬 투자 메모</h3>
+                            <span class="text-[10px] text-gray-400">자동 저장</span>
+                        </div>
+                        <textarea id="portfolioMemo" class="w-full p-2 border rounded-lg text-xs resize-none focus:border-naver-green focus:ring-1 focus:ring-naver-green bg-gray-50 outline-none" rows="3" placeholder="투자 아이디어, 전략, 특이사항 기록..." onchange="app.savePortfolioMemo(this.value)"></textarea>
+                    </div>
+
+                    <!-- Detail Stats -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="naver-card p-4 flex flex-col justify-between">
+                            <div class="text-xs text-naver-sub mb-1">현재 투입 (체결)</div>
+                            <div id="currentInvested" class="text-base font-bold text-naver-text">0</div>
+                            <div class="w-full bg-gray-100 rounded-full h-1 mt-2 overflow-hidden"><div id="progressBar" class="bg-naver-green h-full rounded-full transition-all duration-500" style="width: 0%"></div></div>
+                        </div>
+                        <div class="naver-card p-4 flex flex-col justify-between">
+                            <div class="text-xs text-naver-sub mb-1">현재 평단 (통합)</div>
+                            <div id="currentMyAvg" class="text-base font-bold text-naver-blue">0</div>
+                            <div class="text-[10px] text-gray-400 mt-1 text-right">보유: <span id="currentMyQty" class="text-naver-text font-bold">0</span> 주</div>
+                        </div>
+                    </div>
+
+                    <!-- Exit Plan -->
+                    <div class="naver-card p-4 bg-blue-50/30 border-blue-100">
+                         <div class="flex justify-between items-center mb-3">
+                             <h3 class="text-xs font-bold text-naver-blue flex items-center gap-1">🎯 목표 매도</h3>
+                         </div>
+                         <div class="grid grid-cols-2 gap-2 mb-2">
+                             <div class="space-y-1"><input type="text" id="ma120Price" placeholder="120월선" class="w-full h-8 p-2 text-center font-bold text-xs border border-gray-200 rounded focus:border-naver-blue focus:outline-none bg-white" oninput="app.formatInput(this)"></div>
+                             <div class="space-y-1"><input type="number" id="targetMultiple" placeholder="멀티플" step="0.1" class="w-full h-8 p-2 text-center font-bold text-xs border border-gray-200 rounded focus:border-naver-blue focus:outline-none bg-white" oninput="app.calculateAutoTarget()"></div>
+                         </div>
+                         <div class="flex justify-between items-center bg-white p-2 rounded border border-blue-100 mb-2">
+                             <span class="text-xs text-naver-sub ml-1 whitespace-nowrap">목표가</span>
+                             <input type="text" id="manualTargetPrice" placeholder="0" class="text-right font-bold text-naver-blue text-sm bg-transparent focus:outline-none w-24" oninput="app.formatInput(this)">
+                         </div>
+                         <div class="grid grid-cols-2 gap-2 text-center bg-white p-2 rounded border border-blue-100">
+                            <div><div class="text-[10px] text-gray-400">수익률</div><div id="simRoe" class="font-bold text-naver-red text-xs">-</div></div>
+                            <div><div class="text-[10px] text-gray-400">수익금</div><div id="simProfit" class="font-bold text-naver-red text-xs">-</div></div>
+                        </div>
+                    </div>
+                    
+                    <!-- File Operations -->
+                    <div class="flex justify-center gap-3 py-2 flex-wrap">
+                        <button onclick="app.exportData()" class="text-[10px] font-bold text-naver-green hover:underline">💾 백업</button>
+                        <button onclick="app.exportCSV()" class="text-[10px] font-bold text-blue-600 hover:underline">📊 CSV</button>
+                        <button onclick="app.showBackupList()" class="text-[10px] font-bold text-purple-600 hover:underline">🕐 복원</button>
+                        <button onclick="app.triggerImport()" class="text-[10px] font-bold text-gray-400 hover:underline">📂 불러오기</button>
+                        <input type="file" id="fileInput" style="display:none" onchange="app.importData(this)" accept=".json">
+                    </div>
+                </div>
+
+                <!-- Right Column: Chart & Table -->
+                <div class="lg:col-span-2 space-y-4">
+                    <!-- Chart Card -->
+                    <div class="naver-card p-4">
+                         <div class="flex justify-between items-end mb-2">
+                             <h3 class="text-xs font-bold text-naver-sub flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-naver-green"></span> 평단가 방어선 <span class="text-gray-300">|</span> <span class="w-2 h-2 rounded-full bg-slate-400"></span> 괴리율(%)</h3>
+                         </div>
+                         <div class="h-64 relative w-full">
+                            <canvas id="mcaChart"></canvas>
+                         </div>
+                    </div>
+
+                    <!-- Table -->
+                    <div class="naver-card overflow-hidden">
+                        <div class="p-3 bg-gray-50 border-b border-gray-200 flex flex-col gap-2">
+                            <div class="flex justify-between items-center">
+                                <h3 class="text-xs font-bold text-naver-text">매매 체결 리스트</h3>
+                                <label class="flex items-center gap-2 text-[10px] cursor-pointer text-naver-sub">
+                                    <input type="checkbox" id="quickModeToggle" onchange="app.toggleQuickMode()" class="accent-naver-green">
+                                    ⚡ 빠른 입력 모드
+                                </label>
+                            </div>
+                            <div id="quickPanel" class="hidden flex gap-2 items-center bg-white p-2 rounded border border-blue-100">
+                                <input type="text" id="quickInput" placeholder="예: 3 (3구간 체결) 또는 1-5 (일괄체결)" class="flex-1 p-1 text-xs border-b border-gray-300 focus:border-naver-green outline-none" onkeypress="if(event.key==='Enter') app.quickExecute(this.value)">
+                                <button onclick="app.quickExecute(document.getElementById('quickInput').value)" class="bg-naver-green text-white px-3 py-1 rounded text-[10px] font-bold">확인</button>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto max-h-[60vh]">
+                            <table class="w-full text-right text-xs whitespace-nowrap">
+                                <thead class="bg-white text-naver-sub border-b border-gray-200 sticky top-0 z-10">
+                                    <tr>
+                                        <th class="px-2 py-2 text-center bg-white w-8">주문</th>
+                                        <th class="px-2 py-2 text-center bg-white w-8">체결</th>
+                                        <th class="px-2 py-2 text-center bg-white">구간</th>
+                                        <th class="px-2 py-2 text-center text-naver-blue bg-white">하락</th>
+                                        <th class="px-2 py-2 text-naver-text bg-white">매수가</th>
+                                        <th class="px-2 py-2 bg-white">수량</th>
+                                        <th class="px-2 py-2 bg-white">금액</th>
+                                        <th class="px-2 py-2 font-bold text-naver-text bg-white border-l border-gray-200">실 수량</th>
+                                        <th class="px-2 py-2 font-bold text-naver-text bg-white">실 총액</th>
+                                        <th class="px-2 py-2 text-naver-green bg-white">실 평단</th>
+                                        <th class="px-2 py-2 bg-white border-l border-gray-100 text-[10px]">체결일</th>
+                                        <th class="px-2 py-2 bg-white text-[10px] min-w-[100px]">비고</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="resultBody" class="divide-y divide-gray-100"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= HISTORY VIEW ================= -->
+        <div id="historyView" class="hidden p-4 space-y-4 animate-fade-in">
+            <div class="naver-card p-5">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-naver-text">📜 거래 히스토리</h2>
+                    <button onclick="app.renderHistory()" class="text-xs text-gray-400 hover:text-naver-text">
+                        🔄 새로고침
+                    </button>
+                </div>
+                <div id="historyTimeline" class="space-y-4">
+                    <!-- 동적 생성 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications -->
+    <div id="toast" class="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-gray-800/90 text-white px-4 py-2 rounded-full shadow-lg opacity-0 transition-opacity duration-300 pointer-events-none z-50 text-xs font-bold whitespace-nowrap">알림 메시지</div>
+
+    <script>
+        // --- 1. Constants & Utils ---
+        const CONSTANTS = {
+            STORAGE_KEY: 'Moonwave_MCA_v1_5_Final',
+            BACKUP_KEY: 'MCA_AUTO_BACKUP',
+            COLORS: { executed: '#F04452', line: '#03C75A', gap: '#64748B' }
+        };
+
+        const app = {
+            data: { portfolios: [], activeId: null, initialCash: 0 },
+            chartInstance: null,
+            _saveTimer: null,
+
+            // Utils
+            formatNum: (num) => new Intl.NumberFormat('ko-KR').format(num),
+            parseNum: (str) => str ? parseFloat(String(str).replace(/,/g, '')) || 0 : 0,
+            
+            showToast: (msg) => {
+                const el = document.getElementById('toast');
+                el.innerText = msg; el.classList.remove('opacity-0');
+                setTimeout(() => el.classList.add('opacity-0'), 2000);
+            },
+
+            // --- 2. State Management ---
+            init: function() {
+                try {
+                    const saved = localStorage.getItem(CONSTANTS.STORAGE_KEY);
+                    if (saved) {
+                        const parsed = JSON.parse(saved);
+                        this.data.portfolios = parsed.portfolios || [];
+                        this.data.activeId = parsed.activeId;
+                        this.data.initialCash = parsed.initialCash || 0;
+                    } else {
+                        // Migration from v1.4
+                        const v14 = localStorage.getItem('Moonwave_MCA_v1_4_Perfect');
+                        if (v14) {
+                            const parsed = JSON.parse(v14);
+                            this.data.portfolios = parsed.portfolios || [];
+                            this.data.activeId = parsed.activeId;
+                            this.data.initialCash = parsed.initialCash || 0;
+                            this.save(); // Save to new key
+                        }
+                    }
+                } catch(e) { console.error("Load Error", e); }
+
+                if (this.data.portfolios.length === 0) this.addNewPortfolio(false);
+                if (!this.data.activeId || !this.data.portfolios.find(p => p.id === this.data.activeId)) {
+                    this.data.activeId = this.data.portfolios[0].id;
+                }
+
+                document.getElementById('initialCash').value = this.formatNum(this.data.initialCash);
+                
+                this.renderTabs();
+                this.loadActivePortfolio();
+                this.showDashboard();
+            },
+
+            debouncedSave: function() {
+                clearTimeout(this._saveTimer);
+                this._saveTimer = setTimeout(() => this.save(), 300);
+            },
+
+            save: function() {
+                const p = this.data.portfolios.find(p => p.id === this.data.activeId);
+                if (p && !document.getElementById('detailView').classList.contains('hidden')) {
+                     p.name = document.getElementById('assetName').value;
+                     p.params.peakPrice = document.getElementById('peakPrice').value;
+                     p.params.strength = document.getElementById('strength').value;
+                     p.params.startDrop = document.getElementById('startDrop').value;
+                     p.params.steps = document.getElementById('steps').value;
+                     p.params.targetBudget = document.getElementById('targetBudgetInput').value;
+                     p.params.ma120Price = document.getElementById('ma120Price').value;
+                     p.params.targetMultiple = document.getElementById('targetMultiple').value;
+                     p.params.manualTargetPrice = document.getElementById('manualTargetPrice').value;
+                     p.params.legacyQty = document.getElementById('legacyQty').value;
+                     p.params.legacyAvg = document.getElementById('legacyAvg').value;
+                }
+                
+                this.data.initialCash = this.parseNum(document.getElementById('initialCash').value);
+                const dataStr = JSON.stringify(this.data);
+                
+                // Current data save
+                localStorage.setItem(CONSTANTS.STORAGE_KEY, dataStr);
+                
+                // Auto backup (최근 5개)
+                try {
+                    const backups = JSON.parse(localStorage.getItem(CONSTANTS.BACKUP_KEY) || '[]');
+                    backups.unshift({
+                        timestamp: new Date().toISOString(),
+                        data: dataStr
+                    });
+                    
+                    if (backups.length > 5) backups.length = 5;
+                    localStorage.setItem(CONSTANTS.BACKUP_KEY, JSON.stringify(backups));
+                } catch(e) {
+                    console.warn('Auto backup failed:', e);
+                }
+            },
+
+            // --- Memo & Quick Mode ---
+            savePortfolioMemo: function(val) {
+                const p = this.data.portfolios.find(p => p.id === this.data.activeId);
+                if(p) { p.portfolioMemo = val; this.debouncedSave(); }
+            },
+
+            saveStepMemo: function(step, val) {
+                const p = this.data.portfolios.find(p => p.id === this.data.activeId);
+                if(p) {
+                    if(!p.stepMemos) p.stepMemos = {};
+                    p.stepMemos[step] = val;
+                    this.debouncedSave();
+                }
+            },
+
+            saveStepDate: function(step, val) {
+                 const p = this.data.portfolios.find(p => p.id === this.data.activeId);
+                if(p) {
+                    if(!p.executionDates) p.executionDates = {};
+                    p.executionDates[step] = val;
+                    this.debouncedSave();
+                }
+            },
+
+            toggleQuickMode: function() {
+                const panel = document.getElementById('quickPanel');
+                if (document.getElementById('quickModeToggle').checked) {
+                    panel.classList.remove('hidden');
+                    document.getElementById('quickInput').focus();
+                } else {
+                    panel.classList.add('hidden');
+                }
+            },
+
+            quickExecute: function(input) {
+                const p = this.data.portfolios.find(p => p.id === this.data.activeId);
+                if (!p) return;
+                
+                const range = input.trim().split('-');
+                let start, end;
+                
+                if (range.length === 2) {
+                    start = parseInt(range[0]);
+                    end = parseInt(range[1]);
+                } else {
+                    start = end = parseInt(range[0]);
+                }
+
+                if (isNaN(start) || isNaN(end) || start < 1 || end > parseInt(p.params.steps)) {
+                    this.showToast("⚠️ 올바른 구간을 입력하세요 (예: 3 또는 1-5)");
+                    return;
+                }
+
+                const today = new Date().toISOString().split('T')[0];
+                let count = 0;
+
+                for (let i = start; i <= end; i++) {
+                    if (!p.orderedSteps.includes(i)) p.orderedSteps.push(i);
+                    if (!p.executedSteps.includes(i)) {
+                        p.executedSteps.push(i);
+                        if (!p.executionDates) p.executionDates = {};
+                        if (!p.executionDates[i]) p.executionDates[i] = today;
+                        count++;
+                    }
+                }
+                
+                this.save();
+                this.calculateMCA();
+                this.showToast(`⚡ ${count}개 구간 체결 완료`);
+                document.getElementById('quickInput').value = '';
+            },
+
+            // --- 3. Portfolio Ops ---
+            addNewPortfolio: function(render = true) {
+                const newId = Date.now();
+                this.data.portfolios.push({
+                    id: newId, name: "새 종목", isFavorite: false,
+                    params: { peakPrice: '100,000', strength: '1.0', startDrop: '10', steps: '20', targetBudget: '10,000,000', legacyQty:'0', legacyAvg:'0', ma120Price: '', targetMultiple: '', manualTargetPrice: '' },
+                    orderedSteps: [], executedSteps: [], stepMemos: {}, executionDates: {}, portfolioMemo: "" 
+                });
+                this.data.activeId = newId;
+                if (render) { this.renderTabs(); this.loadActivePortfolio(); this.showDetail(); this.save(); this.showToast("추가됨"); }
+            },
+
+            deleteCurrentPortfolio: function() {
+                if (this.data.portfolios.length <= 1) { alert("최소 1개 필요"); return; }
+                if (confirm("삭제하시겠습니까?")) {
+                    this.data.portfolios = this.data.portfolios.filter(p => p.id !== this.data.activeId);
+                    this.data.activeId = this.data.portfolios[0].id;
+                    this.renderTabs(); this.loadActivePortfolio(); this.save(); this.updateDashboardStats();
+                }
+            },
+
+            toggleFavorite: function() {
+                const p = this.data.portfolios.find(p => p.id === this.data.activeId);
+                if(p) { p.isFavorite = !p.isFavorite; this.renderTabs(); this.updateFavoriteUI(); this.save(); }
+            },
+
+            renderTabs: function() {
+                const container = document.getElementById('tabContainer');
+                container.innerHTML = '';
+                const sorted = [...this.data.portfolios].sort((a, b) => (a.isFavorite === b.isFavorite) ? a.id - b.id : (a.isFavorite ? -1 : 1));
+                
+                sorted.forEach(p => {
+                    const isActive = p.id === this.data.activeId;
+                    const div = document.createElement('div');
+                    div.className = `px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer whitespace-nowrap transition-all border flex items-center gap-1 ${isActive ? 'tab-active' : 'tab-inactive'}`;
+                    div.innerHTML = `${p.isFavorite ? '<span class="text-yellow-400">★</span>' : ''}${p.name}`;
+                    div.onclick = () => { this.data.activeId = p.id; this.loadActivePortfolio(); this.renderTabs(); };
+                    container.appendChild(div);
+                });
+            },
+
+            loadActivePortfolio: function() {
+                const p = this.data.portfolios.find(p => p.id === this.data.activeId);
+                if (!p) return;
+                
+                const setVal = (id, val) => document.getElementById(id).value = val;
+                setVal('assetName', p.name);
+                setVal('peakPrice', p.params.peakPrice);
+                setVal('strength', p.params.strength);
+                setVal('startDrop', p.params.startDrop);
+                setVal('steps', p.params.steps);
+                setVal('targetBudgetInput', p.params.targetBudget);
+                setVal('ma120Price', p.params.ma120Price);
+                setVal('targetMultiple', p.params.targetMultiple);
+                setVal('manualTargetPrice', p.params.manualTargetPrice);
+                setVal('legacyQty', p.params.legacyQty);
+                setVal('legacyAvg', p.params.legacyAvg);
+                document.getElementById('portfolioMemo').value = p.portfolioMemo || "";
+                
+                this.updateFavoriteUI();
+                
+                if (!document.getElementById('detailView').classList.contains('hidden')) {
+                    this.calculateMCA();
+                }
+            },
+            
+            updateFavoriteUI: function() {
+                const p = this.data.portfolios.find(p => p.id === this.data.activeId);
+                const btn = document.getElementById('favoriteBtn');
+                btn.className = (p && p.isFavorite) ? "text-yellow-400 hover:text-yellow-500 transition" : "text-gray-300 hover:text-yellow-400 transition";
+            },
+
+            updateCurrentTabName: function() { this.save(); this.renderTabs(); },
+            getAutoTick: function(price) {
+                if (price < 2000) return 1; if (price < 5000) return 5; if (price < 20000) return 10;
+                if (price < 50000) return 50; if (price < 200000) return 100; if (price < 500000) return 500; return 1000;
+            },
+            formatInput: function(input) {
+                let val = input.value.replace(/[^0-9]/g, '');
+                if (val) val = parseInt(val).toLocaleString('ko-KR');
+                input.value = val;
+                
+                if (input.id === 'ma120Price' || input.id === 'targetMultiple') this.calculateAutoTarget();
+                else if (input.id === 'manualTargetPrice') { this.calculateSimulation(); this.debouncedSave(); }
+                else if (input.id === 'initialCash') { this.debouncedSave(); this.updateDashboardStats(); }
+                else if (input.id === 'targetBudgetInput') { this.debouncedSave(); }
+                else if (input.id === 'peakPrice' || input.id === 'legacyQty' || input.id === 'legacyAvg' || input.id === 'strength' || input.id === 'startDrop' || input.id === 'steps') {
+                     this.calculateMCA(); this.debouncedSave(); 
+                }
+            },
+
+            calculateMCA: function() {
+                const p = this.data.portfolios.find(p => p.id === this.data.activeId);
+                if (!p) return;
+
+                const peak = this.parseNum(document.getElementById('peakPrice').value);
+                const strength = parseFloat(document.getElementById('strength').value) || 1;
+                const startDrop = parseFloat(document.getElementById('startDrop').value) || 10;
+                const tick = this.getAutoTick(peak);
+                const steps = parseInt(document.getElementById('steps').value) || 20;
+                const legQty = this.parseNum(document.getElementById('legacyQty').value);
+                const legAvg = this.parseNum(document.getElementById('legacyAvg').value);
+                const legAmt = legQty * legAvg;
+
+                const ordered = p.orderedSteps || [];
+                const executed = p.executedSteps || [];
+                const memos = p.stepMemos || {};
+                const dates = p.executionDates || {};
+
+                const tbody = document.getElementById('resultBody');
+                tbody.innerHTML = '';
+
+                const labels = [], avgPrices = [], gaps = [];
+                let planQty = legQty, planAmt = legAmt;
+                let realQty = legQty, realAmt = legAmt;
+
+                // Legacy Row
+                if (legQty > 0) {
+                    labels.push(0); avgPrices.push(legAvg); gaps.push(0);
+                    tbody.innerHTML += `<tr class="bg-gray-100 text-gray-500 font-bold"><td class="px-2 py-2 text-center">-</td><td class="px-2 py-2 text-center text-[10px]">보유</td><td colspan="3" class="text-center">-</td><td class="px-2 py-2 text-right">${this.formatNum(legQty)}</td><td class="px-2 py-2 text-right">${this.formatNum(legAmt)}</td><td class="px-2 py-2 text-right border-l font-bold">${this.formatNum(legQty)}</td><td class="px-2 py-2 text-right font-bold">${this.formatNum(legAmt)}</td><td class="px-2 py-2 text-right font-bold text-naver-green">${this.formatNum(legAvg)}</td><td colspan="2"></td></tr>`;
+                }
+
+                for (let i = 1; i <= steps; i++) {
+                    const drop = startDrop + (i - 1);
+                    const rawP = peak * (1 - (drop / 100));
+                    const buyP = Math.floor(rawP / tick) * tick; 
+                    let qty = Math.trunc(strength * Math.exp(i / 3));
+                    if (qty < 1) qty = 1;
+                    const amt = buyP * qty;
+
+                    planQty += qty; planAmt += amt;
+                    const planAvg = Math.round(planAmt / planQty);
+
+                    const isExec = executed.includes(i);
+                    if (isExec) { realQty += qty; realAmt += amt; }
+                    const realAvg = realQty > 0 ? Math.round(realAmt / realQty) : 0;
+
+                    labels.push(i);
+                    avgPrices.push(planAvg);
+                    const gap = planAvg > 0 ? ((buyP - planAvg) / planAvg * 100).toFixed(2) : 0;
+                    gaps.push(gap);
+
+                    const isOrd = ordered.includes(i) ? 'checked' : '';
+                    const isExecChk = isExec ? 'checked' : '';
+                    const rowClass = isExec ? 'bg-green-50' : (isOrd ? 'bg-yellow-50' : '');
+                    const realClass = isExec ? "font-bold text-naver-text" : "text-gray-400";
+                    const avgClass = isExec ? "font-bold text-naver-green" : "text-gray-400";
+                    
+                    const stepDate = dates[i] || '';
+                    const stepMemo = memos[i] || '';
+
+                    const tr = document.createElement('tr');
+                    tr.className = rowClass;
+                    tr.innerHTML = `
+                        <td class="px-2 py-2 text-center border-r border-gray-100"><div class="checkbox-wrapper"><input type="checkbox" class="order-checkbox" data-step="${i}" data-type="order" ${isOrd} onchange="app.handleCheck(this)"></div></td>
+                        <td class="px-2 py-2 text-center border-r border-gray-100"><div class="checkbox-wrapper"><input type="checkbox" class="exec-checkbox" data-step="${i}" data-type="exec" ${isExecChk} onchange="app.handleCheck(this)"></div></td>
+                        <td class="px-2 py-2 text-center text-naver-sub">${i}</td>
+                        <td class="px-2 py-2 text-center text-naver-blue font-bold">-${drop}%</td>
+                        <td class="px-2 py-2 text-naver-text font-medium">${this.formatNum(buyP)}</td>
+                        <td class="px-2 py-2 text-naver-sub">${this.formatNum(qty)}</td>
+                        <td class="px-2 py-2 text-naver-text text-[11px]">${this.formatNum(amt)}</td>
+                        <td class="px-2 py-2 ${realClass} border-l border-gray-200">${this.formatNum(realQty)}</td>
+                        <td class="px-2 py-2 ${realClass}">${this.formatNum(realAmt)}</td>
+                        <td class="px-2 py-2 ${avgClass}">${this.formatNum(realAvg)}</td>
+                        <td class="px-2 py-2 text-[10px] text-gray-500 border-l border-gray-100"><input type="date" value="${stepDate}" class="bg-transparent w-20 outline-none" onchange="app.saveStepDate(${i}, this.value)"></td>
+                        <td class="px-2 py-2 text-[10px]"><input type="text" value="${stepMemo}" class="bg-transparent w-full outline-none placeholder-gray-300" placeholder="메모" onchange="app.saveStepMemo(${i}, this.value)"></td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+
+                this.updateDetailStats(realAmt, realQty, realQty > 0 ? Math.round(realAmt/realQty) : 0, planAmt);
+                this.updateChart(labels, avgPrices, executed, gaps);
+                this.calculateSimulation();
+                this.save();
+            },
+
+            handleCheck: function(cb) {
+                const step = parseInt(cb.dataset.step);
+                const type = cb.dataset.type;
+                const p = this.data.portfolios.find(p => p.id === this.data.activeId);
+                
+                if (cb.checked) {
+                    if (type === 'order') {
+                        if (!p.orderedSteps.includes(step)) p.orderedSteps.push(step);
+                    } else if (type === 'exec') {
+                        if (!p.executedSteps.includes(step)) p.executedSteps.push(step);
+                        if (!p.orderedSteps.includes(step)) p.orderedSteps.push(step);
+                        if (!p.executionDates) p.executionDates = {};
+                        if (!p.executionDates[step]) p.executionDates[step] = new Date().toISOString().split('T')[0];
+                    }
+                } else {
+                    if (type === 'order') {
+                        p.orderedSteps = p.orderedSteps.filter(s => s !== step);
+                        if (p.executedSteps.includes(step)) {
+                            p.executedSteps = p.executedSteps.filter(s => s !== step);
+                        }
+                    } else if (type === 'exec') {
+                        p.executedSteps = p.executedSteps.filter(s => s !== step);
+                    }
+                }
+                this.save(); this.calculateMCA();
+            },
+
+            updateDetailStats: function(amt, qty, avg, planTotal) {
+                document.getElementById('currentInvested').innerText = this.formatNum(amt) + " 원";
+                document.getElementById('currentMyQty').innerText = this.formatNum(qty);
+                document.getElementById('currentMyAvg').innerText = this.formatNum(avg) + " 원";
+                const prog = planTotal > 0 ? Math.min(Math.round((amt / planTotal) * 100), 100) : 0;
+                document.getElementById('progressBar').style.width = prog + "%";
+            },
+
+            updateChart: function(labels, avgPrices, executedSteps, gaps) {
+                const ctx = document.getElementById('mcaChart').getContext('2d');
+                
+                const numericGaps = gaps.map(g => parseFloat(g));
+                const minGap = Math.min(...numericGaps);
+                const minIdx = numericGaps.indexOf(minGap);
+                let lastExecIdx = -1;
+                if (executedSteps.length > 0) lastExecIdx = labels.indexOf(Math.max(...executedSteps));
+
+                const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+                gradient.addColorStop(0, 'rgba(100, 116, 139, 0.2)'); 
+                gradient.addColorStop(1, 'rgba(100, 116, 139, 0)');
+
+                const configData = {
+                    labels: labels,
+                    datasets: [
+                        { label: '평단가 방어선', data: avgPrices, yAxisID: 'y', borderColor: CONSTANTS.COLORS.line, backgroundColor: CONSTANTS.COLORS.line, borderWidth: 2, pointRadius: 0, tension: 0.4, order: 2, datalabels: { display: false } },
+                        { label: '괴리율(Gap%)', data: gaps, yAxisID: 'y1', borderColor: CONSTANTS.COLORS.gap, borderWidth: 2, tension: 0.4, fill: true, backgroundColor: gradient,
+                            pointBackgroundColor: ctx => executedSteps.includes(labels[ctx.dataIndex]) ? CONSTANTS.COLORS.executed : 'transparent',
+                            pointBorderColor: ctx => executedSteps.includes(labels[ctx.dataIndex]) ? '#fff' : 'transparent',
+                            pointBorderWidth: 2, pointRadius: ctx => executedSteps.includes(labels[ctx.dataIndex]) ? 5 : 0, order: 1,
+                            datalabels: { display: (c) => c.dataIndex === minIdx || c.dataIndex === lastExecIdx, align: (c) => c.dataIndex === minIdx ? 'bottom' : 'top', color: (c) => c.dataIndex === lastExecIdx ? CONSTANTS.COLORS.executed : CONSTANTS.COLORS.gap, font: { size: 10, weight: 'bold', family: '"Nanum Gothic"' }, formatter: (v) => v + '%', offset: 4 }
+                        }
+                    ]
+                };
+
+                if (this.chartInstance) {
+                    this.chartInstance.data = configData;
+                    this.chartInstance.update('none'); 
+                } else {
+                    this.chartInstance = new Chart(ctx, {
+                        type: 'line', plugins: [ChartDataLabels], data: configData,
+                        options: { responsive: true, maintainAspectRatio: false, layout: { padding: { top: 20, bottom: 20, right: 0, left: 0 } }, plugins: { legend: { display: true, position: 'bottom', labels: { usePointStyle: true } } }, scales: { x: { display: true, grid: { display: false }, ticks: { stepSize: 2 } }, y: { position: 'left', grid: { display: false }, display: true }, y1: { position: 'right', grid: { display: false }, display: true, title: {display: true, text: '수익률(%)'} } } }
+                    });
+                }
+            },
+
+            // --- 5. Auto Fit & Sim ---
+            autoFitParams: function() {
+                const target = this.parseNum(document.getElementById('targetBudgetInput').value);
+                const peak = this.parseNum(document.getElementById('peakPrice').value);
+                const startDrop = parseFloat(document.getElementById('startDrop').value);
+                const tick = this.getAutoTick(peak);
+                let currentSteps = parseInt(document.getElementById('steps').value);
+                if (!target) return;
+                
+                this.showToast("최적화 중...");
+                
+                const simulate = (s, st, sd) => {
+                    let sum = 0;
+                    for (let i=1; i<=s; i++) {
+                        let d = sd + (i-1);
+                        let p = Math.floor(peak * (1-d/100)/tick)*tick;
+                        let q = Math.trunc(st * Math.exp(i/3)) || 1;
+                        sum += p*q;
+                    }
+                    return sum;
+                };
+
+                let low = 0.01, high = 50.0, bestStrength = 1.0;
+                for(let i=0; i<50; i++) {
+                    let mid = (low+high)/2;
+                    if(simulate(currentSteps, mid, startDrop) > target) high = mid; else low = mid;
+                    bestStrength = mid;
+                }
+                
+                if (bestStrength < 0.5) {
+                    bestStrength = 0.5;
+                    for(let s=currentSteps; s>=1; s--) {
+                        if(simulate(s, bestStrength, startDrop) <= target * 1.1) { currentSteps = s; break; }
+                    }
+                }
+                
+                document.getElementById('strength').value = bestStrength.toFixed(2);
+                document.getElementById('steps').value = currentSteps;
+                this.calculateMCA();
+                this.showToast(`최적화 완료: 강도 ${bestStrength.toFixed(2)}`);
+            },
+
+            calculateAutoTarget: function() {
+                const ma120 = this.parseNum(document.getElementById('ma120Price').value);
+                const mult = parseFloat(document.getElementById('targetMultiple').value);
+                if (ma120 && mult) {
+                    document.getElementById('manualTargetPrice').value = this.formatNum(Math.round(ma120 * mult));
+                }
+                this.calculateSimulation();
+            },
+
+            calculateSimulation: function() {
+                const targetP = this.parseNum(document.getElementById('manualTargetPrice').value);
+                const curAmt = this.parseNum(document.getElementById('currentInvested').innerText.replace(' 원',''));
+                const curQty = this.parseNum(document.getElementById('currentMyQty').innerText);
+                
+                if (!curQty || !targetP) {
+                    document.getElementById('simRoe').innerText = "-";
+                    document.getElementById('simProfit').innerText = "-";
+                    return;
+                }
+                const profit = (targetP * curQty) - curAmt;
+                const roe = (profit / curAmt) * 100;
+                document.getElementById('simRoe').innerText = roe.toFixed(2) + "%";
+                document.getElementById('simProfit').innerText = this.formatNum(Math.round(profit)) + " 원";
+            },
+
+            // --- 6. View & Dashboard ---
+            showDashboard: function() {
+                document.getElementById('dashboardView').classList.remove('hidden');
+                document.getElementById('detailView').classList.add('hidden');
+                document.getElementById('historyView').classList.add('hidden');
+                
+                ['navDash', 'navDetail', 'navHistory'].forEach(id => {
+                    document.getElementById(id).classList.remove('tab-active');
+                    document.getElementById(id).classList.add('tab-inactive');
+                });
+                document.getElementById('navDash').classList.add('tab-active');
+                document.getElementById('navDash').classList.remove('tab-inactive');
+                
+                this.updateDashboardStats();
+            },
+
+            showDetail: function(id) {
+                if (id) { this.data.activeId = id; this.save(); }
+                this.loadActivePortfolio();
+                this.renderTabs();
+                
+                document.getElementById('dashboardView').classList.add('hidden');
+                document.getElementById('detailView').classList.remove('hidden');
+                document.getElementById('historyView').classList.add('hidden');
+                
+                ['navDash', 'navDetail', 'navHistory'].forEach(id => {
+                    document.getElementById(id).classList.remove('tab-active');
+                    document.getElementById(id).classList.add('tab-inactive');
+                });
+                document.getElementById('navDetail').classList.add('tab-active');
+                document.getElementById('navDetail').classList.remove('tab-inactive');
+            },
+
+            showHistory: function() {
+                document.getElementById('dashboardView').classList.add('hidden');
+                document.getElementById('detailView').classList.add('hidden');
+                document.getElementById('historyView').classList.remove('hidden');
+                
+                ['navDash', 'navDetail', 'navHistory'].forEach(id => {
+                    document.getElementById(id).classList.remove('tab-active');
+                    document.getElementById(id).classList.add('tab-inactive');
+                });
+                document.getElementById('navHistory').classList.add('tab-active');
+                document.getElementById('navHistory').classList.remove('tab-inactive');
+                
+                this.renderHistory();
+            },
+
+            renderHistory: function() {
+                const events = [];
+                
+                this.data.portfolios.forEach(p => {
+                    if (!p.executionDates) return;
+                    
+                    const peak = this.parseNum(p.params.peakPrice);
+                    const strength = parseFloat(p.params.strength) || 1;
+                    const startDrop = parseFloat(p.params.startDrop) || 10;
+                    const tick = this.getAutoTick(peak);
+                    
+                    Object.entries(p.executionDates).forEach(([step, date]) => {
+                        const stepNum = parseInt(step);
+                        const drop = startDrop + (stepNum - 1);
+                        const price = Math.floor(peak * (1 - drop/100) / tick) * tick;
+                        let qty = Math.trunc(strength * Math.exp(stepNum / 3)) || 1;
+                        const amt = price * qty;
+                        
+                        events.push({
+                            date: date,
+                            portfolio: p.name,
+                            step: stepNum,
+                            drop: drop,
+                            price: price,
+                            qty: qty,
+                            amount: amt,
+                            memo: p.stepMemos?.[stepNum] || ''
+                        });
+                    });
+                });
+                
+                events.sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                const container = document.getElementById('historyTimeline');
+                
+                if (events.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-12 text-gray-400">
+                            <p class="text-2xl mb-2">📭</p>
+                            <p class="text-sm">아직 체결 내역이 없습니다</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const grouped = {};
+                events.forEach(e => {
+                    if (!grouped[e.date]) grouped[e.date] = [];
+                    grouped[e.date].push(e);
+                });
+                
+                container.innerHTML = Object.entries(grouped).map(([date, items]) => {
+                    const dateObj = new Date(date);
+                    const dateStr = dateObj.toLocaleDateString('ko-KR', { 
+                        month: 'long', day: 'numeric', weekday: 'short' 
+                    });
+                    
+                    return `
+                        <div class="border-l-4 border-naver-green pl-4 pb-4">
+                            <div class="text-xs text-gray-500 mb-2 font-bold">${dateStr}</div>
+                            <div class="space-y-3">
+                                ${items.map(e => `
+                                    <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                                        <div class="flex justify-between items-start mb-1">
+                                            <div class="font-bold text-sm text-naver-text">${e.portfolio}</div>
+                                            <div class="text-xs text-naver-blue font-bold">-${e.drop}%</div>
+                                        </div>
+                                        <div class="text-xs text-gray-600 mb-1">
+                                            ${e.step}구간 | ${this.formatNum(e.price)}원 × ${this.formatNum(e.qty)}주
+                                        </div>
+                                        <div class="text-xs font-bold text-naver-green">
+                                            ${this.formatNum(e.amount)}원
+                                        </div>
+                                        ${e.memo ? `<div class="text-xs text-gray-500 mt-2 italic">"${e.memo}"</div>` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            },
+
+            updateDashboardStats: function() {
+                let totalInvested = 0, totalOrdered = 0, totalLegacy = 0;
+                const container = document.getElementById('portfolioListContainer');
+                container.innerHTML = '';
+                
+                const sorted = [...this.data.portfolios].sort((a, b) => (a.isFavorite === b.isFavorite) ? a.id - b.id : (a.isFavorite ? -1 : 1));
+
+                sorted.forEach(p => {
+                    const peak = this.parseNum(p.params.peakPrice || '0');
+                    const strength = parseFloat(p.params.strength || '1.0');
+                    const startDrop = parseFloat(p.params.startDrop || '10');
+                    const tick = this.getAutoTick(peak);
+                    const steps = parseInt(p.params.steps || '20');
+                    const legAmt = this.parseNum(p.params.legacyQty || '0') * this.parseNum(p.params.legacyAvg || '0');
+                    
+                    let executed = legAmt, ordered = 0;
+                    let lastExec = 0, lastOrd = 0;
+                    if(p.executedSteps && p.executedSteps.length) lastExec = Math.max(...p.executedSteps);
+                    if(p.orderedSteps && p.orderedSteps.length) lastOrd = Math.max(...p.orderedSteps);
+
+                    totalLegacy += legAmt;
+
+                    for(let i=1; i<=steps; i++) {
+                        const drop = startDrop + (i-1);
+                        const price = Math.floor(peak * (1-drop/100)/tick)*tick;
+                        let qty = Math.trunc(strength * Math.exp(i/3)) || 1;
+                        const amt = price * qty;
+                        if(p.executedSteps.includes(i)) executed += amt;
+                        else if(p.orderedSteps.includes(i)) ordered += amt;
+                    }
+                    totalInvested += executed;
+                    totalOrdered += ordered;
+
+                    const gap = lastOrd - lastExec;
+                    let badge = `<span class="text-[10px] font-bold text-naver-green bg-green-50 px-2 py-0.5 rounded">정상</span>`;
+                    let border = "border-gray-200";
+                    if(lastOrd > 0 && gap <= 3) {
+                        badge = `<span class="text-[10px] font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded animate-pulse">주문필요</span>`;
+                        border = "border-red-200 ring-1 ring-red-50";
+                    } else if (lastOrd === 0) {
+                        badge = `<span class="text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded">대기</span>`;
+                    }
+
+                    const w1 = (lastExec / steps) * 100;
+                    const w2 = ((lastOrd - lastExec) / steps) * 100;
+
+                    container.innerHTML += `
+                    <div class="naver-card p-4 hover:shadow-md transition cursor-pointer border ${border}" onclick="app.showDetail(${p.id})">
+                        <div class="flex justify-between items-center mb-2"><h3 class="font-bold text-naver-text flex items-center gap-1">${p.isFavorite ? '<span class="text-yellow-400">★</span>' : ''} ${p.name}</h3>${badge}</div>
+                        <div class="flex justify-between items-center text-xs text-gray-500 mb-1"><span>체결: <strong>${lastExec}</strong></span><span>주문: <strong>${lastOrd}</strong></span></div>
+                        <div class="w-full bg-gray-100 rounded-full h-2 flex overflow-hidden"><div class="h-full bg-naver-green" style="width: ${w1}%"></div><div class="h-full bg-naver-yellow" style="width: ${w2}%"></div></div>
+                    </div>`;
+                });
+
+                const initCash = this.parseNum(document.getElementById('initialCash').value);
+                const newInvested = totalInvested - totalLegacy; 
+                const remain = initCash - newInvested;
+
+                document.getElementById('dashTotalInvested').innerText = this.formatNum(totalInvested) + " 원";
+                document.getElementById('dashTotalOrdered').innerText = this.formatNum(totalOrdered) + " 원";
+                document.getElementById('dashRemainingCash').innerText = this.formatNum(remain) + " 원";
+                
+                const burn = initCash > 0 ? Math.round((remain/initCash)*100) : 0;
+                const burnEl = document.getElementById('cashBurnRate');
+                burnEl.innerText = burn + "% 남음";
+                burnEl.className = burn < 20 ? "text-xs font-bold text-red-400" : "text-xs font-bold text-naver-green";
+            },
+
+            // --- 7. File Ops ---
+            exportData: function() {
+                const str = localStorage.getItem(CONSTANTS.STORAGE_KEY);
+                if(!str) return this.showToast("데이터 없음");
+                
+                const date = new Date();
+                const ts = date.getFullYear() + "-" + String(date.getMonth()+1).padStart(2,'0') + "-" + String(date.getDate()).padStart(2,'0') + "_" + String(date.getHours()).padStart(2,'0') + String(date.getMinutes()).padStart(2,'0');
+                const blob = new Blob([str], {type:"application/json"});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = `MCA_Backup_${ts}.json`;
+                document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                this.showToast("💾 백업 완료");
+            },
+
+            exportCSV: function() {
+                const p = this.data.portfolios.find(p => p.id === this.data.activeId);
+                if (!p) return this.showToast("종목을 선택하세요");
+                
+                let csv = '\ufeff'; // UTF-8 BOM
+                csv += '종목명,구간,하락률(%),매수가,수량,금액,실제누적수량,실제누적금액,실제평단가,체결여부,체결일,메모\n';
+                
+                const peak = this.parseNum(p.params.peakPrice);
+                const strength = parseFloat(p.params.strength) || 1;
+                const startDrop = parseFloat(p.params.startDrop) || 10;
+                const tick = this.getAutoTick(peak);
+                const steps = parseInt(p.params.steps) || 20;
+                const legQty = this.parseNum(p.params.legacyQty);
+                const legAvg = this.parseNum(p.params.legacyAvg);
+                
+                let realQty = legQty, realAmt = legQty * legAvg;
+                
+                if (legQty > 0) {
+                    csv += `${p.name},0,0,${legAvg},${legQty},${legQty * legAvg},${realQty},${realAmt},${legAvg},O,-,기존 보유\n`;
+                }
+                
+                for (let i = 1; i <= steps; i++) {
+                    const drop = startDrop + (i - 1);
+                    const price = Math.floor(peak * (1 - drop/100) / tick) * tick;
+                    let qty = Math.trunc(strength * Math.exp(i / 3)) || 1;
+                    const amt = price * qty;
+                    
+                    const isExec = p.executedSteps.includes(i);
+                    if (isExec) { realQty += qty; realAmt += amt; }
+                    
+                    const execDate = p.executionDates?.[i] || '';
+                    const memo = (p.stepMemos?.[i] || '').replace(/"/g, '""');
+                    
+                    csv += `${p.name},${i},-${drop}%,${price},${qty},${amt},${realQty},${realAmt},${realQty > 0 ? Math.round(realAmt/realQty) : 0},${isExec ? 'O' : 'X'},${execDate},"${memo}"\n`;
+                }
+                
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                const today = new Date().toISOString().split('T')[0];
+                link.download = `${p.name}_${today}.csv`;
+                link.click();
+                
+                this.showToast('📊 CSV 내보내기 완료');
+            },
+
+            showBackupList: function() {
+                const backups = JSON.parse(localStorage.getItem(CONSTANTS.BACKUP_KEY) || '[]');
+                if (backups.length === 0) return this.showToast('백업 없음');
+                
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4';
+                modal.onclick = () => modal.remove();
+                
+                modal.innerHTML = `
+                    <div class="bg-white rounded-xl p-6 max-w-md w-full shadow-2xl" onclick="event.stopPropagation()">
+                        <h3 class="font-bold mb-4 text-naver-text">🕐 자동 백업 목록</h3>
+                        <div class="space-y-2 max-h-80 overflow-y-auto">
+                            ${backups.map((b, i) => {
+                                const date = new Date(b.timestamp);
+                                const dateStr = date.toLocaleString('ko-KR', { 
+                                    month: 'short', day: 'numeric', 
+                                    hour: '2-digit', minute: '2-digit' 
+                                });
+                                return `
+                                    <div class="p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition" 
+                                         onclick="app.restoreBackup(${i})">
+                                        <div class="font-bold text-sm text-naver-text">${dateStr}</div>
+                                        <div class="text-xs text-gray-500">${i === 0 ? '최근 저장' : `${i+1}번째 백업`}</div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                        <button onclick="this.closest('.fixed').remove()" 
+                                class="w-full mt-4 py-2 bg-gray-100 rounded-lg text-sm font-bold hover:bg-gray-200 transition">
+                            닫기
+                        </button>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            },
+
+            restoreBackup: function(index) {
+                if (!confirm('이 백업으로 복구하시겠습니까?\n(현재 데이터는 덮어씌워집니다)')) return;
+                
+                const backups = JSON.parse(localStorage.getItem(CONSTANTS.BACKUP_KEY));
+                const backup = backups[index];
+                
+                localStorage.setItem(CONSTANTS.STORAGE_KEY, backup.data);
+                this.init();
+                this.showToast('✓ 백업 복구 완료');
+                document.querySelector('.fixed')?.remove();
+            },
+
+            triggerImport: function() { document.getElementById('fileInput').click(); },
+            
+            importData: function(input) {
+                const file = input.files[0];
+                if(!file) return;
+                const r = new FileReader();
+                r.onload = (e) => {
+                    try {
+                        const d = JSON.parse(e.target.result);
+                        if(!d.portfolios) throw new Error();
+                        localStorage.setItem(CONSTANTS.STORAGE_KEY, e.target.result);
+                        this.init(); this.showToast("복구 완료");
+                    } catch(err) { alert("파일 오류"); }
+                };
+                r.readAsText(file);
+                input.value = '';
+            }
+        };
+
+        // Boot
+        document.addEventListener('DOMContentLoaded', () => { app.init(); });
+    </script>
+</body>
+</html>
