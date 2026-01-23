@@ -94,6 +94,38 @@ async function searchNaverStocksAlt(query: string, limit: number): Promise<Stock
   }
 }
 
+// 종목코드로 직접 조회 (6자리 숫자인 경우)
+async function fetchStockByCode(ticker: string): Promise<StockSearchResult | null> {
+  const url = `https://m.stock.naver.com/api/stock/${ticker}/basic`;
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15',
+        'Accept': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await response.json();
+
+    if (data.stockName) {
+      return {
+        ticker,
+        name: data.stockName,
+        market: data.marketName?.includes('코스닥') ? 'KOSDAQ' : 'KOSPI',
+      };
+    }
+  } catch {
+    // 실패 시 null
+  }
+
+  return null;
+}
+
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse
@@ -122,13 +154,26 @@ export default async function handler(
 
   try {
     const maxLimit = parseInt(limit as string, 10) || 10;
+    let results: StockSearchResult[] = [];
 
-    // 네이버 검색 시도
-    let results = await searchNaverStocks(q, maxLimit);
+    // 6자리 숫자면 직접 종목코드 조회
+    const normalizedQuery = q.trim();
+    if (/^\d{6}$/.test(normalizedQuery) || /^\d{1,5}$/.test(normalizedQuery)) {
+      const ticker = normalizedQuery.padStart(6, '0');
+      const directResult = await fetchStockByCode(ticker);
+      if (directResult) {
+        results = [directResult];
+      }
+    }
+
+    // 직접 조회 결과가 없으면 검색
+    if (results.length === 0) {
+      results = await searchNaverStocks(normalizedQuery, maxLimit);
+    }
 
     // 결과가 없으면 대체 API 시도
     if (results.length === 0) {
-      results = await searchNaverStocksAlt(q, maxLimit);
+      results = await searchNaverStocksAlt(normalizedQuery, maxLimit);
     }
 
     res.status(200).json({
