@@ -156,17 +156,19 @@ export function PortfolioDetail() {
   };
 
   // Fundamental Grade 저장 핸들러
-  const handleSaveFundamental = async (data: FundamentalInput, result: FundamentalResult) => {
+  const handleSaveFundamental = async (data: FundamentalInput, result: FundamentalResult, ticker?: string) => {
     if (portfolio?.id) {
       const fundamentalData: FundamentalData = {
         ...data,
-        dataSource: 'manual',
+        dataSource: ticker ? 'api' : 'manual',
         lastUpdated: new Date(),
       };
       await updatePortfolio(portfolio.id, {
         fundamentalScore: result.totalScore,
         fundamentalGrade: result.grade,
         fundamentalData,
+        // 종목코드도 함께 저장
+        ...(ticker && { stockCode: ticker }),
       });
     }
   };
@@ -181,7 +183,25 @@ export function PortfolioDetail() {
 
   const handleSaveName = async () => {
     if (portfolio?.id && editedName.trim()) {
-      await updatePortfolio(portfolio.id, { name: editedName.trim() });
+      const name = editedName.trim();
+
+      // 종목코드 추출 시도
+      // 1. 6자리 숫자만 입력한 경우: "035420"
+      // 2. 괄호 안에 종목코드: "삼성전자 (005930)" 또는 "NAVER(035420)"
+      let stockCode: string | undefined;
+      if (/^\d{6}$/.test(name)) {
+        stockCode = name;
+      } else {
+        const match = name.match(/\((\d{6})\)/);
+        if (match) {
+          stockCode = match[1];
+        }
+      }
+
+      await updatePortfolio(portfolio.id, {
+        name,
+        ...(stockCode && { stockCode }),
+      });
       setIsEditingName(false);
     }
   };
@@ -391,6 +411,7 @@ export function PortfolioDetail() {
       <Section title="Fundamental Grade">
         <FundamentalGradeInput
           initialData={portfolio.fundamentalData}
+          initialTicker={portfolio.stockCode}
           onSave={handleSaveFundamental}
         />
       </Section>

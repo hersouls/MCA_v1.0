@@ -17,7 +17,7 @@ interface FundamentalGradeInputProps {
   initialData?: FundamentalInput;
   initialTicker?: string;
   onChange?: (data: FundamentalInput, result: FundamentalResult) => void;
-  onSave?: (data: FundamentalInput, result: FundamentalResult) => void;
+  onSave?: (data: FundamentalInput, result: FundamentalResult, ticker?: string) => void;
   compact?: boolean;
 }
 
@@ -94,12 +94,14 @@ export function FundamentalGradeInput({
     }
   }, [searchQuery, searchByQuery, clearSearch]);
 
-  // 초기 종목코드가 있으면 자동 조회
+  // 초기 종목코드가 있으면 자동 조회 (initialTicker 변경 시에도 재조회)
   useEffect(() => {
-    if (initialTicker && !stockData) {
+    if (initialTicker) {
+      // 이미 같은 종목이 로드된 경우 스킵
+      if (stockData?.ticker === initialTicker) return;
       selectStock(initialTicker);
     }
-  }, [initialTicker, stockData, selectStock]);
+  }, [initialTicker, stockData?.ticker, selectStock]);
 
   // 외부 클릭 시 검색 결과 닫기
   useEffect(() => {
@@ -196,7 +198,7 @@ export function FundamentalGradeInput({
   // 저장 핸들러
   const handleSave = () => {
     if (result) {
-      onSave?.(data, result);
+      onSave?.(data, result, stockData?.ticker);
     }
   };
 
