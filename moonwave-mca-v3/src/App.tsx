@@ -2,7 +2,7 @@
 // Main App Component
 // ============================================
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Outlet } from 'react-router-dom';
 
 import { Header, Sidebar, MobileNav, BottomNav, LoadingState } from '@/components/layout';
@@ -16,45 +16,51 @@ import { migrateFromV2 } from '@/services/migration';
 export function App() {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isMigrating, setIsMigrating] = useState(false);
+  const initRef = useRef(false);
 
-  const initializePortfolios = usePortfolioStore((state) => state.initialize);
-  const initializeSettings = useSettingsStore((state) => state.initialize);
-  const setGlobalLoading = useUIStore((state) => state.setGlobalLoading);
   const addPortfolio = usePortfolioStore((state) => state.addPortfolio);
 
-  // Initialize app
+  // Initialize app - run only once
   useEffect(() => {
+    // Prevent double initialization (StrictMode or re-mount)
+    if (initRef.current) return;
+    initRef.current = true;
+
     async function init() {
       try {
-        setGlobalLoading(true, '앱 초기화 중...');
+        useUIStore.getState().setGlobalLoading(true, '앱 초기화 중...');
 
         // Check for v2 migration
         const migrated = localStorage.getItem('MCA_V3_MIGRATED');
         if (!migrated) {
           setIsMigrating(true);
-          setGlobalLoading(true, '기존 데이터 마이그레이션 중...');
+          useUIStore.getState().setGlobalLoading(true, '기존 데이터 마이그레이션 중...');
 
-          const hasMigrated = await migrateFromV2();
-          if (hasMigrated) {
+          const result = await migrateFromV2();
+          if (result.success) {
             console.log('v2 → v3 마이그레이션 완료');
           }
 
           setIsMigrating(false);
         }
 
-        // Initialize stores
-        await Promise.all([initializeSettings(), initializePortfolios()]);
+        // Initialize stores using direct store access to avoid dependency issues
+        await Promise.all([
+          useSettingsStore.getState().initialize(),
+          usePortfolioStore.getState().initialize(),
+        ]);
 
         setIsInitialized(true);
       } catch (error) {
         console.error('초기화 실패:', error);
+        setIsInitialized(true); // Still show app even on error
       } finally {
-        setGlobalLoading(false);
+        useUIStore.getState().setGlobalLoading(false);
       }
     }
 
     init();
-  }, [initializePortfolios, initializeSettings, setGlobalLoading]);
+  }, []); // Empty deps - run only on mount
 
   const handleAddPortfolio = useCallback(async () => {
     await addPortfolio();
