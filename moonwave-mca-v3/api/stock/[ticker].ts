@@ -20,8 +20,8 @@ export interface StockFundamentalData {
   fetchedAt: string;
 }
 
-// KRX OTP 요청
-async function getKrxOtp(bld: string): Promise<string> {
+// KRX OTP 요청 (PER/PBR/배당수익률)
+async function getKrxOtp(): Promise<string> {
   const response = await fetch(
     'http://data.krx.co.kr/comm/fileDn/GenerateOTP/generate.cmd',
     {
@@ -29,18 +29,18 @@ async function getKrxOtp(bld: string): Promise<string> {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         Referer: 'http://data.krx.co.kr/contents/MDC/MDI/mdiLoader/index.cmd',
+        Origin: 'http://data.krx.co.kr',
       },
       body: new URLSearchParams({
         locale: 'ko_KR',
         mktId: 'ALL',
         trdDd: getLatestTradingDate(),
         money: '1',
-        csvxls_is498: 'false',
+        csvxls_isNo: 'false',
         name: 'fileDown',
         url: 'dbms/MDC/STAT/standard/MDCSTAT03501',
-        bld,
       }),
     }
   );
@@ -167,7 +167,7 @@ export default async function handler(
 
   try {
     // KRX PER/PBR/배당수익률 데이터
-    const otp = await getKrxOtp('dbms/MDC/STAT/standard/MDCSTAT03501');
+    const otp = await getKrxOtp();
     const csv = await getKrxData(otp);
     const data = parseKrxCsv(csv, normalizedTicker);
 

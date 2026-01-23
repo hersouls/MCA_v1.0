@@ -16,7 +16,7 @@ let stockMasterCache: StockSearchResult[] | null = null;
 let cacheTimestamp = 0;
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24시간
 
-// KRX OTP 요청
+// KRX OTP 요청 (종목 마스터)
 async function getKrxOtp(): Promise<string> {
   const response = await fetch(
     'http://data.krx.co.kr/comm/fileDn/GenerateOTP/generate.cmd',
@@ -25,8 +25,9 @@ async function getKrxOtp(): Promise<string> {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         Referer: 'http://data.krx.co.kr/contents/MDC/MDI/mdiLoader/index.cmd',
+        Origin: 'http://data.krx.co.kr',
       },
       body: new URLSearchParams({
         locale: 'ko_KR',
