@@ -12,10 +12,11 @@ import { TradeTable } from './TradeTable';
 import { MCAChart } from './MCAChart';
 import { ParameterEditor } from './ParameterEditor';
 import { ExitSimulator } from './ExitSimulator';
+import { FundamentalGradeInput } from './FundamentalGradeInput';
 import { usePortfolioStore, selectPortfolioStats } from '@/stores/portfolioStore';
 import { calculateTrades, getCurrentInvestment, calculateTotalBudget } from '@/services/calculation';
 import { formatCurrency, formatCompact, formatPercent } from '@/utils/format';
-import type { PortfolioParams } from '@/types';
+import type { PortfolioParams, FundamentalInput, FundamentalResult, FundamentalData } from '@/types';
 
 export function PortfolioDetail() {
   const { id } = useParams<{ id: string }>();
@@ -126,6 +127,22 @@ export function PortfolioDetail() {
   const handleMemoBlur = async () => {
     if (portfolio?.id && portfolioMemo !== portfolio.memo) {
       await updatePortfolio(portfolio.id, { memo: portfolioMemo });
+    }
+  };
+
+  // Fundamental Grade 저장 핸들러
+  const handleSaveFundamental = async (data: FundamentalInput, result: FundamentalResult) => {
+    if (portfolio?.id) {
+      const fundamentalData: FundamentalData = {
+        ...data,
+        dataSource: 'manual',
+        lastUpdated: new Date(),
+      };
+      await updatePortfolio(portfolio.id, {
+        fundamentalScore: result.totalScore,
+        fundamentalGrade: result.grade,
+        fundamentalData,
+      });
     }
   };
 
@@ -343,6 +360,14 @@ export function PortfolioDetail() {
           currentQty={currentInvestment.quantity}
           avgPrice={currentInvestment.avgPrice}
           onUpdateParams={handleSaveParams}
+        />
+      </Section>
+
+      {/* Fundamental Grade */}
+      <Section title="Fundamental Grade">
+        <FundamentalGradeInput
+          initialData={portfolio.fundamentalData}
+          onSave={handleSaveFundamental}
         />
       </Section>
 
