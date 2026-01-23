@@ -18,7 +18,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           'chart': ['chart.js', 'react-chartjs-2', 'chartjs-plugin-datalabels'],
-          'ui': ['@headlessui/react', 'lucide-react', '@heroicons/react'],
+          'ui': ['@headlessui/react', 'lucide-react'],
         },
       },
     },

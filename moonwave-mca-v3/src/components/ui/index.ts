@@ -1,22 +1,34 @@
 // ============================================
-// UI Components Barrel Export
+// UI Components Barrel Export (Catalyst-style)
 // ============================================
 
 // Button
-export { Button, IconButton } from './Button';
+export { Button, IconButton, TouchTarget } from './Button';
 
 // Input
-export { Input, NumericInput } from './Input';
+export {
+  Input,
+  NumericInput,
+  Textarea,
+  Field,
+  Fieldset,
+  Label,
+  Description,
+  ErrorMessage,
+} from './Input';
 
 // Select
 export { Select, NativeSelect } from './Select';
 export type { SelectOption } from './Select';
 
 // Badge
-export { Badge, StatusBadge, PortfolioStatusBadge } from './Badge';
+export { Badge, LegacyBadge, StatusBadge, PortfolioStatusBadge } from './Badge';
 
 // Card
-export { Card, CardHeader, CardContent, CardFooter, StatsCard } from './Card';
+export { Card, CardHeader, CardContent, CardFooter, StatsCard, StatItem, StatGrid, Divider } from './Card';
+
+// Typography (Golden Ratio Scale)
+export { Heading, PageTitle, SectionTitle, Text } from './Typography';
 
 // Dialog
 export {
@@ -24,6 +36,7 @@ export {
   DialogHeader,
   DialogBody,
   DialogFooter,
+  DialogActions,
   ConfirmDialog,
   AlertDialog,
 } from './Dialog';

@@ -10,7 +10,7 @@ import type {
   ExcelExportOptions,
   FundamentalResult,
 } from '@/types';
-import { formatCurrency, formatCompact, formatPercent } from '@/utils/format';
+import { formatCurrency, formatKoreanUnit, formatPercent } from '@/utils/format';
 import { calculateTrades } from './calculation';
 import { calculateFundamentalScore } from './fundamentalGrade';
 
@@ -292,7 +292,7 @@ export async function createPDFReport(
       `투자강도: ${portfolio.params.strength}`,
       `시작하락률: -${portfolio.params.startDrop}%`,
       `분할구간: ${portfolio.params.steps}구간`,
-      `목표예산: ${formatCompact(portfolio.params.targetBudget)}`,
+      `목표예산: ${formatKoreanUnit(portfolio.params.targetBudget)}`,
     ];
     params.forEach((p) => {
       doc.text(p, 20, yPos);
@@ -309,7 +309,7 @@ export async function createPDFReport(
       yPos += 7;
 
       doc.setFontSize(14);
-      doc.setTextColor(result.grade === 'A' ? '#22c55e' : result.grade === 'D' ? '#ef4444' : '#000');
+      doc.setTextColor(result.grade === 'A' ? '#22c55e' : result.grade === 'D' ? '#ef4444' : '#030303');
       doc.text(`Grade ${result.grade} (${result.totalScore}/100점)`, 20, yPos);
       doc.setTextColor(0);
       yPos += 10;
@@ -342,7 +342,7 @@ export async function createPDFReport(
         `-${t.dropRate}%`,
         formatCurrency(t.buyPrice),
         t.quantity.toString(),
-        formatCompact(t.amount),
+        formatKoreanUnit(t.amount),
         t.isExecuted ? formatCurrency(t.avgPrice) : '-',
         t.isOrdered || t.isExecuted ? formatPercent(t.gap) : '-',
         t.isOrdered ? '✓' : '',
@@ -350,13 +350,14 @@ export async function createPDFReport(
       ]);
 
       // autoTable은 jsPDF 확장 (jspdf-autotable 플러그인)
-      if (doc.autoTable) {
-        doc.autoTable({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((doc as any).autoTable) {
+        (doc as any).autoTable({
           startY: yPos,
           head: [['구간', '하락률', '매수가', '수량', '금액', '평단가', '괴리율', '주문', '체결']],
           body: tableData,
           styles: { fontSize: 8, cellPadding: 2 },
-          headStyles: { fillColor: [37, 99, 235] },
+          headStyles: { fillColor: [0, 168, 107] },
           alternateRowStyles: { fillColor: [245, 247, 250] },
         });
       }
@@ -441,15 +442,15 @@ export function generatePrintHTML(
         @media print {
           body { font-family: 'Malgun Gothic', sans-serif; font-size: 10pt; margin: 20mm; }
           h1 { font-size: 18pt; margin-bottom: 5mm; }
-          h2 { font-size: 12pt; margin-top: 10mm; margin-bottom: 3mm; border-bottom: 1px solid #333; }
+          h2 { font-size: 12pt; margin-top: 10mm; margin-bottom: 3mm; border-bottom: 1px solid #030303; }
           table { width: 100%; border-collapse: collapse; margin-top: 5mm; }
           th, td { border: 1px solid #ccc; padding: 2mm; text-align: right; }
-          th { background-color: #f0f0f0; }
+          th { background-color: #EDECE8; }
           .summary { display: flex; gap: 10mm; margin-bottom: 10mm; }
-          .summary-item { flex: 1; padding: 5mm; background: #f9f9f9; }
+          .summary-item { flex: 1; padding: 5mm; background: #f7f6f4; }
           .grade { font-size: 24pt; font-weight: bold; }
           .grade-A { color: #22c55e; }
-          .grade-B { color: #3b82f6; }
+          .grade-B { color: #2EFFB4; }
           .grade-C { color: #f59e0b; }
           .grade-D { color: #ef4444; }
           .footer { margin-top: 10mm; text-align: center; color: #888; font-size: 8pt; }
@@ -463,7 +464,7 @@ export function generatePrintHTML(
       <div class="summary">
         <div class="summary-item">
           <strong>투입금액</strong><br>
-          ${formatCompact(totalExecuted)}
+          ${formatKoreanUnit(totalExecuted)}
         </div>
         <div class="summary-item">
           <strong>보유수량</strong><br>
@@ -488,7 +489,7 @@ export function generatePrintHTML(
         <tr><td>투자강도</td><td>${portfolio.params.strength}</td></tr>
         <tr><td>시작하락률</td><td>-${portfolio.params.startDrop}%</td></tr>
         <tr><td>분할구간</td><td>${portfolio.params.steps}구간</td></tr>
-        <tr><td>목표예산</td><td>${formatCompact(portfolio.params.targetBudget)}</td></tr>
+        <tr><td>목표예산</td><td>${formatKoreanUnit(portfolio.params.targetBudget)}</td></tr>
       </table>
 
       <h2>매매 체결 리스트</h2>
@@ -506,7 +507,7 @@ export function generatePrintHTML(
               <td>-${t.dropRate}%</td>
               <td>${formatCurrency(t.buyPrice)}</td>
               <td>${t.quantity.toLocaleString()}</td>
-              <td>${formatCompact(t.amount)}</td>
+              <td>${formatKoreanUnit(t.amount)}</td>
               <td>${t.isExecuted ? formatCurrency(t.avgPrice) : '-'}</td>
               <td>${t.isOrdered || t.isExecuted ? formatPercent(t.gap) : '-'}</td>
               <td>${t.isExecuted ? '체결' : t.isOrdered ? '주문' : '대기'}</td>

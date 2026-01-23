@@ -48,6 +48,8 @@ interface PortfolioState {
   loadTradesForPortfolio: (portfolioId: number) => Promise<void>;
   toggleOrderedStep: (portfolioId: number, step: number) => Promise<void>;
   toggleExecutedStep: (portfolioId: number, step: number) => Promise<void>;
+  updateExecutionDate: (portfolioId: number, step: number, date: string) => Promise<void>;
+  updateStepMemo: (portfolioId: number, step: number, memo: string) => Promise<void>;
 
   // Bulk Operations
   refreshPortfolioStats: (portfolioId: number) => void;
@@ -230,6 +232,56 @@ export const usePortfolioStore = create<PortfolioState>()(
 
         await get().loadTradesForPortfolio(portfolioId);
         get().refreshPortfolioStats(portfolioId);
+      },
+
+      updateExecutionDate: async (portfolioId, step, date) => {
+        const portfolio = get().portfolios.find((p) => p.id === portfolioId);
+        if (!portfolio) return;
+
+        const executionDates = { ...(portfolio.params.executionDates || {}), [step]: date };
+        // Remove empty dates
+        if (!date) delete executionDates[step];
+
+        await db.updatePortfolio(portfolioId, {
+          params: { ...portfolio.params, executionDates },
+        });
+
+        set((state) => {
+          const newPortfolios = state.portfolios.map((p) =>
+            p.id === portfolioId
+              ? { ...p, params: { ...p.params, executionDates }, updatedAt: new Date() }
+              : p
+          );
+          return {
+            portfolios: newPortfolios,
+            sortedPortfolios: sortPortfolios(newPortfolios),
+          };
+        });
+      },
+
+      updateStepMemo: async (portfolioId, step, memo) => {
+        const portfolio = get().portfolios.find((p) => p.id === portfolioId);
+        if (!portfolio) return;
+
+        const stepMemos = { ...(portfolio.params.stepMemos || {}), [step]: memo };
+        // Remove empty memos
+        if (!memo) delete stepMemos[step];
+
+        await db.updatePortfolio(portfolioId, {
+          params: { ...portfolio.params, stepMemos },
+        });
+
+        set((state) => {
+          const newPortfolios = state.portfolios.map((p) =>
+            p.id === portfolioId
+              ? { ...p, params: { ...p.params, stepMemos }, updatedAt: new Date() }
+              : p
+          );
+          return {
+            portfolios: newPortfolios,
+            sortedPortfolios: sortPortfolios(newPortfolios),
+          };
+        });
       },
 
       refreshPortfolioStats: (portfolioId) => {

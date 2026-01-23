@@ -29,6 +29,9 @@ export interface PortfolioParams {
   ma120Price?: number;
   targetMultiple?: number;
   manualTargetPrice?: number;
+  // Step-level data
+  executionDates?: Record<number, string>;  // { step: 'YYYY-MM-DD' }
+  stepMemos?: Record<number, string>;       // { step: 'memo text' }
 }
 
 // Trade Types
@@ -60,6 +63,9 @@ export interface CalculatedTrade {
   gap: number;
   isOrdered: boolean;
   isExecuted: boolean;
+  // Real cumulative values (executed steps only, including legacy)
+  realQty: number;      // 체결 구간까지의 누적 실제 수량
+  realAmount: number;   // 체결 구간까지의 누적 실제 금액
 }
 
 // Settings Types
@@ -438,4 +444,35 @@ export interface ExcelExportOptions {
   sheets: ('summary' | 'trades' | 'history' | 'analysis')[];
   dateFormat: string;
   currencyFormat: string;
+}
+
+// ============================================
+// Stock API Types
+// ============================================
+
+export interface StockFundamentalData {
+  ticker: string;
+  name: string;
+  market: 'KOSPI' | 'KOSDAQ';
+  per: number | null;
+  pbr: number | null;
+  dividendYield: number | null;
+  eps: number | null;
+  bps: number | null;
+  dps: number | null;
+  currentPrice: number | null;
+  marketCap: number | null;
+  fetchedAt: string;
+}
+
+export interface StockSearchResult {
+  ticker: string;
+  name: string;
+  market: 'KOSPI' | 'KOSDAQ';
+}
+
+export interface StockSearchResponse {
+  query: string;
+  count: number;
+  results: StockSearchResult[];
 }

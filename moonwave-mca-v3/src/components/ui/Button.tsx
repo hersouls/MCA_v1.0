@@ -2,122 +2,310 @@
 // Button Component (Catalyst-style)
 // ============================================
 
-import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
+import * as Headless from '@headlessui/react';
 import { clsx } from 'clsx';
+import { forwardRef, type ReactNode } from 'react';
+import { Link, type LinkProps } from 'react-router-dom';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'success';
-export type ButtonSize = 'sm' | 'md' | 'lg' | 'icon';
+// TouchTarget for better mobile accessibility
+export function TouchTarget({ children }: { children: ReactNode }) {
+  return (
+    <>
+      <span
+        className="absolute left-1/2 top-1/2 size-[max(100%,2.75rem)] -translate-x-1/2 -translate-y-1/2 [@media(pointer:fine)]:hidden"
+        aria-hidden="true"
+      />
+      {children}
+    </>
+  );
+}
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: ButtonVariant;
+// Base button styles
+const baseStyles = clsx(
+  // Base
+  'relative isolate inline-flex items-center justify-center gap-x-2 rounded-lg border text-base/6 font-semibold',
+  // Focus
+  'focus:outline-none data-[focus]:outline data-[focus]:outline-2 data-[focus]:outline-offset-2 data-[focus]:outline-primary-500',
+  // Disabled
+  'data-[disabled]:opacity-50 cursor-pointer data-[disabled]:cursor-not-allowed',
+  // Icon sizing
+  '[&>[data-slot=icon]]:-mx-0.5 [&>[data-slot=icon]]:my-0.5 [&>[data-slot=icon]]:size-5 [&>[data-slot=icon]]:shrink-0 [&>[data-slot=icon]]:text-[--btn-icon] [&>[data-slot=icon]]:sm:my-1 [&>[data-slot=icon]]:sm:size-4 forced-colors:[--btn-icon:ButtonText] forced-colors:data-[hover]:[--btn-icon:ButtonText]'
+);
+
+// Size styles
+const sizeStyles = {
+  xs: 'px-2 py-1 text-xs/5 sm:text-xs/5',
+  sm: 'px-2.5 py-1.5 text-sm/5 sm:text-sm/5',
+  md: 'px-3 py-2 text-sm/6 sm:text-sm/6',
+  lg: 'px-4 py-2.5 text-base/6 sm:text-base/6',
+  icon: 'p-2 sm:p-1.5 [&>[data-slot=icon]]:m-0',
+};
+
+// Color variants (solid buttons)
+const solidStyles = {
+  primary: clsx(
+    'border-transparent bg-primary-600 text-white',
+    'data-[hover]:bg-primary-500 data-[active]:bg-primary-700',
+    'dark:bg-primary-500 dark:data-[hover]:bg-primary-400 dark:data-[active]:bg-primary-600',
+    '[--btn-icon:theme(colors.white/80%)] data-[hover]:[--btn-icon:theme(colors.white)]'
+  ),
+  secondary: clsx(
+    'border-zinc-950/10 bg-white text-zinc-950',
+    'data-[hover]:bg-zinc-950/[2.5%] data-[active]:bg-zinc-950/5',
+    'dark:border-white/15 dark:bg-white/5 dark:text-white',
+    'dark:data-[hover]:bg-white/10 dark:data-[active]:bg-white/15',
+    '[--btn-icon:theme(colors.zinc.500)] data-[hover]:[--btn-icon:theme(colors.zinc.700)] dark:[--btn-icon:theme(colors.zinc.400)] dark:data-[hover]:[--btn-icon:theme(colors.zinc.300)]'
+  ),
+  danger: clsx(
+    'border-transparent bg-danger-600 text-white',
+    'data-[hover]:bg-danger-500 data-[active]:bg-danger-700',
+    'dark:bg-danger-500 dark:data-[hover]:bg-danger-400 dark:data-[active]:bg-danger-600',
+    '[--btn-icon:theme(colors.white/80%)] data-[hover]:[--btn-icon:theme(colors.white)]'
+  ),
+  success: clsx(
+    'border-transparent bg-success-600 text-white',
+    'data-[hover]:bg-success-500 data-[active]:bg-success-700',
+    'dark:bg-success-500 dark:data-[hover]:bg-success-400 dark:data-[active]:bg-success-600',
+    '[--btn-icon:theme(colors.white/80%)] data-[hover]:[--btn-icon:theme(colors.white)]'
+  ),
+  warning: clsx(
+    'border-transparent bg-warning-500 text-white',
+    'data-[hover]:bg-warning-400 data-[active]:bg-warning-600',
+    'dark:bg-warning-500 dark:data-[hover]:bg-warning-400 dark:data-[active]:bg-warning-600',
+    '[--btn-icon:theme(colors.white/80%)] data-[hover]:[--btn-icon:theme(colors.white)]'
+  ),
+};
+
+// Outline variants
+const outlineStyles = {
+  primary: clsx(
+    'border-primary-500/50 text-primary-600',
+    'data-[hover]:border-primary-500 data-[hover]:bg-primary-50',
+    'data-[active]:bg-primary-100',
+    'dark:text-primary-400 dark:border-primary-500/30',
+    'dark:data-[hover]:border-primary-400 dark:data-[hover]:bg-primary-950/50',
+    '[--btn-icon:theme(colors.primary.500)]'
+  ),
+  secondary: clsx(
+    'border-zinc-300 text-zinc-700',
+    'data-[hover]:border-zinc-400 data-[hover]:bg-zinc-50',
+    'data-[active]:bg-zinc-100',
+    'dark:text-zinc-300 dark:border-zinc-700',
+    'dark:data-[hover]:border-zinc-600 dark:data-[hover]:bg-zinc-800/50',
+    '[--btn-icon:theme(colors.zinc.500)]'
+  ),
+  danger: clsx(
+    'border-danger-500/50 text-danger-600',
+    'data-[hover]:border-danger-500 data-[hover]:bg-danger-50',
+    'data-[active]:bg-danger-100',
+    'dark:text-danger-400 dark:border-danger-500/30',
+    'dark:data-[hover]:border-danger-400 dark:data-[hover]:bg-danger-950/50',
+    '[--btn-icon:theme(colors.danger.500)]'
+  ),
+  success: clsx(
+    'border-success-500/50 text-success-600',
+    'data-[hover]:border-success-500 data-[hover]:bg-success-50',
+    'data-[active]:bg-success-100',
+    'dark:text-success-400 dark:border-success-500/30',
+    '[--btn-icon:theme(colors.success.500)]'
+  ),
+  warning: clsx(
+    'border-warning-500/50 text-warning-600',
+    'data-[hover]:border-warning-500 data-[hover]:bg-warning-50',
+    'data-[active]:bg-warning-100',
+    'dark:text-warning-400 dark:border-warning-500/30',
+    '[--btn-icon:theme(colors.warning.500)]'
+  ),
+};
+
+// Plain/Ghost variants
+const plainStyles = {
+  primary: clsx(
+    'border-transparent text-primary-600',
+    'data-[hover]:bg-primary-50',
+    'data-[active]:bg-primary-100',
+    'dark:text-primary-400',
+    'dark:data-[hover]:bg-primary-950/50',
+    '[--btn-icon:theme(colors.primary.500)]'
+  ),
+  secondary: clsx(
+    'border-transparent text-zinc-700',
+    'data-[hover]:bg-zinc-100',
+    'data-[active]:bg-zinc-200',
+    'dark:text-zinc-300',
+    'dark:data-[hover]:bg-zinc-800',
+    '[--btn-icon:theme(colors.zinc.500)] dark:[--btn-icon:theme(colors.zinc.400)]'
+  ),
+  danger: clsx(
+    'border-transparent text-danger-600',
+    'data-[hover]:bg-danger-50',
+    'data-[active]:bg-danger-100',
+    'dark:text-danger-400',
+    'dark:data-[hover]:bg-danger-950/50',
+    '[--btn-icon:theme(colors.danger.500)]'
+  ),
+  success: clsx(
+    'border-transparent text-success-600',
+    'data-[hover]:bg-success-50',
+    'data-[active]:bg-success-100',
+    'dark:text-success-400',
+    '[--btn-icon:theme(colors.success.500)]'
+  ),
+  warning: clsx(
+    'border-transparent text-warning-600',
+    'data-[hover]:bg-warning-50',
+    'data-[active]:bg-warning-100',
+    'dark:text-warning-400',
+    '[--btn-icon:theme(colors.warning.500)]'
+  ),
+};
+
+type ButtonColor = 'primary' | 'secondary' | 'danger' | 'success' | 'warning';
+type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'icon';
+
+type BaseButtonProps = {
+  color?: ButtonColor;
   size?: ButtonSize;
+  outline?: boolean;
+  plain?: boolean;
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'success'; // Legacy support
   isLoading?: boolean;
   leftIcon?: ReactNode;
   rightIcon?: ReactNode;
+  className?: string;
   children?: ReactNode;
+};
+
+type ButtonProps = BaseButtonProps &
+  (
+    | (Omit<Headless.ButtonProps, 'as' | 'className'> & { to?: never })
+    | (Omit<LinkProps, 'className'> & { disabled?: boolean })
+  );
+
+function getButtonStyles(
+  color: ButtonColor = 'primary',
+  outline?: boolean,
+  plain?: boolean
+): string {
+  if (plain) {
+    return plainStyles[color as keyof typeof plainStyles] || plainStyles.secondary;
+  }
+  if (outline) {
+    return outlineStyles[color as keyof typeof outlineStyles] || outlineStyles.secondary;
+  }
+  return solidStyles[color] || solidStyles.primary;
 }
 
-const variantStyles: Record<ButtonVariant, string> = {
-  primary:
-    'bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800 dark:bg-primary-500 dark:hover:bg-primary-600 focus-visible:ring-primary-500',
-  secondary:
-    'bg-zinc-100 text-zinc-900 hover:bg-zinc-200 active:bg-zinc-300 dark:bg-zinc-700 dark:text-zinc-50 dark:hover:bg-zinc-600 dark:active:bg-zinc-500',
-  ghost:
-    'bg-transparent text-zinc-600 hover:bg-zinc-100 active:bg-zinc-200 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-100',
-  danger:
-    'bg-danger-600 text-white hover:bg-danger-700 active:bg-danger-800 dark:bg-danger-500 dark:hover:bg-danger-600 focus-visible:ring-danger-500',
-  success:
-    'bg-success-600 text-white hover:bg-success-700 active:bg-success-800 dark:bg-success-500 dark:hover:bg-success-600 focus-visible:ring-success-500',
-};
-
-const sizeStyles: Record<ButtonSize, string> = {
-  sm: 'h-8 px-3 text-xs gap-1.5',
-  md: 'h-10 px-4 text-sm gap-2',
-  lg: 'h-12 px-6 text-base gap-2.5',
-  icon: 'h-10 w-10 p-0',
-};
-
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  (
+export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(
+  function Button(
     {
-      variant = 'primary',
+      color,
       size = 'md',
+      outline,
+      plain,
+      variant, // Legacy support
       isLoading = false,
       leftIcon,
       rightIcon,
-      children,
       className,
-      disabled,
+      children,
       ...props
     },
     ref
-  ) => {
-    return (
-      <button
-        ref={ref}
-        className={clsx(
-          'inline-flex items-center justify-center font-medium rounded-lg',
-          'transition-all duration-200 ease-in-out',
-          'focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
-          'disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none',
-          variantStyles[variant],
-          sizeStyles[size],
-          className
-        )}
-        disabled={disabled || isLoading}
-        {...props}
+  ) {
+    // Legacy variant mapping
+    const mappedColor = variant === 'ghost' ? 'secondary' : (variant || color || 'primary');
+    const isPlain = plain || variant === 'ghost';
+
+    const classes = clsx(
+      baseStyles,
+      sizeStyles[size],
+      getButtonStyles(mappedColor as ButtonColor, outline, isPlain),
+      className
+    );
+
+    // Loading spinner
+    const LoadingSpinner = () => (
+      <svg
+        className="animate-spin size-4"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        data-slot="icon"
       >
-        {isLoading ? (
-          <svg
-            className="animate-spin h-4 w-4"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            />
-          </svg>
-        ) : (
-          <>
-            {leftIcon && <span className="flex-shrink-0">{leftIcon}</span>}
-            {children}
-            {rightIcon && <span className="flex-shrink-0">{rightIcon}</span>}
-          </>
-        )}
-      </button>
+        <circle
+          className="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          strokeWidth="4"
+        />
+        <path
+          className="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+        />
+      </svg>
+    );
+
+    const content = isLoading ? (
+      <LoadingSpinner />
+    ) : (
+      <>
+        <TouchTarget>
+          {leftIcon && <span data-slot="icon">{leftIcon}</span>}
+          {children}
+          {rightIcon && <span data-slot="icon">{rightIcon}</span>}
+        </TouchTarget>
+      </>
+    );
+
+    // Check if it's a link
+    if ('to' in props && props.to) {
+      const { to, ...linkProps } = props as LinkProps & { disabled?: boolean };
+      return (
+        <Link
+          to={to}
+          {...linkProps}
+          className={classes}
+          ref={ref as React.Ref<HTMLAnchorElement>}
+        >
+          {content}
+        </Link>
+      );
+    }
+
+    const buttonProps = props as Omit<Headless.ButtonProps, 'as' | 'className'>;
+
+    return (
+      <Headless.Button
+        {...buttonProps}
+        className={classes}
+        ref={ref as React.Ref<HTMLButtonElement>}
+        disabled={isLoading || buttonProps.disabled}
+      >
+        {content}
+      </Headless.Button>
     );
   }
 );
 
-Button.displayName = 'Button';
-
-// Icon Button variant
-interface IconButtonProps extends Omit<ButtonProps, 'size' | 'leftIcon' | 'rightIcon'> {
-  children: ReactNode;
-}
+// Icon Button variant (button-only, no link support)
+type IconButtonProps = BaseButtonProps &
+  Omit<Headless.ButtonProps, 'as' | 'className'>;
 
 export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
-  ({ className, children, ...props }, ref) => (
-    <Button
-      ref={ref}
-      size="icon"
-      className={clsx('rounded-lg', className)}
-      {...props}
-    >
-      {children}
-    </Button>
-  )
+  function IconButton({ className, children, ...props }, ref) {
+    return (
+      <Button
+        ref={ref as React.Ref<HTMLButtonElement | HTMLAnchorElement>}
+        size="icon"
+        className={className}
+        {...props}
+      >
+        <span data-slot="icon" className="flex-shrink-0">{children}</span>
+      </Button>
+    );
+  }
 );
-
-IconButton.displayName = 'IconButton';

@@ -25,3 +25,6 @@ export * from './broadcast';
 
 // 새 서비스 - 분석 및 통계
 export * from './analytics';
+
+// 새 서비스 - 종목 API (KRX 데이터)
+export * from './stockApi';

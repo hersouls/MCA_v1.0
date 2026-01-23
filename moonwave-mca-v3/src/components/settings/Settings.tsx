@@ -3,10 +3,10 @@
 // ============================================
 
 import { useState } from 'react';
-import { Sun, Moon, Monitor, Database, Download, Upload, Trash2 } from 'lucide-react';
+import { Sun, Moon, Monitor, Database, Download, Upload, Trash2, Palette, Info, Wallet } from 'lucide-react';
 
 import { PageContainer, PageHeader, Section } from '@/components/layout';
-import { Card, Button, NumericInput, ConfirmDialog } from '@/components/ui';
+import { Card, Button, NumericInput, ConfirmDialog, StatItem, StatGrid } from '@/components/ui';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { usePortfolioStore } from '@/stores/portfolioStore';
 import { useToast } from '@/components/ui/Toast';
@@ -125,7 +125,7 @@ export function Settings() {
       />
 
       {/* Theme Settings */}
-      <Section title="🎨 테마">
+      <Section title="테마" icon={<Palette className="w-5 h-5" />}>
         <Card>
           <div className="flex flex-wrap gap-3">
             {themeOptions.map((option) => {
@@ -133,18 +133,15 @@ export function Settings() {
               const isSelected = settings.theme === option.value;
 
               return (
-                <button
+                <Button
                   key={option.value}
+                  outline={!isSelected}
+                  color={isSelected ? 'primary' : 'secondary'}
+                  leftIcon={<Icon className="w-5 h-5" />}
                   onClick={() => handleThemeChange(option.value)}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border-2 transition-all ${
-                    isSelected
-                      ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
-                      : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600 text-zinc-600 dark:text-zinc-400'
-                  }`}
                 >
-                  <Icon className="w-5 h-5" />
-                  <span className="font-medium">{option.label}</span>
-                </button>
+                  {option.label}
+                </Button>
               );
             })}
           </div>
@@ -152,7 +149,7 @@ export function Settings() {
       </Section>
 
       {/* Fund Settings */}
-      <Section title="💰 자금 설정">
+      <Section title="자금 설정" icon={<Wallet className="w-5 h-5" />}>
         <Card>
           <div className="max-w-sm">
             <NumericInput
@@ -169,7 +166,7 @@ export function Settings() {
       </Section>
 
       {/* Data Management */}
-      <Section title="📦 데이터 관리">
+      <Section title="데이터 관리" icon={<Database className="w-5 h-5" />}>
         <Card>
           <div className="space-y-4">
             {/* Stats */}
@@ -188,7 +185,7 @@ export function Settings() {
             {/* Actions */}
             <div className="flex flex-wrap gap-3">
               <Button
-                variant="secondary"
+                color="secondary"
                 leftIcon={<Download className="w-4 h-4" />}
                 onClick={handleExportData}
                 isLoading={isExporting}
@@ -196,7 +193,7 @@ export function Settings() {
                 데이터 내보내기
               </Button>
               <Button
-                variant="secondary"
+                color="secondary"
                 leftIcon={<Upload className="w-4 h-4" />}
                 onClick={handleImportData}
               >
@@ -210,7 +207,7 @@ export function Settings() {
                 위험 영역
               </h4>
               <Button
-                variant="danger"
+                color="danger"
                 leftIcon={<Trash2 className="w-4 h-4" />}
                 onClick={() => setIsDeleteDialogOpen(true)}
               >
@@ -222,29 +219,25 @@ export function Settings() {
       </Section>
 
       {/* App Info */}
-      <Section title="ℹ️ 앱 정보">
+      <Section title="앱 정보" icon={<Info className="w-5 h-5" />}>
         <Card>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-zinc-500 dark:text-zinc-400">버전</span>
-              <span className="text-zinc-900 dark:text-zinc-100">3.0.0</span>
+          <StatGrid columns={3} divided>
+            <StatItem label="버전" value="3.0.0" />
+            <StatItem label="개발자" value="Moonwave" />
+            <div>
+              <span className="text-xs text-zinc-500 dark:text-zinc-400">저장소</span>
+              <p className="font-semibold text-right">
+                <a
+                  href="https://github.com/hersouls/moonwave-mca"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary-600 dark:text-primary-400 hover:underline"
+                >
+                  GitHub
+                </a>
+              </p>
             </div>
-            <div className="flex justify-between">
-              <span className="text-zinc-500 dark:text-zinc-400">개발자</span>
-              <span className="text-zinc-900 dark:text-zinc-100">Moonwave</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-zinc-500 dark:text-zinc-400">저장소</span>
-              <a
-                href="https://github.com/hersouls/moonwave-mca"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary-600 dark:text-primary-400 hover:underline"
-              >
-                GitHub
-              </a>
-            </div>
-          </div>
+          </StatGrid>
         </Card>
       </Section>
 

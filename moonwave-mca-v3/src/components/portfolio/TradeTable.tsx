@@ -3,12 +3,12 @@
 // Interactive table with order/execute toggles
 // ============================================
 
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { clsx } from 'clsx';
 import { Check, Clock, AlertTriangle } from 'lucide-react';
 import type { CalculatedTrade, PortfolioParams } from '@/types';
 import { calculateTrades } from '@/services/calculation';
-import { formatCurrency, formatCompact, formatPercent } from '@/utils/format';
+import { formatCurrency, formatKoreanUnit, formatPercent } from '@/utils/format';
 
 interface TradeTableProps {
   params: PortfolioParams;
@@ -16,6 +16,10 @@ interface TradeTableProps {
   executedSteps: number[];
   onToggleOrdered: (step: number) => void;
   onToggleExecuted: (step: number) => void;
+  executionDates?: Record<number, string>;
+  stepMemos?: Record<number, string>;
+  onDateChange?: (step: number, date: string) => void;
+  onMemoChange?: (step: number, memo: string) => void;
 }
 
 export function TradeTable({
@@ -24,6 +28,10 @@ export function TradeTable({
   executedSteps,
   onToggleOrdered,
   onToggleExecuted,
+  executionDates = {},
+  stepMemos = {},
+  onDateChange,
+  onMemoChange,
 }: TradeTableProps) {
   const trades = useMemo(
     () => calculateTrades(params, orderedSteps, executedSteps),
@@ -34,6 +42,7 @@ export function TradeTable({
   const totals = useMemo(() => {
     const ordered = trades.filter((t) => t.isOrdered);
     const executed = trades.filter((t) => t.isExecuted);
+    const lastExecuted = executed[executed.length - 1];
 
     return {
       orderedQty: ordered.reduce((sum, t) => sum + t.quantity, 0),
@@ -41,8 +50,24 @@ export function TradeTable({
       executedQty: executed.reduce((sum, t) => sum + t.quantity, 0) + params.legacyQty,
       executedAmt: executed.reduce((sum, t) => sum + t.amount, 0) + params.legacyQty * params.legacyAvg,
       avgPrice: executed.length > 0 ? executed[executed.length - 1].avgPrice : 0,
+      realQty: lastExecuted?.realQty ?? params.legacyQty,
+      realAmount: lastExecuted?.realAmount ?? params.legacyQty * params.legacyAvg,
     };
   }, [trades, params.legacyQty, params.legacyAvg]);
+
+  const handleDateChange = useCallback(
+    (step: number, date: string) => {
+      onDateChange?.(step, date);
+    },
+    [onDateChange]
+  );
+
+  const handleMemoChange = useCallback(
+    (step: number, memo: string) => {
+      onMemoChange?.(step, memo);
+    },
+    [onMemoChange]
+  );
 
   return (
     <div className="overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700/50">
@@ -71,11 +96,24 @@ export function TradeTable({
               <th className="px-3 py-3 text-right text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider">
                 금액
               </th>
+              {/* New columns */}
+              <th className="px-3 py-3 text-right text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider border-l border-zinc-200 dark:border-zinc-700">
+                실 수량
+              </th>
+              <th className="px-3 py-3 text-right text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider">
+                실 총액
+              </th>
               <th className="px-3 py-3 text-right text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider">
                 평단가
               </th>
               <th className="px-3 py-3 text-right text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider">
                 괴리율
+              </th>
+              <th className="px-3 py-3 text-center text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider border-l border-zinc-200 dark:border-zinc-700 w-28">
+                체결일
+              </th>
+              <th className="px-3 py-3 text-left text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider min-w-[120px]">
+                비고
               </th>
             </tr>
           </thead>
@@ -84,8 +122,12 @@ export function TradeTable({
               <TradeRow
                 key={trade.step}
                 trade={trade}
+                executionDate={executionDates[trade.step] || ''}
+                memo={stepMemos[trade.step] || ''}
                 onToggleOrdered={() => onToggleOrdered(trade.step)}
                 onToggleExecuted={() => onToggleExecuted(trade.step)}
+                onDateChange={(date) => handleDateChange(trade.step, date)}
+                onMemoChange={(memo) => handleMemoChange(trade.step, memo)}
               />
             ))}
           </tbody>
@@ -98,11 +140,20 @@ export function TradeTable({
                 {totals.executedQty.toLocaleString()}주
               </td>
               <td className="px-3 py-3 text-right font-bold text-zinc-900 dark:text-zinc-50 tabular-nums">
-                {formatCompact(totals.executedAmt)}
+                {formatKoreanUnit(totals.executedAmt)}
+              </td>
+              {/* Real totals */}
+              <td className="px-3 py-3 text-right font-bold text-zinc-900 dark:text-zinc-50 tabular-nums border-l border-zinc-200 dark:border-zinc-700">
+                {totals.realQty.toLocaleString()}주
+              </td>
+              <td className="px-3 py-3 text-right font-bold text-zinc-900 dark:text-zinc-50 tabular-nums">
+                {formatKoreanUnit(totals.realAmount)}
               </td>
               <td className="px-3 py-3 text-right font-bold text-primary-600 dark:text-primary-400 tabular-nums">
                 {totals.avgPrice > 0 ? formatCurrency(totals.avgPrice) : '-'}
               </td>
+              <td className="px-3 py-3"></td>
+              <td className="px-3 py-3 border-l border-zinc-200 dark:border-zinc-700"></td>
               <td className="px-3 py-3"></td>
             </tr>
           </tfoot>
@@ -115,11 +166,23 @@ export function TradeTable({
 // Individual Trade Row
 interface TradeRowProps {
   trade: CalculatedTrade;
+  executionDate: string;
+  memo: string;
   onToggleOrdered: () => void;
   onToggleExecuted: () => void;
+  onDateChange: (date: string) => void;
+  onMemoChange: (memo: string) => void;
 }
 
-function TradeRow({ trade, onToggleOrdered, onToggleExecuted }: TradeRowProps) {
+function TradeRow({
+  trade,
+  executionDate,
+  memo,
+  onToggleOrdered,
+  onToggleExecuted,
+  onDateChange,
+  onMemoChange,
+}: TradeRowProps) {
   const getRowClass = () => {
     if (trade.isExecuted) {
       return 'bg-success-50/50 dark:bg-success-900/20';
@@ -205,7 +268,29 @@ function TradeRow({ trade, onToggleOrdered, onToggleExecuted }: TradeRowProps) {
 
       {/* Amount */}
       <td className="px-3 py-2.5 text-right tabular-nums text-zinc-700 dark:text-zinc-200">
-        {formatCompact(trade.amount)}
+        {formatKoreanUnit(trade.amount)}
+      </td>
+
+      {/* Real Quantity (new) */}
+      <td className="px-3 py-2.5 text-right tabular-nums border-l border-zinc-200 dark:border-zinc-700">
+        {trade.isExecuted ? (
+          <span className="font-bold text-zinc-900 dark:text-zinc-50">
+            {trade.realQty.toLocaleString()}
+          </span>
+        ) : (
+          <span className="text-zinc-400 dark:text-zinc-500">-</span>
+        )}
+      </td>
+
+      {/* Real Amount (new) */}
+      <td className="px-3 py-2.5 text-right tabular-nums">
+        {trade.isExecuted ? (
+          <span className="font-bold text-zinc-900 dark:text-zinc-50">
+            {formatKoreanUnit(trade.realAmount)}
+          </span>
+        ) : (
+          <span className="text-zinc-400 dark:text-zinc-500">-</span>
+        )}
       </td>
 
       {/* Average Price */}
@@ -229,6 +314,38 @@ function TradeRow({ trade, onToggleOrdered, onToggleExecuted }: TradeRowProps) {
         ) : (
           '-'
         )}
+      </td>
+
+      {/* Execution Date (new) */}
+      <td className="px-3 py-2.5 text-center border-l border-zinc-200 dark:border-zinc-700">
+        <input
+          type="date"
+          value={executionDate}
+          onChange={(e) => onDateChange(e.target.value)}
+          disabled={!trade.isExecuted}
+          className={clsx(
+            'w-full bg-transparent text-xs text-center tabular-nums',
+            'border-0 focus:outline-none focus:ring-1 focus:ring-primary-500 rounded',
+            trade.isExecuted
+              ? 'text-zinc-700 dark:text-zinc-200'
+              : 'text-zinc-300 dark:text-zinc-600 cursor-not-allowed'
+          )}
+        />
+      </td>
+
+      {/* Memo (new) */}
+      <td className="px-3 py-2.5">
+        <input
+          type="text"
+          value={memo}
+          onChange={(e) => onMemoChange(e.target.value)}
+          placeholder="메모"
+          className={clsx(
+            'w-full min-w-[100px] bg-transparent text-xs',
+            'border-0 focus:outline-none focus:ring-1 focus:ring-primary-500 rounded px-1',
+            'text-zinc-700 dark:text-zinc-200 placeholder-zinc-400 dark:placeholder-zinc-500'
+          )}
+        />
       </td>
     </tr>
   );

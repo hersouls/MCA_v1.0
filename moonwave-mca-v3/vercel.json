@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    { "source": "/api/stock/search", "destination": "/api/stock/search" },
+    { "source": "/api/stock/:ticker", "destination": "/api/stock/[ticker]" },
+    { "source": "/((?!api|assets|favicon|logo|icons|manifest|sw).*)", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, OPTIONS" }
+      ]
+    }
+  ]
+}

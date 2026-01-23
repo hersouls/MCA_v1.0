@@ -5,14 +5,14 @@
 
 import { useState, useMemo } from 'react';
 import { clsx } from 'clsx';
-import { Target, TrendingUp, Calculator } from 'lucide-react';
-import { Card, NumericInput, Input } from '@/components/ui';
+import { TrendingUp, Calculator } from 'lucide-react';
+import { Card, NumericInput } from '@/components/ui';
 import type { PortfolioParams } from '@/types';
 import {
   calculateSimulation,
   calculateAutoTargetPrice,
 } from '@/services/calculation';
-import { formatNumber, formatCurrency, formatCompact, formatPercent } from '@/utils/format';
+import { formatNumber, formatCurrency, formatKoreanUnit, formatPercent } from '@/utils/format';
 
 interface ExitSimulatorProps {
   params: PortfolioParams;
@@ -66,14 +66,7 @@ export function ExitSimulator({
     : 0;
 
   return (
-    <Card padding="lg" className="border-l-4 border-l-primary-500">
-      <div className="flex items-center gap-2 mb-4">
-        <Target className="w-5 h-5 text-primary-500" />
-        <h3 className="font-semibold text-zinc-900 dark:text-zinc-50">
-          목표가 시뮬레이션
-        </h3>
-      </div>
-
+    <Card padding="lg">
       <div className="space-y-4">
         {/* MA120 and Multiple */}
         <div className="grid grid-cols-2 gap-4">
@@ -87,19 +80,15 @@ export function ExitSimulator({
             placeholder="0"
             unit="원"
           />
-          <Input
+          <NumericInput
             label="목표 배수"
-            type="number"
-            step="0.1"
-            min="1"
-            max="10"
             value={targetMultiple > 0 ? targetMultiple.toString() : ''}
             onChange={(value) => {
               setTargetMultiple(parseFloat(String(value)) || 0);
             }}
             onBlur={handleUpdateParams}
             placeholder="2.5"
-            hint="배"
+            unit="배"
           />
         </div>
 
@@ -124,7 +113,7 @@ export function ExitSimulator({
             setManualTargetPrice(Number(value));
           }}
           onBlur={handleUpdateParams}
-          placeholder="직접 입력 시 자동 계산 무시"
+          placeholder="직접 입력"
           unit="원"
           hint="입력하면 자동 계산 목표가를 대체합니다"
         />
@@ -145,7 +134,7 @@ export function ExitSimulator({
                 <p className="text-xs font-medium text-primary-600 dark:text-primary-400 uppercase tracking-wide">
                   목표 매도가
                 </p>
-                <p className="mt-1 text-2xl font-bold text-primary-700 dark:text-primary-300">
+                <p className="mt-1 text-2xl font-bold text-primary-700 dark:text-primary-300 text-right tabular-nums">
                   {formatCurrency(effectiveTargetPrice)}
                 </p>
                 {avgPrice > 0 && (
@@ -176,13 +165,12 @@ export function ExitSimulator({
                 </p>
                 <p
                   className={clsx(
-                    'mt-1 text-2xl font-bold',
+                    'mt-1 text-2xl font-bold text-right tabular-nums',
                     simulation.expectedROE >= 0
                       ? 'text-success-700 dark:text-success-300'
                       : 'text-danger-700 dark:text-danger-300'
                   )}
                 >
-                  {simulation.expectedROE >= 0 ? '+' : ''}
                   {formatPercent(simulation.expectedROE)}
                 </p>
               </div>
@@ -203,18 +191,18 @@ export function ExitSimulator({
                 </span>
                 <span
                   className={clsx(
-                    'text-xl font-bold',
+                    'text-xl font-bold tabular-nums',
                     simulation.expectedProfit >= 0
                       ? 'text-success-600 dark:text-success-400'
                       : 'text-danger-600 dark:text-danger-400'
                   )}
                 >
                   {simulation.expectedProfit >= 0 ? '+' : ''}
-                  {formatCompact(simulation.expectedProfit)}
+                  {formatKoreanUnit(simulation.expectedProfit)}
                 </span>
               </div>
               <div className="mt-2 flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
-                <span>투입금액: {formatCompact(currentAmount)}</span>
+                <span className="tabular-nums">투입금액: {formatKoreanUnit(currentAmount)}</span>
                 <span>보유수량: {currentQty.toLocaleString()}주</span>
               </div>
             </div>

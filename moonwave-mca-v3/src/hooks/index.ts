@@ -14,3 +14,6 @@ export * from './useExport';
 
 // 새 훅 - 크로스탭 동기화
 export * from './useBroadcast';
+
+// 새 훅 - 종목 기본 정보 조회
+export * from './useStockFundamental';

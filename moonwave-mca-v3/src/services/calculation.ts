@@ -26,6 +26,10 @@ export function calculateTrades(
   let cumulativeQty = legacyQty;
   let cumulativeAmt = legacyQty * legacyAvg;
 
+  // Real cumulative values (executed steps only)
+  let realQty = legacyQty;
+  let realAmount = legacyQty * legacyAvg;
+
   for (let i = 1; i <= steps; i++) {
     const dropRate = startDrop + (i - 1);
     const buyPrice = calculateBuyPrice(peakPrice, dropRate);
@@ -39,6 +43,8 @@ export function calculateTrades(
     if (isExecuted) {
       cumulativeQty += quantity;
       cumulativeAmt += amount;
+      realQty += quantity;
+      realAmount += amount;
     }
 
     const avgPrice = cumulativeQty > 0 ? Math.round(cumulativeAmt / cumulativeQty) : 0;
@@ -56,6 +62,8 @@ export function calculateTrades(
       gap,
       isOrdered,
       isExecuted,
+      realQty: isExecuted ? realQty : 0,
+      realAmount: isExecuted ? realAmount : 0,
     });
   }
 

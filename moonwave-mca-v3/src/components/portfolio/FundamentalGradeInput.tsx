@@ -3,16 +3,19 @@
 // 100점 만점 펀더멘털 점수 입력 UI
 // ============================================
 
-import { useState, useMemo, useCallback } from 'react';
-import { Clipboard, Calculator, Info, AlertCircle, CheckCircle } from 'lucide-react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { Clipboard, Calculator, Info, AlertCircle, CheckCircle, Search, Loader2, X } from 'lucide-react';
 import type { FundamentalInput, FundamentalResult, GrowthPotential, ManagementQuality, ClipboardParseResult } from '@/types';
 import { calculateFundamentalScore, getGradeColor, getGradeDescription } from '@/services/fundamentalGrade';
-import { useClipboard, useDropParse } from '@/hooks/useClipboard';
+import { useClipboard, useDropParse, useStockFundamental } from '@/hooks';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { FUNDAMENTAL_GRADE_CONFIG } from '@/utils/constants';
+import { TEXTS } from '@/utils/texts';
 
 interface FundamentalGradeInputProps {
   initialData?: FundamentalInput;
+  initialTicker?: string;
   onChange?: (data: FundamentalInput, result: FundamentalResult) => void;
   onSave?: (data: FundamentalInput, result: FundamentalResult) => void;
   compact?: boolean;
@@ -36,15 +39,85 @@ const DEFAULT_INPUT: FundamentalInput = {
 
 export function FundamentalGradeInput({
   initialData,
+  initialTicker,
   onChange,
   onSave,
   compact = false,
 }: FundamentalGradeInputProps) {
   const [data, setData] = useState<FundamentalInput>(initialData || DEFAULT_INPUT);
   const [showToast, setShowToast] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [modifiedFields, setModifiedFields] = useState<Set<string>>(new Set());
+  const searchContainerRef = useRef<HTMLDivElement>(null);
 
   // 클립보드 훅
   const { parseClipboard, isParsing, error: clipboardError } = useClipboard();
+
+  // 종목 검색 훅
+  const {
+    stockData,
+    searchResults,
+    isLoading: isStockLoading,
+    isSearching,
+    error: stockError,
+    isManuallyModified,
+    searchByQuery,
+    selectStock,
+    clearSearch,
+    markAsModified,
+  } = useStockFundamental({
+    debounceMs: 500,
+    useCache: true,
+    onDataLoaded: (loadedData) => {
+      // API 데이터를 폼에 자동 적용
+      setData((prev) => ({
+        ...prev,
+        per: loadedData.per ?? prev.per,
+        pbr: loadedData.pbr ?? prev.pbr,
+        dividendYield: loadedData.dividendYield ?? prev.dividendYield,
+      }));
+      setModifiedFields(new Set()); // 자동 적용 시 수정 플래그 초기화
+      setShowToast(`${loadedData.name} (${loadedData.ticker}) 데이터 적용됨`);
+      setTimeout(() => setShowToast(null), 3000);
+    },
+  });
+
+  // 검색어 변경 시 검색 실행
+  useEffect(() => {
+    if (searchQuery.length >= 1) {
+      searchByQuery(searchQuery);
+      setShowSearchResults(true);
+    } else {
+      clearSearch();
+      setShowSearchResults(false);
+    }
+  }, [searchQuery, searchByQuery, clearSearch]);
+
+  // 초기 종목코드가 있으면 자동 조회
+  useEffect(() => {
+    if (initialTicker && !stockData) {
+      selectStock(initialTicker);
+    }
+  }, [initialTicker, stockData, selectStock]);
+
+  // 외부 클릭 시 검색 결과 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setShowSearchResults(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // 종목 선택 핸들러
+  const handleSelectStock = async (ticker: string, name: string) => {
+    setSearchQuery(`${name} (${ticker})`);
+    setShowSearchResults(false);
+    await selectStock(ticker);
+  };
 
   // 파싱된 데이터 적용 (useDropParse보다 먼저 선언해야 함)
   const applyParsedData = useCallback((parseResult: ClipboardParseResult) => {
@@ -87,6 +160,13 @@ export function FundamentalGradeInput({
   const handleChange = <K extends keyof FundamentalInput>(key: K, value: FundamentalInput[K]) => {
     const newData = { ...data, [key]: value };
     setData(newData);
+
+    // API에서 가져온 필드를 수동으로 수정한 경우 추적
+    if (stockData && ['per', 'pbr', 'dividendYield'].includes(key as string)) {
+      setModifiedFields((prev) => new Set(prev).add(key as string));
+      markAsModified();
+    }
+
     // 변경 시 부모에게 알림
     if (onChange) {
       const newResult = calculateFundamentalScore(newData);
@@ -108,15 +188,15 @@ export function FundamentalGradeInput({
 
   return (
     <div
-      className={`relative rounded-lg border ${isDragging ? 'border-blue-500 bg-blue-500/5' : 'border-zinc-200 dark:border-zinc-700'} ${compact ? 'p-3' : 'p-4'}`}
+      className={`relative rounded-lg border ${isDragging ? 'border-primary-500 bg-primary-500/5' : 'border-zinc-200 dark:border-zinc-700'} ${compact ? 'p-3' : 'p-4'}`}
       {...dragHandlers}
     >
       {/* 드래그 오버레이 */}
       {isDragging && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-blue-500/10">
+        <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-primary-500/10">
           <div className="text-center">
-            <Clipboard className="mx-auto h-8 w-8 text-blue-500" />
-            <p className="mt-2 text-sm text-blue-600 dark:text-blue-400">여기에 데이터 놓기</p>
+            <Clipboard className="mx-auto h-8 w-8 text-primary-500" />
+            <p className="mt-2 text-sm text-primary-600 dark:text-primary-400">여기에 데이터 놓기</p>
           </div>
         </div>
       )}
@@ -124,12 +204,17 @@ export function FundamentalGradeInput({
       {/* 헤더 */}
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Calculator className="h-5 w-5 text-blue-500" />
+          <Calculator className="h-5 w-5 text-primary-500" />
           <h3 className="font-semibold text-zinc-900 dark:text-white">Fundamental Grade</h3>
+          {isManuallyModified && (
+            <span className="rounded-full bg-warning-100 px-2 py-0.5 text-xs font-medium text-warning-700 dark:bg-warning-900/30 dark:text-warning-400">
+              수정됨
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <Button
-            variant="secondary"
+            color="secondary"
             size="sm"
             onClick={handlePaste}
             disabled={isParsing}
@@ -141,9 +226,94 @@ export function FundamentalGradeInput({
         </div>
       </div>
 
+      {/* 종목 검색 */}
+      <div ref={searchContainerRef} className="relative mb-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => searchQuery.length >= 1 && setShowSearchResults(true)}
+            placeholder="종목명 또는 종목코드 검색..."
+            className="w-full rounded-lg border border-zinc-300 bg-white py-2 pl-9 pr-10 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white"
+          />
+          {(isSearching || isStockLoading) && (
+            <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-zinc-400" />
+          )}
+          {searchQuery && !isSearching && !isStockLoading && (
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                clearSearch();
+              }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+
+        {/* 검색 결과 드롭다운 */}
+        {showSearchResults && searchResults.length > 0 && (
+          <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-60 overflow-auto rounded-lg border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
+            {searchResults.map((result) => (
+              <button
+                key={result.ticker}
+                onClick={() => handleSelectStock(result.ticker, result.name)}
+                className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-zinc-50 dark:hover:bg-zinc-700"
+              >
+                <span className="font-medium text-zinc-900 dark:text-white">
+                  {result.name}
+                </span>
+                <span className="flex items-center gap-2 text-xs text-zinc-500">
+                  <span>{result.ticker}</span>
+                  <span className="rounded bg-zinc-100 px-1.5 py-0.5 dark:bg-zinc-700">
+                    {result.market}
+                  </span>
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* 검색 결과 없음 */}
+        {showSearchResults && searchQuery.length >= 2 && !isSearching && searchResults.length === 0 && (
+          <div className="absolute left-0 right-0 top-full z-20 mt-1 rounded-lg border border-zinc-200 bg-white p-3 text-center text-sm text-zinc-500 shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
+            검색 결과가 없습니다
+          </div>
+        )}
+      </div>
+
+      {/* 종목 정보 표시 */}
+      {stockData && (
+        <div className="mb-4 flex items-center justify-between rounded-lg bg-primary-50 p-3 dark:bg-primary-900/20">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-primary-700 dark:text-primary-300">
+              {stockData.name}
+            </span>
+            <span className="rounded bg-primary-100 px-1.5 py-0.5 text-xs text-primary-600 dark:bg-primary-800/50 dark:text-primary-400">
+              {stockData.ticker}
+            </span>
+            <span className="text-xs text-primary-500">{stockData.market}</span>
+          </div>
+          <span className="text-xs text-primary-500 dark:text-primary-400">
+            {new Date(stockData.fetchedAt).toLocaleDateString('ko-KR')} 기준
+          </span>
+        </div>
+      )}
+
+      {/* API 에러 */}
+      {stockError && (
+        <div className="mb-3 flex items-center gap-2 rounded-md bg-danger-100 px-3 py-2 text-sm text-danger-700 dark:bg-danger-900/30 dark:text-danger-400">
+          <AlertCircle className="h-4 w-4" />
+          {stockError}
+        </div>
+      )}
+
       {/* 토스트 메시지 */}
       {showToast && (
-        <div className="mb-3 flex items-center gap-2 rounded-md bg-green-100 px-3 py-2 text-sm text-green-700 dark:bg-green-900/30 dark:text-green-400">
+        <div className="mb-3 flex items-center gap-2 rounded-md bg-success-100 px-3 py-2 text-sm text-success-700 dark:bg-success-900/30 dark:text-success-400">
           <CheckCircle className="h-4 w-4" />
           {showToast}
         </div>
@@ -151,7 +321,7 @@ export function FundamentalGradeInput({
 
       {/* 클립보드 에러 */}
       {clipboardError && (
-        <div className="mb-3 flex items-center gap-2 rounded-md bg-red-100 px-3 py-2 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-400">
+        <div className="mb-3 flex items-center gap-2 rounded-md bg-danger-100 px-3 py-2 text-sm text-danger-700 dark:bg-danger-900/30 dark:text-danger-400">
           <AlertCircle className="h-4 w-4" />
           {clipboardError}
         </div>
@@ -185,9 +355,9 @@ export function FundamentalGradeInput({
 
           {/* 점수 분포 바 */}
           <div className="mt-3 space-y-1.5">
-            <ScoreBar label="가치평가 (I)" score={result.categoryScores.valuation} max={35} color="#3b82f6" />
-            <ScoreBar label="주주환원 (II)" score={result.categoryScores.shareholderReturn} max={40} color="#22c55e" />
-            <ScoreBar label="성장/경영 (III)" score={result.categoryScores.growthManagement} max={25} color="#f59e0b" />
+            <ScoreBar label={TEXTS.FUNDAMENTAL.CATEGORY_VALUATION} score={result.categoryScores.valuation} max={FUNDAMENTAL_GRADE_CONFIG.CATEGORY_MAX.VALUATION} color="#00A86B" />
+            <ScoreBar label={TEXTS.FUNDAMENTAL.CATEGORY_SHAREHOLDER} score={result.categoryScores.shareholderReturn} max={FUNDAMENTAL_GRADE_CONFIG.CATEGORY_MAX.SHAREHOLDER_RETURN} color="#22c55e" />
+            <ScoreBar label={TEXTS.FUNDAMENTAL.CATEGORY_GROWTH} score={result.categoryScores.growthManagement} max={FUNDAMENTAL_GRADE_CONFIG.CATEGORY_MAX.GROWTH_MANAGEMENT} color="#f59e0b" />
           </div>
         </div>
       )}
@@ -195,7 +365,7 @@ export function FundamentalGradeInput({
       {/* 입력 폼 */}
       <div className={`space-y-4 ${compact ? 'text-sm' : ''}`}>
         {/* Category I: 가치평가 */}
-        <CategorySection title="I. 가치평가 (35점)" color="#3b82f6">
+        <CategorySection title={`I. 가치평가 (${FUNDAMENTAL_GRADE_CONFIG.CATEGORY_MAX.VALUATION}${TEXTS.UNITS.POINTS})`} color="#00A86B">
           <div className="grid gap-3 sm:grid-cols-2">
             <InputField
               label="PER"
@@ -204,6 +374,7 @@ export function FundamentalGradeInput({
               onChange={(v) => handleChange('per', v ? parseFloat(v) : null)}
               placeholder="예: 8.5"
               hint="10 이하: 10점, 10-15: 5점"
+              modified={modifiedFields.has('per')}
             />
             <InputField
               label="PBR"
@@ -212,6 +383,7 @@ export function FundamentalGradeInput({
               onChange={(v) => handleChange('pbr', v ? parseFloat(v) : null)}
               placeholder="예: 0.8"
               hint="1 이하: 10점, 1-2: 5점"
+              modified={modifiedFields.has('pbr')}
             />
           </div>
           <CheckboxField
@@ -227,7 +399,7 @@ export function FundamentalGradeInput({
         </CategorySection>
 
         {/* Category II: 주주환원 */}
-        <CategorySection title="II. 주주환원 (40점)" color="#22c55e">
+        <CategorySection title={`II. 주주환원 (${FUNDAMENTAL_GRADE_CONFIG.CATEGORY_MAX.SHAREHOLDER_RETURN}${TEXTS.UNITS.POINTS})`} color="#22c55e">
           <InputField
             label="배당수익률 (%)"
             type="number"
@@ -235,6 +407,7 @@ export function FundamentalGradeInput({
             onChange={(v) => handleChange('dividendYield', v ? parseFloat(v) : null)}
             placeholder="예: 3.5"
             hint="3% 이상: 10점, 1-3%: 5점"
+            modified={modifiedFields.has('dividendYield')}
           />
           <CheckboxField
             label="분기 배당 시행"
@@ -273,26 +446,26 @@ export function FundamentalGradeInput({
         </CategorySection>
 
         {/* Category III: 성장/경영 */}
-        <CategorySection title="III. 성장/경영 (25점)" color="#f59e0b">
+        <CategorySection title={`III. 성장/경영 (${FUNDAMENTAL_GRADE_CONFIG.CATEGORY_MAX.GROWTH_MANAGEMENT}${TEXTS.UNITS.POINTS})`} color="#f59e0b">
           <SelectField
-            label="성장 잠재력"
+            label={TEXTS.FUNDAMENTAL.GROWTH_POTENTIAL}
             value={data.growthPotential}
             onChange={(v) => handleChange('growthPotential', v as GrowthPotential)}
             options={[
-              { value: 'very_high', label: '매우 높음 (10점)' },
-              { value: 'high', label: '높음 (7점)' },
-              { value: 'normal', label: '보통 (5점)' },
-              { value: 'low', label: '낮음 (3점)' },
+              { value: 'very_high', label: `${TEXTS.FUNDAMENTAL.GROWTH_VERY_HIGH} (${FUNDAMENTAL_GRADE_CONFIG.GROWTH_SCORES.very_high}${TEXTS.UNITS.POINTS})` },
+              { value: 'high', label: `${TEXTS.FUNDAMENTAL.GROWTH_HIGH} (${FUNDAMENTAL_GRADE_CONFIG.GROWTH_SCORES.high}${TEXTS.UNITS.POINTS})` },
+              { value: 'normal', label: `${TEXTS.FUNDAMENTAL.GROWTH_NORMAL} (${FUNDAMENTAL_GRADE_CONFIG.GROWTH_SCORES.normal}${TEXTS.UNITS.POINTS})` },
+              { value: 'low', label: `${TEXTS.FUNDAMENTAL.GROWTH_LOW} (${FUNDAMENTAL_GRADE_CONFIG.GROWTH_SCORES.low}${TEXTS.UNITS.POINTS})` },
             ]}
           />
           <SelectField
-            label="경영진 품질"
+            label={TEXTS.FUNDAMENTAL.MANAGEMENT_QUALITY}
             value={data.managementQuality}
             onChange={(v) => handleChange('managementQuality', v as ManagementQuality)}
             options={[
-              { value: 'excellent', label: '우수 (10점)' },
-              { value: 'professional', label: '전문경영인 (5점)' },
-              { value: 'owner_risk', label: '오너리스크 (0점)' },
+              { value: 'excellent', label: `${TEXTS.FUNDAMENTAL.MGMT_EXCELLENT} (${FUNDAMENTAL_GRADE_CONFIG.MANAGEMENT_SCORES.excellent}${TEXTS.UNITS.POINTS})` },
+              { value: 'professional', label: `${TEXTS.FUNDAMENTAL.MGMT_PROFESSIONAL} (${FUNDAMENTAL_GRADE_CONFIG.MANAGEMENT_SCORES.professional}${TEXTS.UNITS.POINTS})` },
+              { value: 'owner_risk', label: `${TEXTS.FUNDAMENTAL.MGMT_OWNER_RISK} (${FUNDAMENTAL_GRADE_CONFIG.MANAGEMENT_SCORES.owner_risk}${TEXTS.UNITS.POINTS})` },
             ]}
           />
           <CheckboxField
@@ -305,7 +478,7 @@ export function FundamentalGradeInput({
 
       {/* 액션 버튼 */}
       <div className="mt-4 flex justify-end gap-2">
-        <Button variant="ghost" size="sm" onClick={handleReset}>
+        <Button plain color="secondary" size="sm" onClick={handleReset}>
           초기화
         </Button>
         {onSave && (
@@ -378,6 +551,7 @@ function InputField({
   onChange,
   placeholder,
   hint,
+  modified,
 }: {
   label: string;
   type?: string;
@@ -385,11 +559,19 @@ function InputField({
   onChange: (value: string) => void;
   placeholder?: string;
   hint?: string;
+  modified?: boolean;
 }) {
   return (
     <div className="space-y-1">
       <label className="flex items-center justify-between">
-        <span className="text-sm text-zinc-700 dark:text-zinc-300">{label}</span>
+        <span className="flex items-center gap-1.5 text-sm text-zinc-700 dark:text-zinc-300">
+          {label}
+          {modified && (
+            <span className="rounded bg-warning-100 px-1 py-0.5 text-[10px] font-medium text-warning-600 dark:bg-warning-900/30 dark:text-warning-400">
+              수정됨
+            </span>
+          )}
+        </span>
         {hint && (
           <span className="text-xs text-zinc-400" title={hint}>
             <Info className="h-3.5 w-3.5" />
@@ -422,7 +604,7 @@ function CheckboxField({
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="h-4 w-4 rounded border-zinc-300 text-blue-500 focus:ring-blue-500 dark:border-zinc-600"
+        className="h-4 w-4 rounded border-zinc-300 text-primary-500 focus:ring-primary-500 dark:border-zinc-600"
       />
       <span className="text-sm text-zinc-700 dark:text-zinc-300">{label}</span>
     </label>
@@ -446,7 +628,7 @@ function SelectField({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-8 w-full rounded-md border border-zinc-300 bg-white px-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-800"
+        className="h-8 w-full rounded-md border border-zinc-300 bg-white px-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-zinc-600 dark:bg-zinc-800"
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>
