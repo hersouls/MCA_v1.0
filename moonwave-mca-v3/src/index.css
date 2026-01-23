@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Tailwind v4 - Enable class-based dark mode */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ============================================
    Moonwave MCA v3.0 Design System
    Finance Blue Theme with Dark Mode Support
