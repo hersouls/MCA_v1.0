@@ -106,29 +106,46 @@
 }
 
 .dark {
-  --background: #0f0f0f;
-  --foreground: #fafafa;
-  --card: #171717;
-  --card-foreground: #fafafa;
-  --popover: #171717;
-  --popover-foreground: #fafafa;
-  --primary: #3b82f6;
-  --primary-foreground: #ffffff;
-  --secondary: #262626;
-  --secondary-foreground: #a1a1aa;
-  --muted: #262626;
+  /* 배경: 순수 검정 대신 부드러운 다크 그레이 */
+  --background: #0c0c0c;
+  --foreground: #f4f4f5;
+
+  /* 카드: 배경보다 확실히 밝게 (레이어 구분) */
+  --card: #1a1a1c;
+  --card-foreground: #f4f4f5;
+
+  /* 팝오버: 카드보다 살짝 밝게 */
+  --popover: #1f1f22;
+  --popover-foreground: #f4f4f5;
+
+  /* Primary: 밝은 블루로 가독성 향상 */
+  --primary: #60a5fa;
+  --primary-foreground: #0c0c0c;
+
+  /* Secondary: 더 밝은 그레이 */
+  --secondary: #27272a;
+  --secondary-foreground: #d4d4d8;
+
+  /* Muted: 보조 텍스트 대비 향상 */
+  --muted: #27272a;
   --muted-foreground: #a1a1aa;
+
+  /* Accent: 더 밝은 블루 배경 */
   --accent: #1e3a5f;
   --accent-foreground: #93c5fd;
-  --destructive: #dc2626;
-  --destructive-foreground: #fafafa;
-  --success: #16a34a;
-  --success-foreground: #fafafa;
-  --warning: #d97706;
-  --warning-foreground: #fafafa;
-  --border: #262626;
-  --input: #262626;
-  --ring: #3b82f6;
+
+  /* 시맨틱 컬러: 다크모드에서 채도 높임 */
+  --destructive: #f87171;
+  --destructive-foreground: #0c0c0c;
+  --success: #4ade80;
+  --success-foreground: #0c0c0c;
+  --warning: #fbbf24;
+  --warning-foreground: #0c0c0c;
+
+  /* 보더: 더 밝게 해서 구분 명확히 */
+  --border: #3f3f46;
+  --input: #27272a;
+  --ring: #60a5fa;
 }
 
 /* Base Styles */

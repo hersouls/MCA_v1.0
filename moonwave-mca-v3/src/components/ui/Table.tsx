@@ -13,7 +13,7 @@ interface TableProps extends HTMLAttributes<HTMLTableElement> {
 export const Table = forwardRef<HTMLTableElement, TableProps>(
   ({ striped = false, className, children, ...props }, ref) => {
     return (
-      <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
+      <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-700/50">
         <table
           ref={ref}
           className={clsx(
@@ -40,7 +40,7 @@ export const TableHeader = forwardRef<
   <thead
     ref={ref}
     className={clsx(
-      'bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800',
+      'bg-zinc-50 dark:bg-zinc-800/50 border-b border-zinc-200 dark:border-zinc-700/50',
       className
     )}
     {...props}
@@ -56,7 +56,7 @@ export const TableBody = forwardRef<
 >(({ className, ...props }, ref) => (
   <tbody
     ref={ref}
-    className={clsx('divide-y divide-zinc-200 dark:divide-zinc-800', className)}
+    className={clsx('divide-y divide-zinc-200 dark:divide-zinc-700/50', className)}
     {...props}
   />
 ));
@@ -75,8 +75,8 @@ export const TableRow = forwardRef<HTMLTableRowElement, TableRowProps>(
       ref={ref}
       className={clsx(
         'transition-colors',
-        hoverable && 'hover:bg-zinc-50 dark:hover:bg-zinc-900/50',
-        selected && 'bg-primary-50 dark:bg-primary-900/20',
+        hoverable && 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50',
+        selected && 'bg-primary-50 dark:bg-primary-900/30',
         className
       )}
       {...props}
@@ -97,7 +97,7 @@ export const TableHead = forwardRef<HTMLTableCellElement, TableHeadProps>(
     <th
       ref={ref}
       className={clsx(
-        'px-4 py-3 text-left text-xs font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider',
+        'px-4 py-3 text-left text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider',
         sortable && 'cursor-pointer select-none hover:text-zinc-900 dark:hover:text-zinc-100',
         className
       )}
@@ -173,10 +173,11 @@ export function CheckboxCell({ checked, onChange, disabled = false }: CheckboxCe
         onChange={(e) => onChange(e.target.checked)}
         disabled={disabled}
         className={clsx(
-          'w-4 h-4 rounded border-zinc-300 dark:border-zinc-600',
+          'w-4 h-4 rounded border-zinc-300 dark:border-zinc-500',
           'text-primary-600 focus:ring-primary-500 focus:ring-2',
-          'dark:bg-zinc-800',
-          'disabled:opacity-50 disabled:cursor-not-allowed'
+          'dark:bg-zinc-700 dark:checked:bg-primary-500',
+          'disabled:opacity-50 disabled:cursor-not-allowed',
+          'cursor-pointer'
         )}
       />
     </TableCell>

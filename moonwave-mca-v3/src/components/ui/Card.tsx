@@ -12,11 +12,11 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 const variantStyles = {
-  default: 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800',
-  elevated: 'bg-white dark:bg-zinc-900 shadow-lg shadow-zinc-900/5 dark:shadow-zinc-900/50',
-  bordered: 'bg-transparent border-2 border-zinc-200 dark:border-zinc-700',
+  default: 'bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-700/50',
+  elevated: 'bg-white dark:bg-zinc-900/90 shadow-lg shadow-zinc-900/5 dark:shadow-black/30',
+  bordered: 'bg-transparent border-2 border-zinc-200 dark:border-zinc-600',
   interactive:
-    'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 hover:shadow-md transition-all duration-200 cursor-pointer',
+    'bg-white dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-700/50 hover:border-primary-300 dark:hover:border-zinc-500 hover:shadow-md dark:hover:shadow-black/20 transition-all duration-200 cursor-pointer',
 };
 
 const paddingStyles = {

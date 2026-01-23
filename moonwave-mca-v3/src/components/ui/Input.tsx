@@ -67,19 +67,19 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className={clsx('w-full', className)}>
         {label && (
-          <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1.5">
+          <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-300 mb-1.5">
             {label}
           </label>
         )}
         <div
           className={clsx(
-            'relative flex items-center rounded-lg border bg-white dark:bg-zinc-900',
+            'relative flex items-center rounded-lg border bg-white dark:bg-zinc-800/50',
             'transition-all duration-200',
             error
-              ? 'border-danger-500 focus-within:ring-2 focus-within:ring-danger-500/20'
+              ? 'border-danger-500 focus-within:ring-2 focus-within:ring-danger-500/30'
               : isFocused
-              ? 'border-primary-500 ring-2 ring-primary-500/20'
-              : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600'
+              ? 'border-primary-400 ring-2 ring-primary-500/30 dark:border-primary-500'
+              : 'border-zinc-200 dark:border-zinc-600 hover:border-zinc-300 dark:hover:border-zinc-500'
           )}
         >
           {leftIcon && (
@@ -91,7 +91,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             className={clsx(
               'flex-1 w-full px-3 py-2.5 text-sm bg-transparent',
-              'text-zinc-900 dark:text-zinc-100',
+              'text-zinc-900 dark:text-zinc-50',
               'placeholder:text-zinc-400 dark:placeholder:text-zinc-500',
               'focus:outline-none',
               'disabled:opacity-50 disabled:cursor-not-allowed',
