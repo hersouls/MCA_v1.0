@@ -195,3 +195,6 @@ export function useStockFundamental(
 }
 
 export default useStockFundamental;
+
+// Re-export types for convenience
+export type { StockFundamentalData, StockSearchResult } from '@/services/stockApi';

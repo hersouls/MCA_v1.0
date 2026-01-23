@@ -3,11 +3,11 @@
 // 100점 만점 펀더멘털 점수 입력 UI
 // ============================================
 
-import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
-import { Clipboard, Calculator, Info, AlertCircle, CheckCircle, Search, Loader2, X } from 'lucide-react';
-import type { FundamentalInput, FundamentalResult, GrowthPotential, ManagementQuality, ClipboardParseResult } from '@/types';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { Clipboard, Calculator, Info, AlertCircle, CheckCircle } from 'lucide-react';
+import type { FundamentalInput, FundamentalResult, GrowthPotential, ManagementQuality, ClipboardParseResult, StockFundamentalData } from '@/types';
 import { calculateFundamentalScore, getGradeColor, getGradeDescription } from '@/services/fundamentalGrade';
-import { useClipboard, useDropParse, useStockFundamental } from '@/hooks';
+import { useClipboard, useDropParse } from '@/hooks';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { FUNDAMENTAL_GRADE_CONFIG } from '@/utils/constants';
@@ -15,7 +15,7 @@ import { TEXTS } from '@/utils/texts';
 
 interface FundamentalGradeInputProps {
   initialData?: FundamentalInput;
-  initialTicker?: string;
+  stockData?: StockFundamentalData | null;
   onChange?: (data: FundamentalInput, result: FundamentalResult) => void;
   onSave?: (data: FundamentalInput, result: FundamentalResult, ticker?: string) => void;
   compact?: boolean;
@@ -39,106 +39,34 @@ const DEFAULT_INPUT: FundamentalInput = {
 
 export function FundamentalGradeInput({
   initialData,
-  initialTicker,
+  stockData,
   onChange,
   onSave,
   compact = false,
 }: FundamentalGradeInputProps) {
   const [data, setData] = useState<FundamentalInput>(initialData || DEFAULT_INPUT);
   const [showToast, setShowToast] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showSearchResults, setShowSearchResults] = useState(false);
   const [modifiedFields, setModifiedFields] = useState<Set<string>>(new Set());
-  const searchContainerRef = useRef<HTMLDivElement>(null);
+  const [isManuallyModified, setIsManuallyModified] = useState(false);
 
   // 클립보드 훅
   const { parseClipboard, isParsing, error: clipboardError } = useClipboard();
 
-  // 종목 검색 훅
-  const {
-    stockData,
-    searchResults,
-    isLoading: isStockLoading,
-    isSearching,
-    error: stockError,
-    isManuallyModified,
-    searchByQuery,
-    selectStock,
-    clearSearch,
-    markAsModified,
-  } = useStockFundamental({
-    debounceMs: 300,
-    useCache: true,
-    onDataLoaded: (loadedData) => {
-      // API 데이터를 폼에 자동 적용
+  // stockData prop이 변경되면 폼에 자동 적용
+  useEffect(() => {
+    if (stockData) {
       setData((prev) => ({
         ...prev,
-        per: loadedData.per ?? prev.per,
-        pbr: loadedData.pbr ?? prev.pbr,
-        dividendYield: loadedData.dividendYield ?? prev.dividendYield,
+        per: stockData.per ?? prev.per,
+        pbr: stockData.pbr ?? prev.pbr,
+        dividendYield: stockData.dividendYield ?? prev.dividendYield,
       }));
       setModifiedFields(new Set()); // 자동 적용 시 수정 플래그 초기화
-      setShowToast(`${loadedData.name} (${loadedData.ticker}) 데이터 적용됨`);
+      setIsManuallyModified(false);
+      setShowToast(`${stockData.name} (${stockData.ticker}) 데이터 적용됨`);
       setTimeout(() => setShowToast(null), 3000);
-    },
-  });
-
-  // 검색어 변경 시 검색 실행
-  useEffect(() => {
-    if (searchQuery.length >= 1) {
-      searchByQuery(searchQuery);
-      setShowSearchResults(true);
-    } else {
-      clearSearch();
-      setShowSearchResults(false);
     }
-  }, [searchQuery, searchByQuery, clearSearch]);
-
-  // 초기 종목코드가 있으면 자동 조회 (initialTicker 변경 시에도 재조회)
-  useEffect(() => {
-    if (initialTicker) {
-      // 이미 같은 종목이 로드된 경우 스킵
-      if (stockData?.ticker === initialTicker) return;
-      selectStock(initialTicker);
-    }
-  }, [initialTicker, stockData?.ticker, selectStock]);
-
-  // 외부 클릭 시 검색 결과 닫기
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
-        setShowSearchResults(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // 종목 선택 핸들러
-  const handleSelectStock = async (ticker: string, name: string) => {
-    setSearchQuery(`${name} (${ticker})`);
-    setShowSearchResults(false);
-    await selectStock(ticker);
-  };
-
-  // Enter 키로 즉시 검색/조회
-  const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      const query = searchQuery.trim();
-
-      // 6자리 이하 숫자면 직접 종목코드 조회
-      if (/^\d{1,6}$/.test(query)) {
-        const ticker = query.padStart(6, '0');
-        setShowSearchResults(false);
-        await selectStock(ticker);
-      } else if (searchResults.length > 0) {
-        // 검색 결과가 있으면 첫 번째 선택
-        const first = searchResults[0];
-        await handleSelectStock(first.ticker, first.name);
-      }
-    }
-  };
+  }, [stockData]);
 
   // 파싱된 데이터 적용 (useDropParse보다 먼저 선언해야 함)
   const applyParsedData = useCallback((parseResult: ClipboardParseResult) => {
@@ -185,7 +113,7 @@ export function FundamentalGradeInput({
     // API에서 가져온 필드를 수동으로 수정한 경우 추적
     if (stockData && ['per', 'pbr', 'dividendYield'].includes(key as string)) {
       setModifiedFields((prev) => new Set(prev).add(key as string));
-      markAsModified();
+      setIsManuallyModified(true);
     }
 
     // 변경 시 부모에게 알림
@@ -247,66 +175,6 @@ export function FundamentalGradeInput({
         </div>
       </div>
 
-      {/* 종목 검색 */}
-      <div ref={searchContainerRef} className="relative mb-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onFocus={() => searchQuery.length >= 1 && setShowSearchResults(true)}
-            placeholder="종목코드 입력 후 Enter (예: 035420)"
-            className="w-full rounded-lg border border-zinc-300 bg-white py-2 pl-9 pr-10 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white"
-          />
-          {(isSearching || isStockLoading) && (
-            <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-zinc-400" />
-          )}
-          {searchQuery && !isSearching && !isStockLoading && (
-            <button
-              onClick={() => {
-                setSearchQuery('');
-                clearSearch();
-              }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
-        </div>
-
-        {/* 검색 결과 드롭다운 */}
-        {showSearchResults && searchResults.length > 0 && (
-          <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-60 overflow-auto rounded-lg border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
-            {searchResults.map((result) => (
-              <button
-                key={result.ticker}
-                onClick={() => handleSelectStock(result.ticker, result.name)}
-                className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-zinc-50 dark:hover:bg-zinc-700"
-              >
-                <span className="font-medium text-zinc-900 dark:text-white">
-                  {result.name}
-                </span>
-                <span className="flex items-center gap-2 text-xs text-zinc-500">
-                  <span>{result.ticker}</span>
-                  <span className="rounded bg-zinc-100 px-1.5 py-0.5 dark:bg-zinc-700">
-                    {result.market}
-                  </span>
-                </span>
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* 검색 결과 없음 */}
-        {showSearchResults && searchQuery.length >= 2 && !isSearching && searchResults.length === 0 && (
-          <div className="absolute left-0 right-0 top-full z-20 mt-1 rounded-lg border border-zinc-200 bg-white p-3 text-center text-sm text-zinc-500 shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
-            검색 결과가 없습니다
-          </div>
-        )}
-      </div>
-
       {/* 종목 정보 표시 */}
       {stockData && (
         <div className="mb-4 flex items-center justify-between rounded-lg bg-primary-50 p-3 dark:bg-primary-900/20">
@@ -322,14 +190,6 @@ export function FundamentalGradeInput({
           <span className="text-xs text-primary-500 dark:text-primary-400">
             {new Date(stockData.fetchedAt).toLocaleDateString('ko-KR')} 기준
           </span>
-        </div>
-      )}
-
-      {/* API 에러 */}
-      {stockError && (
-        <div className="mb-3 flex items-center gap-2 rounded-md bg-danger-100 px-3 py-2 text-sm text-danger-700 dark:bg-danger-900/30 dark:text-danger-400">
-          <AlertCircle className="h-4 w-4" />
-          {stockError}
         </div>
       )}
 

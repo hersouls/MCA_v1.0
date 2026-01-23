@@ -66,3 +66,6 @@ export {
   TabContent,
   SimpleTabs,
 } from './Tabs';
+
+// Stock Search
+export { StockSearchInput } from './StockSearchInput';

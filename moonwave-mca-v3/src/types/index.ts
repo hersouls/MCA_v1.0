@@ -253,7 +253,7 @@ export interface FundamentalResult {
 }
 
 export interface FundamentalData extends FundamentalInput {
-  dataSource: 'manual' | 'krx' | 'template' | 'clipboard';
+  dataSource: 'manual' | 'krx' | 'template' | 'clipboard' | 'api';
   lastUpdated: Date;
   notes?: string;
 }

@@ -4,10 +4,10 @@
 
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Star, Trash2, Settings2, FileText, Pencil, Check, X } from 'lucide-react';
+import { ArrowLeft, Star, Trash2, Settings2, FileText } from 'lucide-react';
 
 import { PageContainer, Section, ErrorState } from '@/components/layout';
-import { Button, IconButton, Card, StatsCard, StatItem, StatGrid } from '@/components/ui';
+import { Button, IconButton, Card, StatsCard, StatItem, StatGrid, StockSearchInput } from '@/components/ui';
 import { TradeTable } from './TradeTable';
 import { MCAChart } from './MCAChart';
 import { ParameterEditor } from './ParameterEditor';
@@ -16,7 +16,7 @@ import { FundamentalGradeInput } from './FundamentalGradeInput';
 import { usePortfolioStore, selectPortfolioStats } from '@/stores/portfolioStore';
 import { calculateTrades, getCurrentInvestment, calculateTotalBudget } from '@/services/calculation';
 import { formatCurrency, formatKoreanUnit, formatPercent } from '@/utils/format';
-import type { PortfolioParams, FundamentalInput, FundamentalResult, FundamentalData, Trade } from '@/types';
+import type { PortfolioParams, FundamentalInput, FundamentalResult, FundamentalData, Trade, StockFundamentalData } from '@/types';
 
 // Stable empty array to avoid creating new reference on each render
 const EMPTY_TRADES: Trade[] = [];
@@ -28,9 +28,7 @@ export function PortfolioDetail() {
   // State
   const [isParamEditorOpen, setIsParamEditorOpen] = useState(false);
   const [portfolioMemo, setPortfolioMemo] = useState('');
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [editedName, setEditedName] = useState('');
-  const [nameToast, setNameToast] = useState<string | null>(null);
+  const [stockFundamentalData, setStockFundamentalData] = useState<StockFundamentalData | null>(null);
 
   // Store
   const portfolios = usePortfolioStore((state) => state.portfolios);
@@ -174,75 +172,19 @@ export function PortfolioDetail() {
     }
   };
 
-  // Name editing handlers
-  const handleStartEditName = () => {
-    if (portfolio) {
-      setEditedName(portfolio.name);
-      setIsEditingName(true);
-    }
-  };
-
-  const handleSaveName = async () => {
-    if (portfolio?.id && editedName.trim()) {
-      const name = editedName.trim();
-      let stockCode: string | undefined;
-      let displayName = name;
-
-      // 1. 6자리 숫자만 입력: "035420"
-      if (/^\d{6}$/.test(name)) {
-        stockCode = name;
-        setNameToast(`종목코드 ${stockCode} 조회 중...`);
-      }
-      // 2. 괄호 안 종목코드: "삼성전자 (005930)"
-      else {
-        const match = name.match(/\((\d{6})\)/);
-        if (match) {
-          stockCode = match[1];
-          setNameToast(`종목코드 ${stockCode} 조회 중...`);
-        }
-      }
-
-      // 3. 종목명으로 API 검색
-      if (!stockCode) {
-        setNameToast(`"${name}" 검색 중...`);
-        try {
-          const res = await fetch(`/api/stock/search?q=${encodeURIComponent(name)}&limit=1`);
-          if (res.ok) {
-            const data = await res.json();
-            if (data.results?.length > 0) {
-              const found = data.results[0];
-              stockCode = found.ticker;
-              displayName = `${found.name} (${found.ticker})`;
-              setNameToast(`${found.name} (${found.ticker}) 찾음`);
-            } else {
-              setNameToast(`"${name}" 검색 결과 없음`);
-            }
-          }
-        } catch {
-          setNameToast(`검색 실패`);
-        }
-      }
-
+  // Stock search handlers
+  const handleStockSelect = async (stock: { ticker: string; name: string; market: string }) => {
+    if (portfolio?.id) {
+      const displayName = `${stock.name} (${stock.ticker})`;
       await updatePortfolio(portfolio.id, {
         name: displayName,
-        ...(stockCode && { stockCode }),
+        stockCode: stock.ticker,
       });
-      setIsEditingName(false);
-      setTimeout(() => setNameToast(null), 3000);
     }
   };
 
-  const handleCancelEditName = () => {
-    setIsEditingName(false);
-    setEditedName('');
-  };
-
-  const handleNameKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSaveName();
-    } else if (e.key === 'Escape') {
-      handleCancelEditName();
-    }
+  const handleFundamentalLoaded = (data: StockFundamentalData) => {
+    setStockFundamentalData(data);
   };
 
   // Error state
@@ -273,45 +215,13 @@ export function PortfolioDetail() {
             <ArrowLeft className="w-5 h-5" />
           </IconButton>
           <div className="flex items-center gap-2">
-            {isEditingName ? (
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={editedName}
-                  onChange={(e) => setEditedName(e.target.value)}
-                  onKeyDown={handleNameKeyDown}
-                  className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 bg-transparent border-b-2 border-primary-500 focus:outline-none px-1"
-                  autoFocus
-                />
-                <button
-                  onClick={handleSaveName}
-                  className="p-1 hover:bg-success-100 dark:hover:bg-success-900/30 rounded transition-colors text-success-600 dark:text-success-400"
-                  aria-label="저장"
-                >
-                  <Check className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={handleCancelEditName}
-                  className="p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors text-zinc-500"
-                  aria-label="취소"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            ) : (
-              <>
-                <h1 className="text-[1.625rem] font-bold text-zinc-900 dark:text-zinc-50">
-                  {portfolio.name}
-                </h1>
-                <button
-                  onClick={handleStartEditName}
-                  className="p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
-                  aria-label="종목명 수정"
-                >
-                  <Pencil className="w-4 h-4" />
-                </button>
-              </>
-            )}
+            <StockSearchInput
+              value={portfolio.name}
+              placeholder="종목명 또는 종목코드 검색"
+              onSelect={handleStockSelect}
+              onFundamentalLoaded={handleFundamentalLoaded}
+              className="w-64"
+            />
             <button
               onClick={handleToggleFavorite}
               className="p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors"
@@ -342,13 +252,6 @@ export function PortfolioDetail() {
           </IconButton>
         </div>
       </div>
-
-      {/* 종목코드 감지 토스트 */}
-      {nameToast && (
-        <div className="mb-4 rounded-lg bg-primary-100 dark:bg-primary-900/30 px-4 py-3 text-sm text-primary-700 dark:text-primary-300">
-          {nameToast}
-        </div>
-      )}
 
       {/* Stats Summary - Using StatsCard for consistency */}
       <Section>
@@ -443,9 +346,8 @@ export function PortfolioDetail() {
       {/* Fundamental Grade */}
       <Section title="Fundamental Grade">
         <FundamentalGradeInput
-          key={portfolio.stockCode || 'no-ticker'}
           initialData={portfolio.fundamentalData}
-          initialTicker={portfolio.stockCode}
+          stockData={stockFundamentalData}
           onSave={handleSaveFundamental}
         />
       </Section>
