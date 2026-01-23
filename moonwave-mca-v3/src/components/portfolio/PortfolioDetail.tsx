@@ -30,6 +30,7 @@ export function PortfolioDetail() {
   const [portfolioMemo, setPortfolioMemo] = useState('');
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState('');
+  const [nameToast, setNameToast] = useState<string | null>(null);
 
   // Store
   const portfolios = usePortfolioStore((state) => state.portfolios);
@@ -203,6 +204,12 @@ export function PortfolioDetail() {
         ...(stockCode && { stockCode }),
       });
       setIsEditingName(false);
+
+      // 피드백 토스트
+      if (stockCode) {
+        setNameToast(`종목코드 ${stockCode} 감지됨 - 아래 Fundamental Grade에서 데이터 조회 중...`);
+        setTimeout(() => setNameToast(null), 4000);
+      }
     }
   };
 
@@ -317,6 +324,13 @@ export function PortfolioDetail() {
         </div>
       </div>
 
+      {/* 종목코드 감지 토스트 */}
+      {nameToast && (
+        <div className="mb-4 rounded-lg bg-primary-100 dark:bg-primary-900/30 px-4 py-3 text-sm text-primary-700 dark:text-primary-300">
+          {nameToast}
+        </div>
+      )}
+
       {/* Stats Summary - Using StatsCard for consistency */}
       <Section>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -410,6 +424,7 @@ export function PortfolioDetail() {
       {/* Fundamental Grade */}
       <Section title="Fundamental Grade">
         <FundamentalGradeInput
+          key={portfolio.stockCode || 'no-ticker'}
           initialData={portfolio.fundamentalData}
           initialTicker={portfolio.stockCode}
           onSave={handleSaveFundamental}
