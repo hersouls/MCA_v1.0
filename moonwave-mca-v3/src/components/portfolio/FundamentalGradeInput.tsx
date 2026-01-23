@@ -67,7 +67,7 @@ export function FundamentalGradeInput({
     clearSearch,
     markAsModified,
   } = useStockFundamental({
-    debounceMs: 500,
+    debounceMs: 300,
     useCache: true,
     onDataLoaded: (loadedData) => {
       // API 데이터를 폼에 자동 적용
@@ -117,6 +117,25 @@ export function FundamentalGradeInput({
     setSearchQuery(`${name} (${ticker})`);
     setShowSearchResults(false);
     await selectStock(ticker);
+  };
+
+  // Enter 키로 즉시 검색/조회
+  const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const query = searchQuery.trim();
+
+      // 6자리 이하 숫자면 직접 종목코드 조회
+      if (/^\d{1,6}$/.test(query)) {
+        const ticker = query.padStart(6, '0');
+        setShowSearchResults(false);
+        await selectStock(ticker);
+      } else if (searchResults.length > 0) {
+        // 검색 결과가 있으면 첫 번째 선택
+        const first = searchResults[0];
+        await handleSelectStock(first.ticker, first.name);
+      }
+    }
   };
 
   // 파싱된 데이터 적용 (useDropParse보다 먼저 선언해야 함)
@@ -234,8 +253,9 @@ export function FundamentalGradeInput({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={handleKeyDown}
             onFocus={() => searchQuery.length >= 1 && setShowSearchResults(true)}
-            placeholder="종목명 또는 종목코드 검색..."
+            placeholder="종목코드 입력 후 Enter (예: 035420)"
             className="w-full rounded-lg border border-zinc-300 bg-white py-2 pl-9 pr-10 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white"
           />
           {(isSearching || isStockLoading) && (
