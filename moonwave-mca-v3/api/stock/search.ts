@@ -13,7 +13,8 @@ export interface StockSearchResult {
 
 // 네이버 금융 자동완성 API
 async function searchNaverStocks(query: string, limit: number): Promise<StockSearchResult[]> {
-  const url = `https://m.stock.naver.com/api/json/search/searchListJson.nhn?keyword=${encodeURIComponent(query)}`;
+  // 네이버 API는 URL 인코딩된 한글을 제대로 처리 못함 - 인코딩 없이 전송
+  const url = `https://m.stock.naver.com/api/json/search/searchListJson.nhn?keyword=${query}`;
 
   try {
     const response = await fetch(url, {
@@ -54,7 +55,7 @@ async function searchNaverStocks(query: string, limit: number): Promise<StockSea
 
 // 대체: 네이버 통합검색 API
 async function searchNaverStocksAlt(query: string, limit: number): Promise<StockSearchResult[]> {
-  const url = `https://m.stock.naver.com/api/search/all?query=${encodeURIComponent(query)}`;
+  const url = `https://m.stock.naver.com/api/search/all?query=${query}`;
 
   try {
     const response = await fetch(url, {
