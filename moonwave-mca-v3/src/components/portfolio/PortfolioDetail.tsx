@@ -16,7 +16,10 @@ import { FundamentalGradeInput } from './FundamentalGradeInput';
 import { usePortfolioStore, selectPortfolioStats } from '@/stores/portfolioStore';
 import { calculateTrades, getCurrentInvestment, calculateTotalBudget } from '@/services/calculation';
 import { formatCurrency, formatCompact, formatPercent } from '@/utils/format';
-import type { PortfolioParams, FundamentalInput, FundamentalResult, FundamentalData } from '@/types';
+import type { PortfolioParams, FundamentalInput, FundamentalResult, FundamentalData, Trade } from '@/types';
+
+// Stable empty array to avoid creating new reference on each render
+const EMPTY_TRADES: Trade[] = [];
 
 export function PortfolioDetail() {
   const { id } = useParams<{ id: string }>();
@@ -35,7 +38,7 @@ export function PortfolioDetail() {
   const updatePortfolio = usePortfolioStore((state) => state.updatePortfolio);
   const toggleOrderedStep = usePortfolioStore((state) => state.toggleOrderedStep);
   const toggleExecutedStep = usePortfolioStore((state) => state.toggleExecutedStep);
-  const trades = usePortfolioStore((state) => state.trades.get(Number(id)) || []);
+  const trades = usePortfolioStore((state) => state.trades.get(Number(id)) ?? EMPTY_TRADES);
   const stats = usePortfolioStore((state) => selectPortfolioStats(state, Number(id)));
 
   // Find portfolio

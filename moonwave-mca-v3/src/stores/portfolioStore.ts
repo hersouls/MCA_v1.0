@@ -9,6 +9,9 @@ import * as db from '@/services/database';
 import { calculatePortfolioStats } from '@/services/calculation';
 import { DEFAULT_PORTFOLIO_PARAMS } from '@/utils/constants';
 
+// Stable empty array for selectors (prevents new reference on each call)
+const EMPTY_TRADES: Trade[] = [];
+
 // Sort portfolios helper (pure function)
 function sortPortfolios(portfolios: Portfolio[]): Portfolio[] {
   return [...portfolios].sort((a, b) => {
@@ -282,7 +285,7 @@ export const selectActivePortfolio = (state: PortfolioState) =>
   state.portfolios.find((p) => p.id === state.activePortfolioId);
 
 export const selectPortfolioTrades = (state: PortfolioState, portfolioId: number) =>
-  state.trades.get(portfolioId) || [];
+  state.trades.get(portfolioId) ?? EMPTY_TRADES;
 
 export const selectPortfolioStats = (state: PortfolioState, portfolioId: number) =>
   state.portfolioStats.get(portfolioId);
