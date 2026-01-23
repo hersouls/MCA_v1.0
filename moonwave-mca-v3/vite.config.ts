@@ -5,8 +5,8 @@ import { resolve } from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
-  // GitHub Pages 배포를 위한 base URL
-  base: '/MCA_v1.0/',
+  // 커스텀 도메인(mca.moonwave.kr) 사용 시 base는 '/'
+  base: '/',
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
