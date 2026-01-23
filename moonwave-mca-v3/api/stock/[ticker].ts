@@ -1,6 +1,6 @@
 // ============================================
 // Vercel API Route: Stock Fundamental Data
-// KRX 정보데이터시스템에서 PER, PBR, 배당수익률 크롤링
+// 네이버 금융에서 PER, PBR, 배당수익률 조회
 // ============================================
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
@@ -20,120 +20,87 @@ export interface StockFundamentalData {
   fetchedAt: string;
 }
 
-// KRX OTP 요청 (PER/PBR/배당수익률)
-async function getKrxOtp(): Promise<string> {
-  const response = await fetch(
-    'http://data.krx.co.kr/comm/fileDn/GenerateOTP/generate.cmd',
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        Referer: 'http://data.krx.co.kr/contents/MDC/MDI/mdiLoader/index.cmd',
-        Origin: 'http://data.krx.co.kr',
-      },
-      body: new URLSearchParams({
-        locale: 'ko_KR',
-        mktId: 'ALL',
-        trdDd: getLatestTradingDate(),
-        money: '1',
-        csvxls_isNo: 'false',
-        name: 'fileDown',
-        url: 'dbms/MDC/STAT/standard/MDCSTAT03501',
-      }),
-    }
-  );
+// 네이버 금융 API에서 종목 정보 조회
+async function fetchNaverStock(ticker: string): Promise<StockFundamentalData | null> {
+  const url = `https://m.stock.naver.com/api/stock/${ticker}/basic`;
 
-  return response.text();
-}
+  const response = await fetch(url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15',
+      'Accept': 'application/json',
+    },
+  });
 
-// KRX 데이터 요청
-async function getKrxData(otp: string): Promise<string> {
-  const response = await fetch(
-    'http://data.krx.co.kr/comm/fileDn/download_csv/download.cmd',
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        Referer: 'http://data.krx.co.kr/contents/MDC/MDI/mdiLoader/index.cmd',
-      },
-      body: new URLSearchParams({ code: otp }),
-    }
-  );
-
-  const buffer = await response.arrayBuffer();
-  // KRX returns EUC-KR encoded CSV
-  const decoder = new TextDecoder('euc-kr');
-  return decoder.decode(buffer);
-}
-
-// 최근 거래일 계산 (주말 제외)
-function getLatestTradingDate(): string {
-  const today = new Date();
-  const day = today.getDay();
-
-  // 주말이면 금요일로 조정
-  if (day === 0) today.setDate(today.getDate() - 2);
-  else if (day === 6) today.setDate(today.getDate() - 1);
-
-  return today.toISOString().slice(0, 10).replace(/-/g, '');
-}
-
-// CSV 파싱
-function parseKrxCsv(csv: string, ticker: string): StockFundamentalData | null {
-  const lines = csv.split('\n');
-  if (lines.length < 2) return null;
-
-  // 헤더 파싱
-  const headers = lines[0].split(',').map((h) => h.trim().replace(/"/g, ''));
-
-  // 종목코드 컬럼 인덱스 찾기
-  const tickerIdx = headers.findIndex(
-    (h) => h === '종목코드' || h === '단축코드'
-  );
-  const nameIdx = headers.findIndex((h) => h === '종목명');
-  const marketIdx = headers.findIndex((h) => h === '시장구분');
-  const perIdx = headers.findIndex((h) => h === 'PER');
-  const pbrIdx = headers.findIndex((h) => h === 'PBR');
-  const divYieldIdx = headers.findIndex((h) => h === '배당수익률');
-  const epsIdx = headers.findIndex((h) => h === 'EPS');
-  const bpsIdx = headers.findIndex((h) => h === 'BPS');
-  const dpsIdx = headers.findIndex((h) => h === 'DPS' || h === '주당배당금');
-  const priceIdx = headers.findIndex((h) => h === '종가');
-  const capIdx = headers.findIndex((h) => h === '시가총액');
-
-  // 종목 찾기
-  for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i].split(',').map((c) => c.trim().replace(/"/g, ''));
-    if (cols[tickerIdx] === ticker) {
-      const parseNum = (idx: number): number | null => {
-        if (idx === -1) return null;
-        const val = cols[idx]?.replace(/,/g, '');
-        const num = parseFloat(val);
-        return isNaN(num) ? null : num;
-      };
-
-      return {
-        ticker,
-        name: cols[nameIdx] || '',
-        market: cols[marketIdx]?.includes('KOSDAQ') ? 'KOSDAQ' : 'KOSPI',
-        per: parseNum(perIdx),
-        pbr: parseNum(pbrIdx),
-        dividendYield: parseNum(divYieldIdx),
-        eps: parseNum(epsIdx),
-        bps: parseNum(bpsIdx),
-        dps: parseNum(dpsIdx),
-        currentPrice: parseNum(priceIdx),
-        marketCap: parseNum(capIdx),
-        fetchedAt: new Date().toISOString(),
-      };
-    }
+  if (!response.ok) {
+    return null;
   }
 
-  return null;
+  const data = await response.json();
+
+  // 네이버 API 응답 파싱
+  const parseNum = (val: string | number | null | undefined): number | null => {
+    if (val === null || val === undefined || val === '' || val === '-') return null;
+    const num = typeof val === 'string' ? parseFloat(val.replace(/,/g, '')) : val;
+    return isNaN(num) ? null : num;
+  };
+
+  return {
+    ticker,
+    name: data.stockName || '',
+    market: data.marketName?.includes('코스닥') ? 'KOSDAQ' : 'KOSPI',
+    per: parseNum(data.per),
+    pbr: parseNum(data.pbr),
+    dividendYield: parseNum(data.dividendYield),
+    eps: parseNum(data.eps),
+    bps: parseNum(data.bps),
+    dps: null, // 네이버 API에서 직접 제공하지 않음
+    currentPrice: parseNum(data.closePrice),
+    marketCap: parseNum(data.marketValue),
+    fetchedAt: new Date().toISOString(),
+  };
+}
+
+// 네이버 금융 투자지표 API (PER, PBR, 배당수익률)
+async function fetchNaverInvestmentInfo(ticker: string): Promise<Partial<StockFundamentalData>> {
+  const url = `https://m.stock.naver.com/api/stock/${ticker}/integration`;
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15',
+        'Accept': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      return {};
+    }
+
+    const data = await response.json();
+    const investInfo = data.totalInfos?.find((i: { key: string }) => i.key === 'investInfo');
+
+    const parseNum = (val: string | number | null | undefined): number | null => {
+      if (val === null || val === undefined || val === '' || val === '-') return null;
+      const num = typeof val === 'string' ? parseFloat(val.replace(/,/g, '').replace('%', '')) : val;
+      return isNaN(num) ? null : num;
+    };
+
+    if (investInfo?.data) {
+      const per = investInfo.data.find((d: { key: string }) => d.key === 'per')?.value;
+      const pbr = investInfo.data.find((d: { key: string }) => d.key === 'pbr')?.value;
+      const dy = investInfo.data.find((d: { key: string }) => d.key === 'dividendYield')?.value;
+
+      return {
+        per: parseNum(per),
+        pbr: parseNum(pbr),
+        dividendYield: parseNum(dy),
+      };
+    }
+  } catch {
+    // 실패 시 빈 객체 반환
+  }
+
+  return {};
 }
 
 export default async function handler(
@@ -166,19 +133,28 @@ export default async function handler(
   const normalizedTicker = ticker.padStart(6, '0');
 
   try {
-    // KRX PER/PBR/배당수익률 데이터
-    const otp = await getKrxOtp();
-    const csv = await getKrxData(otp);
-    const data = parseKrxCsv(csv, normalizedTicker);
+    // 네이버 금융에서 기본 정보 조회
+    const basicData = await fetchNaverStock(normalizedTicker);
 
-    if (!data) {
+    if (!basicData) {
       res.status(404).json({ error: 'Stock not found', ticker: normalizedTicker });
       return;
     }
 
+    // 투자지표 추가 조회
+    const investInfo = await fetchNaverInvestmentInfo(normalizedTicker);
+
+    // 데이터 병합 (투자지표가 있으면 덮어씀)
+    const data: StockFundamentalData = {
+      ...basicData,
+      per: investInfo.per ?? basicData.per,
+      pbr: investInfo.pbr ?? basicData.pbr,
+      dividendYield: investInfo.dividendYield ?? basicData.dividendYield,
+    };
+
     res.status(200).json(data);
   } catch (error) {
-    console.error('KRX API Error:', error);
+    console.error('Naver Stock API Error:', error);
     res.status(500).json({
       error: 'Failed to fetch stock data',
       message: error instanceof Error ? error.message : 'Unknown error',

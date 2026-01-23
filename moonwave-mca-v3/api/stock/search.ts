@@ -1,6 +1,6 @@
 // ============================================
 // Vercel API Route: Stock Search
-// KRX 종목 검색 API
+// 네이버 금융 종목 검색 API
 // ============================================
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
@@ -11,140 +11,87 @@ export interface StockSearchResult {
   market: 'KOSPI' | 'KOSDAQ';
 }
 
-// 한국거래소 종목 마스터 캐시 (메모리)
-let stockMasterCache: StockSearchResult[] | null = null;
-let cacheTimestamp = 0;
-const CACHE_TTL = 24 * 60 * 60 * 1000; // 24시간
+// 네이버 금융 자동완성 API
+async function searchNaverStocks(query: string, limit: number): Promise<StockSearchResult[]> {
+  const url = `https://m.stock.naver.com/api/json/search/searchListJson.nhn?keyword=${encodeURIComponent(query)}`;
 
-// KRX OTP 요청 (종목 마스터)
-async function getKrxOtp(): Promise<string> {
-  const response = await fetch(
-    'http://data.krx.co.kr/comm/fileDn/GenerateOTP/generate.cmd',
-    {
-      method: 'POST',
+  try {
+    const response = await fetch(url, {
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        Referer: 'http://data.krx.co.kr/contents/MDC/MDI/mdiLoader/index.cmd',
-        Origin: 'http://data.krx.co.kr',
+        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15',
+        'Accept': 'application/json',
       },
-      body: new URLSearchParams({
-        locale: 'ko_KR',
-        mktId: 'ALL',
-        share: '1',
-        csvxls_isNo: 'false',
-        name: 'fileDown',
-        url: 'dbms/MDC/STAT/standard/MDCSTAT01901',
-      }),
-    }
-  );
+    });
 
-  return response.text();
+    if (!response.ok) {
+      return [];
+    }
+
+    const data = await response.json();
+    const results: StockSearchResult[] = [];
+
+    // 국내 주식만 필터링
+    const stocks = data.result?.d || [];
+
+    for (const item of stocks) {
+      if (results.length >= limit) break;
+
+      // 국내 주식만 (cd가 6자리 숫자)
+      if (item.cd && /^\d{6}$/.test(item.cd)) {
+        results.push({
+          ticker: item.cd,
+          name: item.nm || '',
+          market: item.mt === 'KOSDAQ' ? 'KOSDAQ' : 'KOSPI',
+        });
+      }
+    }
+
+    return results;
+  } catch {
+    return [];
+  }
 }
 
-// KRX 데이터 요청
-async function getKrxData(otp: string): Promise<string> {
-  const response = await fetch(
-    'http://data.krx.co.kr/comm/fileDn/download_csv/download.cmd',
-    {
-      method: 'POST',
+// 대체: 네이버 통합검색 API
+async function searchNaverStocksAlt(query: string, limit: number): Promise<StockSearchResult[]> {
+  const url = `https://m.stock.naver.com/api/search/all?query=${encodeURIComponent(query)}`;
+
+  try {
+    const response = await fetch(url, {
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        Referer: 'http://data.krx.co.kr/contents/MDC/MDI/mdiLoader/index.cmd',
+        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15',
+        'Accept': 'application/json',
       },
-      body: new URLSearchParams({ code: otp }),
+    });
+
+    if (!response.ok) {
+      return [];
     }
-  );
 
-  const buffer = await response.arrayBuffer();
-  const decoder = new TextDecoder('euc-kr');
-  return decoder.decode(buffer);
-}
+    const data = await response.json();
+    const results: StockSearchResult[] = [];
 
-// CSV 파싱하여 종목 마스터 생성
-function parseStockMaster(csv: string): StockSearchResult[] {
-  const lines = csv.split('\n');
-  if (lines.length < 2) return [];
+    // 국내 주식 결과
+    const stocks = data.result?.stocks || data.stocks || [];
 
-  const headers = lines[0].split(',').map((h) => h.trim().replace(/"/g, ''));
+    for (const item of stocks) {
+      if (results.length >= limit) break;
 
-  const tickerIdx = headers.findIndex(
-    (h) => h === '종목코드' || h === '단축코드'
-  );
-  const nameIdx = headers.findIndex((h) => h === '종목명');
-  const marketIdx = headers.findIndex((h) => h === '시장구분');
-
-  const results: StockSearchResult[] = [];
-
-  for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i].split(',').map((c) => c.trim().replace(/"/g, ''));
-    const ticker = cols[tickerIdx];
-    const name = cols[nameIdx];
-    const marketStr = cols[marketIdx];
-
-    if (ticker && name) {
-      results.push({
-        ticker,
-        name,
-        market: marketStr?.includes('KOSDAQ') ? 'KOSDAQ' : 'KOSPI',
-      });
+      // 국내 주식만 (itemCode가 6자리 숫자)
+      const code = item.itemCode || item.code || item.stockCode;
+      if (code && /^\d{6}$/.test(code)) {
+        results.push({
+          ticker: code,
+          name: item.stockName || item.name || '',
+          market: item.marketName?.includes('코스닥') ? 'KOSDAQ' : 'KOSPI',
+        });
+      }
     }
+
+    return results;
+  } catch {
+    return [];
   }
-
-  return results;
-}
-
-// 종목 마스터 로드
-async function loadStockMaster(): Promise<StockSearchResult[]> {
-  const now = Date.now();
-
-  if (stockMasterCache && now - cacheTimestamp < CACHE_TTL) {
-    return stockMasterCache;
-  }
-
-  const otp = await getKrxOtp();
-  const csv = await getKrxData(otp);
-  stockMasterCache = parseStockMaster(csv);
-  cacheTimestamp = now;
-
-  return stockMasterCache;
-}
-
-// 검색 함수
-function searchStocks(
-  stocks: StockSearchResult[],
-  query: string,
-  limit: number
-): StockSearchResult[] {
-  const normalizedQuery = query.toLowerCase().trim();
-
-  // 종목코드 정확 매칭 우선
-  const exactCodeMatch = stocks.filter(
-    (s) => s.ticker === normalizedQuery || s.ticker === normalizedQuery.padStart(6, '0')
-  );
-
-  if (exactCodeMatch.length > 0) {
-    return exactCodeMatch.slice(0, limit);
-  }
-
-  // 종목명 검색
-  const nameMatches = stocks.filter((s) =>
-    s.name.toLowerCase().includes(normalizedQuery)
-  );
-
-  // 종목코드 부분 매칭
-  const codeMatches = stocks.filter((s) =>
-    s.ticker.includes(normalizedQuery.replace(/^0+/, ''))
-  );
-
-  // 중복 제거 후 반환
-  const combined = [...nameMatches, ...codeMatches];
-  const unique = Array.from(new Map(combined.map((s) => [s.ticker, s])).values());
-
-  return unique.slice(0, limit);
 }
 
 export default async function handler(
@@ -174,8 +121,15 @@ export default async function handler(
   }
 
   try {
-    const stocks = await loadStockMaster();
-    const results = searchStocks(stocks, q, parseInt(limit as string, 10) || 10);
+    const maxLimit = parseInt(limit as string, 10) || 10;
+
+    // 네이버 검색 시도
+    let results = await searchNaverStocks(q, maxLimit);
+
+    // 결과가 없으면 대체 API 시도
+    if (results.length === 0) {
+      results = await searchNaverStocksAlt(q, maxLimit);
+    }
 
     res.status(200).json({
       query: q,
