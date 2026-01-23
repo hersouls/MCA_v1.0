@@ -4,15 +4,25 @@
 
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { useShallow } from 'zustand/react/shallow';
 import type { Portfolio, Trade, PortfolioStats } from '@/types';
 import * as db from '@/services/database';
 import { calculatePortfolioStats } from '@/services/calculation';
 import { DEFAULT_PORTFOLIO_PARAMS } from '@/utils/constants';
 
+// Sort portfolios helper (pure function)
+function sortPortfolios(portfolios: Portfolio[]): Portfolio[] {
+  return [...portfolios].sort((a, b) => {
+    // Favorites first
+    if (a.isFavorite !== b.isFavorite) return a.isFavorite ? -1 : 1;
+    // Then by creation date
+    return a.createdAt.getTime() - b.createdAt.getTime();
+  });
+}
+
 interface PortfolioState {
   // State
   portfolios: Portfolio[];
+  sortedPortfolios: Portfolio[]; // Cached sorted version
   activePortfolioId: number | null;
   trades: Map<number, Trade[]>;
   isLoading: boolean;
@@ -45,6 +55,7 @@ export const usePortfolioStore = create<PortfolioState>()(
   devtools(
     (set, get) => ({
       portfolios: [],
+      sortedPortfolios: [],
       activePortfolioId: null,
       trades: new Map(),
       isLoading: false,
@@ -55,7 +66,7 @@ export const usePortfolioStore = create<PortfolioState>()(
         set({ isLoading: true, error: null });
         try {
           const portfolios = await db.getAllPortfolios();
-          set({ portfolios, isLoading: false });
+          set({ portfolios, sortedPortfolios: sortPortfolios(portfolios), isLoading: false });
           get().refreshAllStats();
 
           // Set active portfolio to first one if none selected
@@ -90,10 +101,14 @@ export const usePortfolioStore = create<PortfolioState>()(
         const portfolio = await db.getPortfolio(id);
 
         if (portfolio) {
-          set((state) => ({
-            portfolios: [...state.portfolios, portfolio],
-            activePortfolioId: id,
-          }));
+          set((state) => {
+            const newPortfolios = [...state.portfolios, portfolio];
+            return {
+              portfolios: newPortfolios,
+              sortedPortfolios: sortPortfolios(newPortfolios),
+              activePortfolioId: id,
+            };
+          });
           get().refreshPortfolioStats(id);
         }
 
@@ -103,11 +118,15 @@ export const usePortfolioStore = create<PortfolioState>()(
       updatePortfolio: async (id, updates) => {
         await db.updatePortfolio(id, updates);
 
-        set((state) => ({
-          portfolios: state.portfolios.map((p) =>
+        set((state) => {
+          const newPortfolios = state.portfolios.map((p) =>
             p.id === id ? { ...p, ...updates, updatedAt: new Date() } : p
-          ),
-        }));
+          );
+          return {
+            portfolios: newPortfolios,
+            sortedPortfolios: sortPortfolios(newPortfolios),
+          };
+        });
 
         get().refreshPortfolioStats(id);
       },
@@ -125,6 +144,7 @@ export const usePortfolioStore = create<PortfolioState>()(
 
           return {
             portfolios: newPortfolios,
+            sortedPortfolios: sortPortfolios(newPortfolios),
             trades: newTrades,
             portfolioStats: newStats,
             activePortfolioId:
@@ -141,11 +161,15 @@ export const usePortfolioStore = create<PortfolioState>()(
 
         await db.updatePortfolio(id, { isFavorite: !portfolio.isFavorite });
 
-        set((state) => ({
-          portfolios: state.portfolios.map((p) =>
+        set((state) => {
+          const newPortfolios = state.portfolios.map((p) =>
             p.id === id ? { ...p, isFavorite: !p.isFavorite } : p
-          ),
-        }));
+          );
+          return {
+            portfolios: newPortfolios,
+            sortedPortfolios: sortPortfolios(newPortfolios),
+          };
+        });
       },
 
       loadTradesForPortfolio: async (portfolioId) => {
@@ -263,22 +287,11 @@ export const selectPortfolioTrades = (state: PortfolioState, portfolioId: number
 export const selectPortfolioStats = (state: PortfolioState, portfolioId: number) =>
   state.portfolioStats.get(portfolioId);
 
-// Internal selector - creates new array, use with useShallow or useSortedPortfolios hook
-const sortPortfolios = (portfolios: Portfolio[]) =>
-  [...portfolios].sort((a, b) => {
-    // Favorites first
-    if (a.isFavorite !== b.isFavorite) return a.isFavorite ? -1 : 1;
-    // Then by creation date
-    return a.createdAt.getTime() - b.createdAt.getTime();
-  });
-
-// Safe selector using useShallow - prevents infinite re-renders
+// Returns cached sorted portfolios from state (stable reference)
 export const selectSortedPortfolios = (state: PortfolioState) =>
-  sortPortfolios(state.portfolios);
+  state.sortedPortfolios;
 
-// Hook for sorted portfolios with shallow comparison (recommended)
+// Hook for sorted portfolios (recommended - uses cached state)
 export function useSortedPortfolios() {
-  return usePortfolioStore(
-    useShallow((state) => sortPortfolios(state.portfolios))
-  );
+  return usePortfolioStore((state) => state.sortedPortfolios);
 }
