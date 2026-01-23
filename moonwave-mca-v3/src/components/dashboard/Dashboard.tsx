@@ -22,13 +22,13 @@ import {
   EmptyState,
 } from '@/components/layout';
 import { Card, StatsCard, Button, PortfolioStatusBadge } from '@/components/ui';
-import { usePortfolioStore, selectSortedPortfolios } from '@/stores/portfolioStore';
+import { usePortfolioStore, useSortedPortfolios } from '@/stores/portfolioStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { formatCurrency, formatCompact, formatPercent } from '@/utils/format';
 
 export function Dashboard() {
   const navigate = useNavigate();
-  const portfolios = usePortfolioStore(selectSortedPortfolios);
+  const portfolios = useSortedPortfolios();
   const addPortfolio = usePortfolioStore((state) => state.addPortfolio);
   const setActivePortfolio = usePortfolioStore((state) => state.setActivePortfolio);
   const portfolioStats = usePortfolioStore((state) => state.portfolioStats);

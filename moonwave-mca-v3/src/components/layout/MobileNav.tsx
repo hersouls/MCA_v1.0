@@ -19,7 +19,7 @@ import {
   Plus,
 } from 'lucide-react';
 import { useUIStore } from '@/stores/uiStore';
-import { usePortfolioStore, selectSortedPortfolios } from '@/stores/portfolioStore';
+import { usePortfolioStore, useSortedPortfolios } from '@/stores/portfolioStore';
 
 type View = 'dashboard' | 'detail' | 'settings';
 
@@ -34,7 +34,7 @@ export function MobileNav({ onNavigate, onAddPortfolio }: MobileNavProps) {
   const currentView = useUIStore((state) => state.currentView);
   const setView = useUIStore((state) => state.setView);
 
-  const portfolios = usePortfolioStore(selectSortedPortfolios);
+  const portfolios = useSortedPortfolios();
   const activePortfolioId = usePortfolioStore((state) => state.activePortfolioId);
   const setActivePortfolio = usePortfolioStore((state) => state.setActivePortfolio);
 

@@ -4,6 +4,7 @@
 
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
+import { useShallow } from 'zustand/react/shallow';
 import type { Portfolio, Trade, PortfolioStats } from '@/types';
 import * as db from '@/services/database';
 import { calculatePortfolioStats } from '@/services/calculation';
@@ -262,10 +263,22 @@ export const selectPortfolioTrades = (state: PortfolioState, portfolioId: number
 export const selectPortfolioStats = (state: PortfolioState, portfolioId: number) =>
   state.portfolioStats.get(portfolioId);
 
-export const selectSortedPortfolios = (state: PortfolioState) =>
-  [...state.portfolios].sort((a, b) => {
+// Internal selector - creates new array, use with useShallow or useSortedPortfolios hook
+const sortPortfolios = (portfolios: Portfolio[]) =>
+  [...portfolios].sort((a, b) => {
     // Favorites first
     if (a.isFavorite !== b.isFavorite) return a.isFavorite ? -1 : 1;
     // Then by creation date
     return a.createdAt.getTime() - b.createdAt.getTime();
   });
+
+// Safe selector using useShallow - prevents infinite re-renders
+export const selectSortedPortfolios = (state: PortfolioState) =>
+  sortPortfolios(state.portfolios);
+
+// Hook for sorted portfolios with shallow comparison (recommended)
+export function useSortedPortfolios() {
+  return usePortfolioStore(
+    useShallow((state) => sortPortfolios(state.portfolios))
+  );
+}
