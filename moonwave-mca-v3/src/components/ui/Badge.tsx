@@ -3,9 +3,17 @@
 // ============================================
 
 import { clsx } from 'clsx';
-import { type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
-type BadgeColor = 'zinc' | 'primary' | 'success' | 'warning' | 'danger' | 'blue' | 'purple' | 'pink';
+type BadgeColor =
+  | 'zinc'
+  | 'primary'
+  | 'success'
+  | 'warning'
+  | 'danger'
+  | 'blue'
+  | 'purple'
+  | 'pink';
 
 interface BadgeProps {
   color?: BadgeColor;
@@ -18,43 +26,59 @@ interface BadgeProps {
 
 const colorStyles: Record<BadgeColor, { solid: string; outline: string; dot: string }> = {
   zinc: {
-    solid: 'bg-zinc-100 text-zinc-700 ring-zinc-500/10 dark:bg-zinc-700 dark:text-zinc-300 dark:ring-zinc-500/20',
-    outline: 'bg-transparent text-zinc-600 ring-zinc-500/20 dark:text-zinc-400 dark:ring-zinc-500/30',
+    solid:
+      'bg-zinc-100 text-zinc-700 ring-zinc-500/10 dark:bg-zinc-700 dark:text-zinc-300 dark:ring-zinc-500/20',
+    outline:
+      'bg-transparent text-zinc-600 ring-zinc-500/20 dark:text-zinc-400 dark:ring-zinc-500/30',
     dot: 'bg-zinc-500',
   },
   primary: {
-    solid: 'bg-primary-50 text-primary-700 ring-primary-500/10 dark:bg-primary-900/50 dark:text-primary-300 dark:ring-primary-500/20',
-    outline: 'bg-transparent text-primary-600 ring-primary-500/20 dark:text-primary-400 dark:ring-primary-500/30',
+    solid:
+      'bg-primary-50 text-primary-700 ring-primary-500/10 dark:bg-primary-900/50 dark:text-primary-300 dark:ring-primary-500/20',
+    outline:
+      'bg-transparent text-primary-600 ring-primary-500/20 dark:text-primary-400 dark:ring-primary-500/30',
     dot: 'bg-primary-500',
   },
   success: {
-    solid: 'bg-success-50 text-success-700 ring-success-500/10 dark:bg-success-900/50 dark:text-success-300 dark:ring-success-500/20',
-    outline: 'bg-transparent text-success-600 ring-success-500/20 dark:text-success-400 dark:ring-success-500/30',
+    solid:
+      'bg-success-50 text-success-700 ring-success-500/10 dark:bg-success-900/50 dark:text-success-300 dark:ring-success-500/20',
+    outline:
+      'bg-transparent text-success-600 ring-success-500/20 dark:text-success-400 dark:ring-success-500/30',
     dot: 'bg-success-500',
   },
   warning: {
-    solid: 'bg-warning-50 text-warning-700 ring-warning-500/10 dark:bg-warning-900/50 dark:text-warning-300 dark:ring-warning-500/20',
-    outline: 'bg-transparent text-warning-600 ring-warning-500/20 dark:text-warning-400 dark:ring-warning-500/30',
+    solid:
+      'bg-warning-50 text-warning-700 ring-warning-500/10 dark:bg-warning-900/50 dark:text-warning-300 dark:ring-warning-500/20',
+    outline:
+      'bg-transparent text-warning-600 ring-warning-500/20 dark:text-warning-400 dark:ring-warning-500/30',
     dot: 'bg-warning-500',
   },
   danger: {
-    solid: 'bg-danger-50 text-danger-700 ring-danger-500/10 dark:bg-danger-900/50 dark:text-danger-300 dark:ring-danger-500/20',
-    outline: 'bg-transparent text-danger-600 ring-danger-500/20 dark:text-danger-400 dark:ring-danger-500/30',
+    solid:
+      'bg-danger-50 text-danger-700 ring-danger-500/10 dark:bg-danger-900/50 dark:text-danger-300 dark:ring-danger-500/20',
+    outline:
+      'bg-transparent text-danger-600 ring-danger-500/20 dark:text-danger-400 dark:ring-danger-500/30',
     dot: 'bg-danger-500',
   },
   blue: {
-    solid: 'bg-primary-50 text-primary-700 ring-primary-500/10 dark:bg-primary-900/50 dark:text-primary-300 dark:ring-primary-500/20',
-    outline: 'bg-transparent text-primary-600 ring-primary-500/20 dark:text-primary-400 dark:ring-primary-500/30',
+    solid:
+      'bg-primary-50 text-primary-700 ring-primary-500/10 dark:bg-primary-900/50 dark:text-primary-300 dark:ring-primary-500/20',
+    outline:
+      'bg-transparent text-primary-600 ring-primary-500/20 dark:text-primary-400 dark:ring-primary-500/30',
     dot: 'bg-primary-500',
   },
   purple: {
-    solid: 'bg-purple-50 text-purple-700 ring-purple-500/10 dark:bg-purple-900/50 dark:text-purple-300 dark:ring-purple-500/20',
-    outline: 'bg-transparent text-purple-600 ring-purple-500/20 dark:text-purple-400 dark:ring-purple-500/30',
+    solid:
+      'bg-purple-50 text-purple-700 ring-purple-500/10 dark:bg-purple-900/50 dark:text-purple-300 dark:ring-purple-500/20',
+    outline:
+      'bg-transparent text-purple-600 ring-purple-500/20 dark:text-purple-400 dark:ring-purple-500/30',
     dot: 'bg-purple-500',
   },
   pink: {
-    solid: 'bg-pink-50 text-pink-700 ring-pink-500/10 dark:bg-pink-900/50 dark:text-pink-300 dark:ring-pink-500/20',
-    outline: 'bg-transparent text-pink-600 ring-pink-500/20 dark:text-pink-400 dark:ring-pink-500/30',
+    solid:
+      'bg-pink-50 text-pink-700 ring-pink-500/10 dark:bg-pink-900/50 dark:text-pink-300 dark:ring-pink-500/20',
+    outline:
+      'bg-transparent text-pink-600 ring-pink-500/20 dark:text-pink-400 dark:ring-pink-500/30',
     dot: 'bg-pink-500',
   },
 };
@@ -84,55 +108,9 @@ export function Badge({
         className
       )}
     >
-      {dot && (
-        <span
-          className={clsx('size-1.5 rounded-full', colorStyle.dot)}
-          aria-hidden="true"
-        />
-      )}
+      {dot && <span className={clsx('size-1.5 rounded-full', colorStyle.dot)} aria-hidden="true" />}
       {children}
     </span>
-  );
-}
-
-// Legacy variant mapping
-type LegacyBadgeVariant = 'default' | 'primary' | 'success' | 'warning' | 'danger' | 'info';
-
-interface LegacyBadgeProps extends Omit<BadgeProps, 'color' | 'variant'> {
-  variant?: LegacyBadgeVariant;
-}
-
-function mapLegacyVariant(variant: LegacyBadgeVariant): BadgeColor {
-  const map: Record<LegacyBadgeVariant, BadgeColor> = {
-    default: 'zinc',
-    primary: 'primary',
-    success: 'success',
-    warning: 'warning',
-    danger: 'danger',
-    info: 'blue',
-  };
-  return map[variant];
-}
-
-// Wrapper for legacy variant prop
-export function LegacyBadge({ variant = 'default', ...props }: LegacyBadgeProps) {
-  return <Badge color={mapLegacyVariant(variant)} {...props} />;
-}
-
-// Status-specific badges for MCA
-export function StatusBadge({ status }: { status: 'pending' | 'ordered' | 'executed' }) {
-  const config: Record<typeof status, { color: BadgeColor; label: string }> = {
-    pending: { color: 'zinc', label: '대기' },
-    ordered: { color: 'warning', label: '주문' },
-    executed: { color: 'success', label: '체결' },
-  };
-
-  const { color, label } = config[status];
-
-  return (
-    <Badge color={color} size="sm" dot>
-      {label}
-    </Badge>
   );
 }
 

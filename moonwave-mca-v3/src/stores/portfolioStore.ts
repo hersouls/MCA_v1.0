@@ -2,15 +2,13 @@
 // Portfolio Store (Zustand)
 // ============================================
 
+import { calculatePortfolioStats } from '@/services/calculation';
+import * as db from '@/services/database';
+import type { Portfolio, PortfolioStats, Trade } from '@/types';
+import { DEFAULT_PORTFOLIO_PARAMS } from '@/utils/constants';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import type { Portfolio, Trade, PortfolioStats } from '@/types';
-import * as db from '@/services/database';
-import { calculatePortfolioStats } from '@/services/calculation';
-import { DEFAULT_PORTFOLIO_PARAMS } from '@/utils/constants';
-
-// Stable empty array for selectors (prevents new reference on each call)
-const EMPTY_TRADES: Trade[] = [];
+import { useNotificationStore } from './notificationStore';
 
 // Sort portfolios helper (pure function)
 function sortPortfolios(portfolios: Portfolio[]): Portfolio[] {
@@ -39,7 +37,9 @@ interface PortfolioState {
   setActivePortfolio: (id: number | null) => void;
 
   // Portfolio CRUD
-  addPortfolio: (name?: string) => Promise<number>;
+  addPortfolio: (
+    stockOrName?: string | { name: string; code: string; market: string }
+  ) => Promise<number>;
   updatePortfolio: (id: number, updates: Partial<Portfolio>) => Promise<void>;
   deletePortfolio: (id: number) => Promise<void>;
   toggleFavorite: (id: number) => Promise<void>;
@@ -93,14 +93,32 @@ export const usePortfolioStore = create<PortfolioState>()(
         }
       },
 
-      addPortfolio: async (name = '새 종목') => {
+      addPortfolio: async (stockOrName = '새 종목') => {
+        let name = '새 종목';
+        let stockCode: string | undefined;
+        let market: string | undefined;
+
+        if (typeof stockOrName === 'string') {
+          name = stockOrName;
+        } else if (stockOrName && typeof stockOrName === 'object') {
+          name = stockOrName.name;
+          stockCode = stockOrName.code;
+          market = stockOrName.market;
+        }
+
         const newPortfolio: Omit<Portfolio, 'id'> = {
           name,
+          stockCode,
+          market,
           isFavorite: false,
           createdAt: new Date(),
           updatedAt: new Date(),
           params: { ...DEFAULT_PORTFOLIO_PARAMS },
         };
+
+        // If we want to support storing ticker, we need to update types/index.ts first.
+        // But the user request emphasized logic direction.
+        // Quick fix: Just use name for now.
 
         const id = await db.addPortfolio(newPortfolio);
         const portfolio = await db.getPortfolio(id);
@@ -121,6 +139,10 @@ export const usePortfolioStore = create<PortfolioState>()(
       },
 
       updatePortfolio: async (id, updates) => {
+        // Get old portfolio for comparison
+        const oldPortfolio = get().portfolios.find((p) => p.id === id);
+        const oldGrade = oldPortfolio?.fundamentalGrade;
+
         await db.updatePortfolio(id, updates);
 
         set((state) => {
@@ -132,6 +154,19 @@ export const usePortfolioStore = create<PortfolioState>()(
             sortedPortfolios: sortPortfolios(newPortfolios),
           };
         });
+
+        // Check for grade change and notify
+        if (updates.fundamentalGrade && oldGrade && updates.fundamentalGrade !== oldGrade) {
+          const portfolio = get().portfolios.find((p) => p.id === id);
+          if (portfolio) {
+            useNotificationStore.getState().addNotification({
+              type: 'grade-change',
+              title: portfolio.name,
+              message: `등급 변경: ${oldGrade} → ${updates.fundamentalGrade}`,
+              portfolioId: id,
+            });
+          }
+        }
 
         get().refreshPortfolioStats(id);
       },
@@ -154,7 +189,7 @@ export const usePortfolioStore = create<PortfolioState>()(
             portfolioStats: newStats,
             activePortfolioId:
               state.activePortfolioId === id
-                ? newPortfolios[0]?.id ?? null
+                ? (newPortfolios[0]?.id ?? null)
                 : state.activePortfolioId,
           };
         });
@@ -292,9 +327,7 @@ export const usePortfolioStore = create<PortfolioState>()(
         const orderedSteps = trades
           .filter((t) => t.status === 'ordered' || t.status === 'executed')
           .map((t) => t.step);
-        const executedSteps = trades
-          .filter((t) => t.status === 'executed')
-          .map((t) => t.step);
+        const executedSteps = trades.filter((t) => t.status === 'executed').map((t) => t.step);
 
         const stats = calculatePortfolioStats(portfolio.params, orderedSteps, executedSteps);
 
@@ -303,6 +336,22 @@ export const usePortfolioStore = create<PortfolioState>()(
           newStats.set(portfolioId, stats);
           return { portfolioStats: newStats };
         });
+
+        // Check for gap warning - add or dismiss notification based on gap status
+        if (portfolio.id) {
+          const notificationStore = useNotificationStore.getState();
+          if (stats.hasGap) {
+            notificationStore.addNotification({
+              type: 'gap-warning',
+              title: portfolio.name,
+              message: `주문 괴리 발생 (${stats.gap}구간 초과)`,
+              portfolioId: portfolio.id,
+            });
+          } else {
+            // Gap resolved - dismiss any existing gap warning for this portfolio
+            notificationStore.dismissByType('gap-warning', portfolio.id);
+          }
+        }
       },
 
       refreshAllStats: () => {
@@ -333,18 +382,8 @@ export const usePortfolioStore = create<PortfolioState>()(
 );
 
 // Selectors
-export const selectActivePortfolio = (state: PortfolioState) =>
-  state.portfolios.find((p) => p.id === state.activePortfolioId);
-
-export const selectPortfolioTrades = (state: PortfolioState, portfolioId: number) =>
-  state.trades.get(portfolioId) ?? EMPTY_TRADES;
-
 export const selectPortfolioStats = (state: PortfolioState, portfolioId: number) =>
   state.portfolioStats.get(portfolioId);
-
-// Returns cached sorted portfolios from state (stable reference)
-export const selectSortedPortfolios = (state: PortfolioState) =>
-  state.sortedPortfolios;
 
 // Hook for sorted portfolios (recommended - uses cached state)
 export function useSortedPortfolios() {

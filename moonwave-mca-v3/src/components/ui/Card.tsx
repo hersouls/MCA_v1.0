@@ -2,8 +2,11 @@
 // Card Component (Catalyst-style)
 // ============================================
 
-import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
 import { clsx } from 'clsx';
+import { Info } from 'lucide-react';
+import { type HTMLAttributes, type ReactNode, forwardRef } from 'react';
+import { Button as AriaButton } from 'react-aria-components';
+import { Tooltip } from './Tooltip';
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
   variant?: 'default' | 'elevated' | 'bordered' | 'interactive' | 'outline';
@@ -12,23 +15,14 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 const variantStyles = {
-  default: clsx(
-    'bg-white dark:bg-zinc-900',
-    'ring-1 ring-zinc-950/5 dark:ring-white/10'
-  ),
+  default: clsx('bg-white dark:bg-zinc-900', 'ring-1 ring-zinc-950/5 dark:ring-white/10'),
   elevated: clsx(
     'bg-white dark:bg-zinc-900',
     'shadow-lg shadow-zinc-950/5 dark:shadow-none',
     'ring-1 ring-zinc-950/5 dark:ring-white/10'
   ),
-  bordered: clsx(
-    'bg-transparent',
-    'border-2 border-zinc-200 dark:border-zinc-700'
-  ),
-  outline: clsx(
-    'bg-white/50 dark:bg-zinc-900/50',
-    'ring-1 ring-zinc-950/10 dark:ring-white/15'
-  ),
+  bordered: clsx('bg-transparent', 'border-2 border-zinc-200 dark:border-zinc-700'),
+  outline: clsx('bg-white/50 dark:bg-zinc-900/50', 'ring-1 ring-zinc-950/10 dark:ring-white/15'),
   interactive: clsx(
     'bg-white dark:bg-zinc-900',
     'ring-1 ring-zinc-950/5 dark:ring-white/10',
@@ -48,15 +42,33 @@ const paddingStyles = {
 
 export const Card = forwardRef<HTMLDivElement, CardProps>(
   ({ variant = 'default', padding = 'md', className, children, ...props }, ref) => {
+    const isInteractive = variant === 'interactive';
+
     return (
       <div
         ref={ref}
+        role={isInteractive ? 'button' : undefined}
+        tabIndex={isInteractive ? 0 : undefined}
         className={clsx(
           'rounded-xl',
           variantStyles[variant],
           paddingStyles[padding],
+          // Add focus-visible styles for interactive variant
+          isInteractive &&
+            'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2',
           className
         )}
+        onKeyDown={
+          isInteractive
+            ? (e) => {
+                // Allow Enter/Space to trigger click for interactive cards
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  (e.target as HTMLElement).click();
+                }
+              }
+            : undefined
+        }
         {...props}
       >
         {children}
@@ -84,24 +96,20 @@ export function CardHeader({
   ...props
 }: CardHeaderProps) {
   return (
-    <div
-      className={clsx('flex items-start justify-between gap-4', className)}
-      {...props}
-    >
+    <div className={clsx('flex items-start justify-between gap-4', className)} {...props}>
       <div className="flex items-start gap-3">
         {icon && (
-          <div className="flex-shrink-0 size-10 rounded-lg bg-primary-50 dark:bg-primary-950/50 ring-1 ring-primary-500/20 flex items-center justify-center text-primary-600 dark:text-primary-400">
+          <div
+            className="flex-shrink-0 size-10 rounded-lg bg-primary-50 dark:bg-primary-950/50 ring-1 ring-primary-500/20 flex items-center justify-center text-primary-600 dark:text-primary-400"
+            aria-hidden="true"
+          >
             {icon}
           </div>
         )}
         <div className="min-w-0">
-          <h3 className="text-base/7 font-semibold text-zinc-950 dark:text-white">
-            {title}
-          </h3>
+          <h3 className="text-base/7 font-semibold text-zinc-950 dark:text-white">{title}</h3>
           {description && (
-            <p className="mt-0.5 text-sm/6 text-zinc-500 dark:text-zinc-400">
-              {description}
-            </p>
+            <p className="mt-0.5 text-sm/6 text-zinc-500 dark:text-zinc-400">{description}</p>
           )}
         </div>
       </div>
@@ -123,41 +131,14 @@ export function CardContent({ className, children, ...props }: CardContentProps)
   );
 }
 
-// Card Footer
-interface CardFooterProps extends HTMLAttributes<HTMLDivElement> {
-  children: ReactNode;
-}
-
-export function CardFooter({ className, children, ...props }: CardFooterProps) {
-  return (
-    <div
-      className={clsx(
-        'mt-4 pt-4 border-t border-zinc-950/5 dark:border-white/5 flex items-center justify-between gap-4',
-        className
-      )}
-      {...props}
-    >
-      {children}
-    </div>
-  );
-}
-
-// Divider component
-export function Divider({ className, ...props }: HTMLAttributes<HTMLHRElement>) {
-  return (
-    <hr
-      className={clsx('border-t border-zinc-950/5 dark:border-white/5', className)}
-      {...props}
-    />
-  );
-}
-
 // Stats Card for Dashboard
 interface StatsCardProps {
   label: string;
   value: string | number;
   subValue?: string;
   icon?: ReactNode;
+  /** Tooltip text shown next to label */
+  tooltip?: string;
   trend?: {
     value: number;
     isPositive: boolean;
@@ -192,6 +173,7 @@ export function StatsCard({
   value,
   subValue,
   icon,
+  tooltip,
   trend,
   progress,
   valueColor = 'default',
@@ -202,14 +184,32 @@ export function StatsCard({
     <Card padding="md" className={className}>
       <div className="flex items-start justify-between">
         <div className="min-w-0 flex-1">
-          <p className="text-xs/5 font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+          <p className="text-xs/5 font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider inline-flex items-center gap-1">
             {label}
+            {tooltip && (
+              <Tooltip content={tooltip} placement="top">
+                <AriaButton className="inline-flex items-center justify-center rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-700 p-0.5 -m-0.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500">
+                  <Info className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500" />
+                </AriaButton>
+              </Tooltip>
+            )}
           </p>
-          <p className={clsx('mt-1.5 text-2xl/8 font-bold tabular-nums', alignStyles[align], valueColorStyles[valueColor])}>
+          <p
+            className={clsx(
+              'mt-1.5 text-xl sm:text-2xl/8 font-bold tabular-nums whitespace-nowrap',
+              alignStyles[align],
+              valueColorStyles[valueColor]
+            )}
+          >
             {value}
           </p>
           {subValue && (
-            <p className={clsx('mt-1 text-sm/6 text-zinc-500 dark:text-zinc-400 tabular-nums', alignStyles[align])}>
+            <p
+              className={clsx(
+                'mt-1 text-sm/6 text-zinc-500 dark:text-zinc-400 tabular-nums',
+                alignStyles[align]
+              )}
+            >
               {subValue}
             </p>
           )}
@@ -235,10 +235,12 @@ export function StatsCard({
                   : 'text-danger-600 dark:text-danger-400'
               )}
             >
-              <span className={clsx(
-                'inline-block size-4',
-                trend.isPositive ? 'rotate-0' : 'rotate-180'
-              )}>
+              <span
+                className={clsx(
+                  'inline-block size-4',
+                  trend.isPositive ? 'rotate-0' : 'rotate-180'
+                )}
+              >
                 ↑
               </span>
               {Math.abs(trend.value)}%
@@ -246,7 +248,10 @@ export function StatsCard({
           )}
         </div>
         {icon && (
-          <div className="flex-shrink-0 size-10 rounded-lg bg-zinc-100 dark:bg-zinc-800 ring-1 ring-zinc-950/5 dark:ring-white/10 flex items-center justify-center text-zinc-500 dark:text-zinc-400">
+          <div
+            className="flex-shrink-0 size-10 rounded-lg bg-zinc-100 dark:bg-zinc-800 ring-1 ring-zinc-950/5 dark:ring-white/10 flex items-center justify-center text-zinc-500 dark:text-zinc-400"
+            aria-hidden="true"
+          >
             {icon}
           </div>
         )}
@@ -271,9 +276,9 @@ interface StatItemProps {
  */
 export function StatItem({ label, value, className }: StatItemProps) {
   return (
-    <div className={className}>
-      <span className="text-xs text-zinc-500 dark:text-zinc-400">{label}</span>
-      <p className="font-semibold text-zinc-900 dark:text-zinc-50 text-right tabular-nums">
+    <div className={clsx('min-w-0', className)}>
+      <span className="block text-xs text-zinc-500 dark:text-zinc-400 truncate">{label}</span>
+      <p className="font-semibold text-zinc-900 dark:text-zinc-50 text-right tabular-nums whitespace-nowrap">
         {value}
       </p>
     </div>
@@ -288,6 +293,8 @@ interface StatGridProps {
   children: ReactNode;
   columns?: 2 | 3 | 4 | 5 | 6;
   divided?: boolean;
+  /** Enable responsive grid (mobile 2col → tablet 3col → desktop target columns) */
+  responsive?: boolean;
   className?: string;
 }
 
@@ -299,19 +306,35 @@ const gridColumnStyles = {
   6: 'grid-cols-6',
 };
 
+const responsiveGridStyles = {
+  2: 'grid-cols-2',
+  3: 'grid-cols-2 sm:grid-cols-3',
+  4: 'grid-cols-2 sm:grid-cols-4',
+  5: 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5',
+  6: 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-6',
+};
+
 export function StatGrid({
   children,
   columns = 4,
   divided = true,
+  responsive = false,
   className,
 }: StatGridProps) {
+  const gridStyles = responsive ? responsiveGridStyles[columns] : gridColumnStyles[columns];
+
   return (
     <div
       className={clsx(
         'grid',
-        gridColumnStyles[columns],
-        divided && 'divide-x divide-zinc-200 dark:divide-zinc-700',
-        '[&>*]:px-6 [&>*:first-child]:pl-0 [&>*:last-child]:pr-0',
+        gridStyles,
+        // Use gap instead of divide for responsive mode (divide-x doesn't work well with wrapping)
+        responsive
+          ? 'gap-4'
+          : [
+              divided && 'divide-x divide-zinc-200 dark:divide-zinc-700',
+              '[&>*]:px-6 [&>*:first-child]:pl-0 [&>*:last-child]:pr-0',
+            ],
         className
       )}
     >

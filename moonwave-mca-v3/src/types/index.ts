@@ -2,11 +2,14 @@
 // Moonwave MCA v3.0 - Type Definitions
 // ============================================
 
+export * from './ui';
+
 // Portfolio Types
 export interface Portfolio {
   id?: number;
   name: string;
   stockCode?: string;
+  market?: string;
   isFavorite: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -18,20 +21,28 @@ export interface Portfolio {
   fundamentalGrade?: FundamentalGrade;
 }
 
+// 기보유 주식 개별 항목
+export interface LegacyHolding {
+  qty: number;
+  avg: number;
+  memo?: string; // 예: "1차 매수", "물타기" 등
+}
+
 export interface PortfolioParams {
   peakPrice: number;
   strength: number;
   startDrop: number;
   steps: number;
   targetBudget: number;
-  legacyQty: number;
-  legacyAvg: number;
+  legacyQty: number; // 합산된 총 수량 (계산용)
+  legacyAvg: number; // 가중평균 단가 (계산용)
+  legacyHoldings?: LegacyHolding[]; // 개별 기보유 항목 (최대 3개)
   ma120Price?: number;
   targetMultiple?: number;
   manualTargetPrice?: number;
   // Step-level data
-  executionDates?: Record<number, string>;  // { step: 'YYYY-MM-DD' }
-  stepMemos?: Record<number, string>;       // { step: 'memo text' }
+  executionDates?: Record<number, string>; // { step: 'YYYY-MM-DD' }
+  stepMemos?: Record<number, string>; // { step: 'memo text' }
 }
 
 // Trade Types
@@ -64,20 +75,30 @@ export interface CalculatedTrade {
   isOrdered: boolean;
   isExecuted: boolean;
   // Real cumulative values (executed steps only, including legacy)
-  realQty: number;      // 체결 구간까지의 누적 실제 수량
-  realAmount: number;   // 체결 구간까지의 누적 실제 금액
+  realQty: number; // 체결 구간까지의 누적 실제 수량
+  realAmount: number; // 체결 구간까지의 누적 실제 금액
 }
 
 // Settings Types
+export interface NotificationPreferences {
+  gapWarning: boolean;       // 주문 갭 경고
+  backupReminder: boolean;   // 백업 알림
+  gradeChange: boolean;      // 등급 변경 알림
+}
+
 export interface Settings {
   id: string;
   theme: ThemeMode;
+  colorPalette: ColorPalette;
   initialCash: number;
   notificationsEnabled: boolean;
+  notificationPreferences: NotificationPreferences;
+  isMusicPlayerEnabled: boolean;
   lastBackupDate?: Date;
 }
 
 export type ThemeMode = 'light' | 'dark' | 'system';
+export type ColorPalette = 'default' | 'ocean' | 'rose' | 'purple' | 'forest';
 
 // History Types (for Undo/Redo)
 export interface HistoryEntry {
@@ -89,21 +110,13 @@ export interface HistoryEntry {
   newState: string;
 }
 
-// Dashboard Stats
-export interface DashboardStats {
-  totalExecutedAmount: number;
-  totalOrderedAmount: number;
-  remainingCash: number;
-  burnRate: number;
-  alertCount: number;
-}
-
 export interface PortfolioStats {
   // Amounts
   executedAmount: number;
   orderedAmount: number;
   totalExecutedAmount: number;
   totalOrderedAmount: number;
+  totalInvestment: number; // 기보유 + 체결금액 합계
 
   // Counts
   orderedStepsCount: number;
@@ -128,16 +141,6 @@ export interface SimulationResult {
   targetPrice: number;
   expectedROE: number;
   expectedProfit: number;
-}
-
-// Export/Import Types
-export interface ExportData {
-  version: string;
-  exportDate: string;
-  appName: string;
-  portfolios: Portfolio[];
-  trades: Trade[];
-  settings: Settings;
 }
 
 // V2 Migration Types (Legacy)
@@ -170,76 +173,56 @@ export interface V2Data {
   initialCash: number;
 }
 
-// UI State Types
-export interface UIState {
-  view: 'dashboard' | 'detail';
-  activePortfolioId: number | null;
-  isLoading: boolean;
-  toastMessage: string | null;
-  toastType: 'success' | 'error' | 'info' | 'warning';
-}
-
-// Filter & Sort Types
-export interface FilterOptions {
-  favorites: boolean;
-  status: PortfolioStatus | 'all';
-  grade?: FundamentalGrade | 'all';
-}
-
-export interface SortOptions {
-  field: 'name' | 'updatedAt' | 'executedAmount' | 'gap' | 'fundamentalScore';
-  direction: 'asc' | 'desc';
-}
-
 // ============================================
-// Fundamental Grade Types
+// Fundamental Grade Types (Korea Tech-Value Mix 2026)
 // ============================================
 
-export type FundamentalGrade = 'A' | 'B' | 'C' | 'D';
-export type GrowthPotential = 'very_high' | 'high' | 'normal' | 'low';
-export type ManagementQuality = 'excellent' | 'professional' | 'owner_risk';
+export type FundamentalGrade = 'S' | 'A' | 'B' | 'C' | 'D'; // S등급 추가
+
+// New Qualitative Types
+export type GlobalScalability = 'high_growth' | 'expanding' | 'domestic_regulated';
+export type MarketDominance = 'monopoly_top' | 'oligopoly_top3' | 'competitive';
+export type FutureInvestment = 'high' | 'maintain' | 'decreasing';
+export type TotalShareholderReturn = 'active_growth' | 'high_yield' | 'minimum' | 'none';
+export type GovernanceRisk = 'clean' | 'shareholder_friendly' | 'defense_doubt';
 
 export interface FundamentalInput {
-  // 카테고리 I: 밸류에이션 (35점)
-  per: number | null;                    // PER 배수
-  pbr: number | null;                    // PBR 배수
-  earningsSustainability: boolean;       // 이익 지속성 (5년 연속 흑자)
-  isDualListed: boolean;                 // 중복 상장 여부
+  // Category 1: Valuation (35 pts)
+  per: number | null;
+  pbr: number | null;
+  isDualListed: boolean; // 지주사/중복상장 여부 (단독=5, 비핵심=3, 핵심중복=0) -> 로직에서 처리
 
-  // 카테고리 II: 주주환원 (40점)
-  dividendYield: number | null;          // 배당수익률 (%)
-  hasQuarterlyDividend: boolean;         // 분기 배당 실시
-  consecutiveDividendYears: number;      // 배당 연속 인상 연수
-  hasBuybackProgram: boolean;            // 자사주 매입/소각 실시
-  annualCancellationRate: number;        // 연간 소각 비율 (%)
-  treasuryStockRatio: number;            // 자사주 보유 비율 (%)
+  // Category 2: Global Growth & Moat (40 pts)
+  globalScalability: GlobalScalability | null; // 글로벌 확장성 (20)
+  marketDominance: MarketDominance | null; // 시장 지배력 (10)
+  futureInvestment: FutureInvestment | null; // 미래 투자 효율 (10)
 
-  // 카테고리 III: 성장/경영 (25점)
-  growthPotential: GrowthPotential;      // 성장 잠재력
-  managementQuality: ManagementQuality;  // 경영진 평가
-  hasGlobalBrand: boolean;               // 글로벌 브랜드 보유
+  // Category 3: Shareholder Return & Risk (25 pts)
+  dividendYield: number | null; // 배당수익률 (참조용, TSR 로직에 포함될 수 있음)
+  totalShareholderReturn: TotalShareholderReturn | null; // 주주환원 의지 (15)
+  governanceRisk: GovernanceRisk | null; // 거버넌스 리스크 (10)
 }
 
 export interface FundamentalScores {
-  per: number;                    // 0-20
-  pbr: number;                    // 0-5
-  earningsSustainability: number; // 0-5
-  dualListing: number;            // 0-5
-  dividendYield: number;          // 0-10
-  quarterlyDividend: number;      // 0-5
-  consecutiveDividend: number;    // 0-5
-  buybackProgram: number;         // 0-7
-  cancellationRate: number;       // 0-8
-  treasuryStockRatio: number;     // 0-5
-  growthPotential: number;        // 0-10
-  management: number;             // 0-10
-  globalBrand: number;            // 0-5
+  // Valuation
+  per: number;
+  pbr: number;
+  dualListing: number;
+
+  // Growth
+  globalScalability: number;
+  marketDominance: number;
+  futureInvestment: number;
+
+  // Shareholder Return
+  totalShareholderReturn: number;
+  governanceRisk: number;
 }
 
 export interface FundamentalCategoryScores {
-  valuation: number;              // 0-35
-  shareholderReturn: number;      // 0-40
-  growthManagement: number;       // 0-25
+  valuation: number;        // Max 35
+  growthMoat: number;       // Max 40
+  shareholderReturn: number;// Max 25
 }
 
 export interface FundamentalResult {
@@ -252,18 +235,32 @@ export interface FundamentalResult {
   actionGuideline: string;
 }
 
-export interface FundamentalData extends FundamentalInput {
-  dataSource: 'manual' | 'krx' | 'template' | 'clipboard' | 'api';
-  lastUpdated: Date;
-  notes?: string;
+// Gemini Gem에서 받는 데이터 형식
+// Gemini Gem에서 받는 데이터 형식 (Legacy Mapping or Direct)
+export interface GeminiGemData {
+  // 가치평가 (API에 없는 항목)
+  earningsSustainability: boolean; // 이익 지속성
+  isDualListed: boolean; // 중복 상장 여부
+
+  // 주주환원 (API에 없는 항목)
+  hasQuarterlyDividend: boolean; // 분기 배당
+  consecutiveDividendYears: number; // 연속 배당 년수
+  hasBuybackProgram: boolean; // 자사주 매입 프로그램
+  annualCancellationRate: number; // 연간 소각률 (%)
+  treasuryStockRatio: number; // 자사주 비율 (%)
+
+  // 성장/경영 (Mapped to new types)
+  globalScalability: GlobalScalability; // 성장 잠재력 -> 글로벌 확장성
+  marketDominance: MarketDominance; // 시장 지배력
+  futureInvestment: FutureInvestment; // 미래 투자
+  governanceRisk: GovernanceRisk; // 경영진 평가 -> 거버넌스 리스크
 }
 
-// Extended Portfolio with Fundamental Grade
-export interface PortfolioWithGrade extends Portfolio {
-  stockCode?: string;
-  fundamentalData?: FundamentalData;
-  fundamentalScore?: number;
-  fundamentalGrade?: FundamentalGrade;
+export interface FundamentalData extends FundamentalInput {
+  dataSource: 'manual' | 'krx' | 'template' | 'clipboard' | 'api' | 'mixed';
+  lastUpdated: Date;
+  notes?: string;
+  gemData?: GeminiGemData; // Gem 데이터 별도 저장
 }
 
 // ============================================
@@ -356,28 +353,6 @@ export interface UsageAnalytics {
 }
 
 // ============================================
-// Price History Types
-// ============================================
-
-export interface PriceEntry {
-  id?: number;
-  portfolioId: number;
-  stockCode?: string;
-  date: string;           // YYYY-MM-DD
-  price: number;
-  source: 'manual' | 'clipboard' | 'import';
-  createdAt: Date;
-}
-
-export interface PriceHistory {
-  entries: PriceEntry[];
-  high52Week?: number;
-  low52Week?: number;
-  currentPrice?: number;
-  trend: 'up' | 'down' | 'flat';
-}
-
-// ============================================
 // Broadcast Channel Types
 // ============================================
 
@@ -396,20 +371,6 @@ export interface BroadcastMessage {
   payload: unknown;
   timestamp: number;
   tabId: string;
-}
-
-// ============================================
-// Stock Template Types
-// ============================================
-
-export interface StockTemplate {
-  id?: number;
-  code: string;
-  name: string;
-  lastUpdated: Date;
-  fundamentalData: Partial<FundamentalInput>;
-  sector?: string;
-  marketCap?: number;
 }
 
 // ============================================
@@ -465,14 +426,29 @@ export interface StockFundamentalData {
   fetchedAt: string;
 }
 
-export interface StockSearchResult {
-  ticker: string;
-  name: string;
-  market: 'KOSPI' | 'KOSDAQ';
+// ============================================
+// Backup/Restore Types
+// ============================================
+
+export interface BackupFile {
+  version: string;
+  appName: string;
+  exportDate: string;
+  data: {
+    portfolios: Portfolio[];
+    trades: Trade[];
+    settings: Settings;
+  };
 }
 
-export interface StockSearchResponse {
-  query: string;
-  count: number;
-  results: StockSearchResult[];
+export interface BackupValidationResult {
+  valid: boolean;
+  errors: string[];
+  warnings: string[];
+  metadata?: {
+    version: string;
+    exportDate: string;
+    portfolioCount: number;
+    tradeCount: number;
+  };
 }

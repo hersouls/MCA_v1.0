@@ -2,17 +2,18 @@
 // Dialog Component (Catalyst-style with Headless UI)
 // ============================================
 
-import { type ReactNode } from 'react';
 import {
-  Dialog as HeadlessDialog,
+  Description,
+  DialogBackdrop,
   DialogPanel,
   DialogTitle,
-  DialogBackdrop,
-  Description,
+  Dialog as HeadlessDialog,
 } from '@headlessui/react';
 import { clsx } from 'clsx';
 import { X } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { Button, IconButton } from './Button';
+import { Tooltip } from './Tooltip';
 
 interface DialogProps {
   open: boolean;
@@ -90,9 +91,11 @@ export function DialogHeader({ title, description, onClose }: DialogHeaderProps)
       )}
       {onClose && (
         <div className="absolute right-0 top-0">
-          <IconButton plain color="secondary" onClick={onClose} aria-label="닫기">
-            <X className="size-5" />
-          </IconButton>
+          <Tooltip content="닫기" placement="left">
+            <IconButton plain color="secondary" onClick={onClose} aria-label="다이얼로그 닫기">
+              <X className="size-5" aria-hidden="true" />
+            </IconButton>
+          </Tooltip>
         </div>
       )}
     </div>
@@ -127,9 +130,6 @@ export function DialogFooter({ children, className }: DialogFooterProps) {
     </div>
   );
 }
-
-// Dialog Actions (alias for Footer)
-export const DialogActions = DialogFooter;
 
 // Confirm Dialog
 interface ConfirmDialogProps {
@@ -167,34 +167,6 @@ export function ConfirmDialog({
           onClick={onConfirm}
           isLoading={isLoading}
         >
-          {confirmText}
-        </Button>
-      </DialogFooter>
-    </Dialog>
-  );
-}
-
-// Alert Dialog (Info only)
-interface AlertDialogProps {
-  open: boolean;
-  onClose: () => void;
-  title: string;
-  description?: string;
-  confirmText?: string;
-}
-
-export function AlertDialog({
-  open,
-  onClose,
-  title,
-  description,
-  confirmText = '확인',
-}: AlertDialogProps) {
-  return (
-    <Dialog open={open} onClose={onClose} size="sm">
-      <DialogHeader title={title} description={description} />
-      <DialogFooter>
-        <Button color="primary" onClick={onClose}>
           {confirmText}
         </Button>
       </DialogFooter>

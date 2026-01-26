@@ -21,7 +21,15 @@ declare module 'jspdf' {
     charSpace?: number;
     lineHeightFactor?: number;
     maxWidth?: number;
-    renderingMode?: 'fill' | 'stroke' | 'fillThenStroke' | 'invisible' | 'fillAndAddForClipping' | 'strokeAndAddPathForClipping' | 'fillThenStrokeAndAddToPathForClipping' | 'addToPathForClipping';
+    renderingMode?:
+      | 'fill'
+      | 'stroke'
+      | 'fillThenStroke'
+      | 'invisible'
+      | 'fillAndAddForClipping'
+      | 'strokeAndAddPathForClipping'
+      | 'fillThenStrokeAndAddToPathForClipping'
+      | 'addToPathForClipping';
   }
 
   interface _ImageOptions {
@@ -107,7 +115,7 @@ declare module 'jspdf' {
 }
 
 declare module 'jspdf-autotable' {
-  import { jsPDF } from 'jspdf';
+  import type { jsPDF } from 'jspdf';
 
   interface AutoTableOptions {
     startY?: number;

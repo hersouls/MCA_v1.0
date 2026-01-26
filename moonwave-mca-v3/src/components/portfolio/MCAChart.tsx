@@ -3,28 +3,28 @@
 // Dual-axis chart: Average Price + Gap %
 // ============================================
 
-import { useMemo, useRef, useEffect } from 'react';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler,
-  type ChartOptions,
-  type ChartData,
-} from 'chart.js';
-import ChartDataLabels from 'chartjs-plugin-datalabels';
-import { Line } from 'react-chartjs-2';
-import type { PortfolioParams } from '@/types';
 import { calculateTrades } from '@/services/calculation';
 import { useSettingsStore } from '@/stores/settingsStore';
+import type { PortfolioParams } from '@/types';
 import { CHART_COLORS, CHART_CONFIG } from '@/utils/constants';
-import { TEXTS } from '@/utils/texts';
 import { formatKoreanUnit } from '@/utils/format';
+import { TEXTS } from '@/utils/texts';
+import {
+  CategoryScale,
+  type ChartData,
+  Chart as ChartJS,
+  type ChartOptions,
+  Filler,
+  Legend,
+  LineElement,
+  LinearScale,
+  PointElement,
+  Title,
+  Tooltip,
+} from 'chart.js';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
+import { useEffect, useMemo, useRef } from 'react';
+import { Line } from 'react-chartjs-2';
 
 // Register Chart.js components
 ChartJS.register(
@@ -75,24 +75,35 @@ export function MCAChart({
 
   // Chart colors based on theme - using centralized CHART_COLORS
   const themeColors = isDark ? CHART_COLORS.dark : CHART_COLORS.light;
-  const colors = useMemo(() => ({
-    ...themeColors,
-    textMuted: isDark ? '#a1a1aa' : '#64748b',
-    background: isDark
-      ? `rgba(46, 255, 180, ${CHART_CONFIG.BACKGROUND_ALPHA.DARK})`
-      : `rgba(0, 168, 107, ${CHART_CONFIG.BACKGROUND_ALPHA.LIGHT})`,
-  }), [isDark, themeColors]);
+  const colors = useMemo(
+    () => ({
+      ...themeColors,
+      textMuted: isDark ? '#a1a1aa' : '#64748b',
+      background: isDark
+        ? `rgba(46, 255, 180, ${CHART_CONFIG.BACKGROUND_ALPHA.DARK})`
+        : `rgba(0, 168, 107, ${CHART_CONFIG.BACKGROUND_ALPHA.LIGHT})`,
+    }),
+    [isDark, themeColors]
+  );
 
   // Find min/max gaps for labels
   const { minGapIdx, maxGapIdx } = useMemo(() => {
     if (chartTrades.length === 0) return { minGapIdx: -1, maxGapIdx: -1 };
 
-    let min = Infinity, max = -Infinity;
-    let minIdx = 0, maxIdx = 0;
+    let min = Number.POSITIVE_INFINITY,
+      max = Number.NEGATIVE_INFINITY;
+    let minIdx = 0,
+      maxIdx = 0;
 
     chartTrades.forEach((t, i) => {
-      if (t.gap < min) { min = t.gap; minIdx = i; }
-      if (t.gap > max) { max = t.gap; maxIdx = i; }
+      if (t.gap < min) {
+        min = t.gap;
+        minIdx = i;
+      }
+      if (t.gap > max) {
+        max = t.gap;
+        maxIdx = i;
+      }
     });
 
     return { minGapIdx: minIdx, maxGapIdx: maxIdx };
@@ -127,13 +138,13 @@ export function MCAChart({
           yAxisID: 'y1',
           fill: true,
           tension: 0.2,
-          pointRadius: chartTrades.map((t) => (t.isExecuted ? CHART_CONFIG.EXECUTED_POINT_RADIUS : 0)),
+          pointRadius: chartTrades.map((t) =>
+            t.isExecuted ? CHART_CONFIG.EXECUTED_POINT_RADIUS : 0
+          ),
           pointBackgroundColor: chartTrades.map((t) =>
             t.isExecuted ? colors.warning : 'transparent'
           ),
-          pointBorderColor: chartTrades.map((t) =>
-            t.isExecuted ? colors.warning : 'transparent'
-          ),
+          pointBorderColor: chartTrades.map((t) => (t.isExecuted ? colors.warning : 'transparent')),
           pointBorderWidth: CHART_CONFIG.POINT_BORDER_WIDTH,
           borderWidth: 2,
           datalabels: {
@@ -160,119 +171,122 @@ export function MCAChart({
   }, [chartTrades, colors, minGapIdx, maxGapIdx, isDark]);
 
   // Chart options
-  const options: ChartOptions<'line'> = useMemo(() => ({
-    responsive: true,
-    maintainAspectRatio: false,
-    interaction: {
-      mode: 'index',
-      intersect: false,
-    },
-    plugins: {
-      legend: {
-        display: true,
-        position: 'top',
-        align: 'end',
-        labels: {
-          color: colors.textMuted,
-          usePointStyle: true,
-          pointStyle: 'circle',
-          padding: CHART_CONFIG.LEGEND_PADDING,
-          font: {
-            size: 12,
-          },
-        },
+  const options: ChartOptions<'line'> = useMemo(
+    () => ({
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false,
       },
-      tooltip: {
-        backgroundColor: isDark ? '#0f0f0f' : '#EDECE8',
-        titleColor: colors.text,
-        bodyColor: colors.textMuted,
-        borderColor: colors.grid,
-        borderWidth: 1,
-        padding: CHART_CONFIG.TOOLTIP_PADDING,
-        displayColors: true,
-        callbacks: {
-          label: (context) => {
-            const label = context.dataset.label || '';
-            const value = context.raw as number;
-            if (context.datasetIndex === 0) {
-              // 평균단가: 한국식 단위 사용
-              return `${label}: ${formatKoreanUnit(value)}`;
-            }
-            return `${label}: ${value.toFixed(2)}%`;
-          },
-        },
-      },
-    },
-    scales: {
-      x: {
-        grid: {
-          display: false,
-        },
-        ticks: {
-          color: colors.textMuted,
-          font: {
-            size: 11,
-          },
-          maxRotation: CHART_CONFIG.X_AXIS_MAX_ROTATION,
-          callback: function(_value, index) {
-            // Show every 2nd label on small screens
-            const step = chartTrades[index]?.step;
-            if (chartTrades.length > CHART_CONFIG.LABEL_SKIP_THRESHOLD) {
-              return index % 2 === 0 ? step : '';
-            }
-            return step;
-          },
-        },
-      },
-      y: {
-        type: 'linear',
-        display: true,
-        position: 'left',
-        title: {
+      plugins: {
+        legend: {
           display: true,
-          text: TEXTS.CHART.Y_AXIS_AVG_PRICE,
-          color: colors.textMuted,
-          font: {
-            size: 11,
+          position: 'top',
+          align: 'end',
+          labels: {
+            color: colors.textMuted,
+            usePointStyle: true,
+            pointStyle: 'circle',
+            padding: CHART_CONFIG.LEGEND_PADDING,
+            font: {
+              size: 12,
+            },
           },
         },
-        grid: {
-          color: colors.grid,
-        },
-        ticks: {
-          color: colors.textMuted,
-          font: {
-            size: 11,
+        tooltip: {
+          backgroundColor: isDark ? '#0f0f0f' : '#EDECE8',
+          titleColor: colors.text,
+          bodyColor: colors.textMuted,
+          borderColor: colors.grid,
+          borderWidth: 1,
+          padding: CHART_CONFIG.TOOLTIP_PADDING,
+          displayColors: true,
+          callbacks: {
+            label: (context) => {
+              const label = context.dataset.label || '';
+              const value = context.raw as number;
+              if (context.datasetIndex === 0) {
+                // 평균단가: 한국식 단위 사용
+                return `${label}: ${formatKoreanUnit(value)}`;
+              }
+              return `${label}: ${value.toFixed(2)}%`;
+            },
           },
-          // 한국식 단위 사용 (만, 억)
-          callback: (value) => formatKoreanUnit(Number(value)),
         },
       },
-      y1: {
-        type: 'linear',
-        display: true,
-        position: 'right',
-        title: {
+      scales: {
+        x: {
+          grid: {
+            display: false,
+          },
+          ticks: {
+            color: colors.textMuted,
+            font: {
+              size: 11,
+            },
+            maxRotation: CHART_CONFIG.X_AXIS_MAX_ROTATION,
+            callback: (_value, index) => {
+              // Show every 2nd label on small screens
+              const step = chartTrades[index]?.step;
+              if (chartTrades.length > CHART_CONFIG.LABEL_SKIP_THRESHOLD) {
+                return index % 2 === 0 ? step : '';
+              }
+              return step;
+            },
+          },
+        },
+        y: {
+          type: 'linear',
           display: true,
-          text: TEXTS.CHART.Y_AXIS_GAP_RATE,
-          color: colors.textMuted,
-          font: {
-            size: 11,
+          position: 'left',
+          title: {
+            display: true,
+            text: TEXTS.CHART.Y_AXIS_AVG_PRICE,
+            color: colors.textMuted,
+            font: {
+              size: 11,
+            },
+          },
+          grid: {
+            color: colors.grid,
+          },
+          ticks: {
+            color: colors.textMuted,
+            font: {
+              size: 11,
+            },
+            // 한국식 단위 사용 (만, 억)
+            callback: (value) => formatKoreanUnit(Number(value)),
           },
         },
-        grid: {
-          drawOnChartArea: false,
-        },
-        ticks: {
-          color: colors.textMuted,
-          font: {
-            size: 11,
+        y1: {
+          type: 'linear',
+          display: true,
+          position: 'right',
+          title: {
+            display: true,
+            text: TEXTS.CHART.Y_AXIS_GAP_RATE,
+            color: colors.textMuted,
+            font: {
+              size: 11,
+            },
           },
-          callback: (value) => `${Number(value).toFixed(0)}%`,
+          grid: {
+            drawOnChartArea: false,
+          },
+          ticks: {
+            color: colors.textMuted,
+            font: {
+              size: 11,
+            },
+            callback: (value) => `${Number(value).toFixed(0)}%`,
+          },
         },
       },
-    },
-  }), [colors, isDark, chartTrades]);
+    }),
+    [colors, isDark, chartTrades]
+  );
 
   // Update chart on theme change
   useEffect(() => {
@@ -284,7 +298,7 @@ export function MCAChart({
   if (chartTrades.length === 0) {
     return (
       <div
-        className="flex items-center justify-center rounded-xl border border-zinc-200 dark:border-zinc-700/50 bg-zinc-50 dark:bg-zinc-800/30"
+        className="flex items-center justify-center rounded-xl border border-dashed border-zinc-300 dark:border-zinc-600 bg-zinc-50 dark:bg-zinc-800/30"
         style={{ height }}
       >
         <div className="text-center text-zinc-500 dark:text-zinc-400">

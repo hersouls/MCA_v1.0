@@ -3,7 +3,7 @@
 // 크로스탭 실시간 동기화
 // ============================================
 
-import type { BroadcastMessage, BroadcastEventType, Portfolio, Settings } from '@/types';
+import type { BroadcastEventType, BroadcastMessage, Portfolio, Settings } from '@/types';
 import { STORAGE_KEYS } from '@/utils/constants';
 
 // 채널 이름
@@ -55,7 +55,6 @@ export function initBroadcastChannel(): boolean {
       console.error('BroadcastChannel message error:', event);
     };
 
-    console.log(`BroadcastChannel initialized: ${TAB_ID}`);
     return true;
   } catch (error) {
     console.error('Failed to initialize BroadcastChannel:', error);
@@ -90,7 +89,6 @@ function initLocalStorageFallback(): void {
   if (typeof window === 'undefined') return;
 
   window.addEventListener('storage', handleStorageEvent);
-  console.log('Using localStorage fallback for cross-tab sync');
 }
 
 /**
@@ -132,8 +130,6 @@ function handleIncomingMessage(message: BroadcastMessage): void {
   // 자신이 보낸 메시지는 무시
   if (message.tabId === TAB_ID) return;
 
-  console.log(`[Broadcast] Received: ${message.type}`, message.payload);
-
   // 특정 이벤트 타입 콜백 실행
   const typeCallbacks = messageCallbacks.get(message.type);
   if (typeCallbacks) {
@@ -154,7 +150,7 @@ function handleIncomingMessage(message: BroadcastMessage): void {
 /**
  * 메시지 전송
  */
-export function broadcast(type: BroadcastEventType, payload: unknown): void {
+function broadcast(type: BroadcastEventType, payload: unknown): void {
   const message: BroadcastMessage = {
     type,
     payload,
@@ -167,8 +163,6 @@ export function broadcast(type: BroadcastEventType, payload: unknown): void {
   } else {
     sendViaLocalStorage(message);
   }
-
-  console.log(`[Broadcast] Sent: ${type}`, payload);
 }
 
 /**
@@ -337,51 +331,4 @@ export function onSyncResponse(
  */
 export function getTabId(): string {
   return TAB_ID;
-}
-
-/**
- * 모든 구독 해제
- */
-export function unsubscribeAll(): void {
-  messageCallbacks.clear();
-}
-
-/**
- * 활성 구독 수 반환
- */
-export function getSubscriptionCount(): number {
-  let count = 0;
-  messageCallbacks.forEach((callbacks) => {
-    count += callbacks.size;
-  });
-  return count;
-}
-
-// ============================================
-// React Hook Support
-// ============================================
-
-/**
- * React useEffect에서 사용할 수 있는 초기화 함수
- */
-export function useBroadcastChannelEffect(
-  onMessage?: (message: BroadcastMessage) => void
-): {
-  init: () => void;
-  cleanup: () => void;
-  broadcast: typeof broadcast;
-} {
-  const init = () => {
-    initBroadcastChannel();
-    if (onMessage) {
-      subscribe('*', onMessage);
-    }
-  };
-
-  const cleanup = () => {
-    unsubscribeAll();
-    closeBroadcastChannel();
-  };
-
-  return { init, cleanup, broadcast };
 }

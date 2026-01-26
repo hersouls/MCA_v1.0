@@ -2,30 +2,29 @@
 // Dashboard Page Component
 // ============================================
 
-import { useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
-  Wallet,
-  TrendingUp,
-  PiggyBank,
   AlertTriangle,
   Briefcase,
+  ClipboardList,
+  PiggyBank,
   Plus,
   Star,
-  ClipboardList,
+  TrendingUp,
+  Wallet,
 } from 'lucide-react';
+import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-import {
-  PageContainer,
-  PageHeader,
-  Section,
-  Grid,
-  EmptyState,
-} from '@/components/layout';
-import { Card, StatsCard, Button, PortfolioStatusBadge } from '@/components/ui';
+import { EmptyState, Grid, PageContainer, PageHeader, Section } from '@/components/layout';
+import { Button, Card, PortfolioStatusBadge, StatsCard, StockLogo } from '@/components/ui';
 import { usePortfolioStore, useSortedPortfolios } from '@/stores/portfolioStore';
 import { useSettingsStore } from '@/stores/settingsStore';
-import { formatCurrency, formatKoreanUnit, formatKoreanCurrency, formatPercent } from '@/utils/format';
+import {
+  formatCurrency,
+  formatKoreanCurrency,
+  formatKoreanUnit,
+  formatPercent,
+} from '@/utils/format';
 import { TEXTS } from '@/utils/texts';
 
 export function Dashboard() {
@@ -46,7 +45,7 @@ export function Dashboard() {
       const stats = portfolioStats.get(p.id!);
       if (stats) {
         totalOrdered += stats.totalOrderedAmount;
-        totalExecuted += stats.totalExecutedAmount;
+        totalExecuted += stats.totalInvestment;
         if (stats.hasGap) alertCount++;
       }
     });
@@ -98,6 +97,7 @@ export function Dashboard() {
             label={TEXTS.DASHBOARD.INITIAL_CASH}
             value={formatKoreanCurrency(dashboardStats.initialCash)}
             icon={<Wallet className="w-5 h-5" />}
+            tooltip={TEXTS.DASHBOARD.INITIAL_CASH_TOOLTIP}
             align="left"
           />
           <StatsCard
@@ -105,18 +105,21 @@ export function Dashboard() {
             value={formatKoreanCurrency(dashboardStats.remainingCash)}
             subValue={`${TEXTS.DASHBOARD.INVESTMENT_RATE} ${formatPercent(dashboardStats.investmentRate)}`}
             icon={<PiggyBank className="w-5 h-5" />}
+            tooltip={TEXTS.DASHBOARD.REMAINING_CASH_TOOLTIP}
             align="left"
           />
           <StatsCard
             label={TEXTS.DASHBOARD.TOTAL_EXECUTED}
             value={formatKoreanCurrency(dashboardStats.totalExecuted)}
             icon={<TrendingUp className="w-5 h-5" />}
+            tooltip={TEXTS.DASHBOARD.TOTAL_EXECUTED_TOOLTIP}
             align="left"
           />
           <StatsCard
             label={TEXTS.DASHBOARD.TOTAL_ORDERED}
             value={formatKoreanCurrency(dashboardStats.totalOrdered)}
             icon={<ClipboardList className="w-5 h-5" />}
+            tooltip={TEXTS.DASHBOARD.TOTAL_ORDERED_TOOLTIP}
             align="left"
           />
         </Grid>
@@ -173,7 +176,10 @@ export function Dashboard() {
 
           {/* Other Portfolios */}
           {otherPortfolios.length > 0 && (
-            <Section title={TEXTS.DASHBOARD.ALL_PORTFOLIOS} icon={<TrendingUp className="w-5 h-5" />}>
+            <Section
+              title={TEXTS.DASHBOARD.ALL_PORTFOLIOS}
+              icon={<TrendingUp className="w-5 h-5" />}
+            >
               <Grid cols={3} gap="md">
                 {otherPortfolios.map((portfolio) => (
                   <PortfolioCard
@@ -202,20 +208,37 @@ interface PortfolioCardProps {
 }
 
 function PortfolioCard({ portfolio, stats, onClick }: PortfolioCardProps) {
-  const progress = stats
-    ? (stats.executedStepsCount / portfolio.params.steps) * 100
-    : 0;
+  const progress = stats ? (stats.executedStepsCount / portfolio.params.steps) * 100 : 0;
 
   return (
     <Card variant="interactive" onClick={onClick} className="group">
       <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-2">
-          {portfolio.isFavorite && (
-            <Star className="w-4 h-4 text-warning-500 fill-warning-500" />
+        <div className="flex items-center gap-3">
+          {portfolio.stockCode ? (
+            <StockLogo
+              code={portfolio.stockCode}
+              name={portfolio.name}
+              size={40}
+              className="shadow-sm"
+            />
+          ) : (
+            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-400">
+              <Briefcase className="w-5 h-5" />
+            </div>
           )}
-          <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
-            {portfolio.name}
-          </h3>
+          <div>
+            <div className="flex items-center gap-1">
+              <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                {portfolio.name}
+              </h3>
+              {portfolio.isFavorite && (
+                <Star className="w-3.5 h-3.5 text-warning-500 fill-warning-500" />
+              )}
+            </div>
+            {portfolio.stockCode && (
+              <p className="text-xs text-zinc-500 font-mono">{portfolio.stockCode}</p>
+            )}
+          </div>
         </div>
         <PortfolioStatusBadge
           orderedCount={stats?.orderedStepsCount ?? 0}
@@ -247,7 +270,7 @@ function PortfolioCard({ portfolio, stats, onClick }: PortfolioCardProps) {
           <div>
             <span className="text-zinc-500 dark:text-zinc-400">투입금액</span>
             <p className="font-medium text-zinc-900 dark:text-zinc-100 text-right tabular-nums">
-              {formatKoreanUnit(stats.totalExecutedAmount)}
+              {formatKoreanUnit(stats.totalInvestment)}
             </p>
           </div>
           <div>

@@ -4,11 +4,11 @@
 // ============================================
 
 import type {
-  Portfolio,
   CalculatedTrade,
-  PDFReportOptions,
   ExcelExportOptions,
   FundamentalResult,
+  PDFReportOptions,
+  Portfolio,
 } from '@/types';
 import { formatCurrency, formatKoreanUnit, formatPercent } from '@/utils/format';
 import { calculateTrades } from './calculation';
@@ -21,7 +21,7 @@ import { calculateFundamentalScore } from './fundamentalGrade';
 /**
  * 전체 데이터 JSON 내보내기
  */
-export function exportToJSON(data: {
+function exportToJSON(data: {
   portfolios: Portfolio[];
   settings?: unknown;
 }): Blob {
@@ -52,7 +52,19 @@ export function downloadJSON(data: unknown, filename: string): void {
  * 매매 리스트를 CSV로 변환
  */
 export function tradesToCSV(trades: CalculatedTrade[], portfolioName: string): string {
-  const headers = ['구간', '하락률', '매수가', '수량', '금액', '누적수량', '누적금액', '평단가', '괴리율', '주문', '체결'];
+  const headers = [
+    '구간',
+    '하락률',
+    '매수가',
+    '수량',
+    '금액',
+    '누적수량',
+    '누적금액',
+    '평단가',
+    '괴리율',
+    '주문',
+    '체결',
+  ];
   const rows = trades.map((t) => [
     t.step,
     `-${t.dropRate}%`,
@@ -96,7 +108,7 @@ export function downloadCSV(content: string, filename: string): void {
  * Excel 워크북 생성
  * 실제 구현 시 xlsx (SheetJS) 라이브러리 필요
  */
-export async function createExcelWorkbook(
+async function createExcelWorkbook(
   portfolio: Portfolio,
   trades: CalculatedTrade[],
   options: ExcelExportOptions
@@ -149,7 +161,19 @@ export async function createExcelWorkbook(
     // 2. 매매 리스트 시트
     if (options.sheets.includes('trades')) {
       const tradesData = [
-        ['구간', '하락률', '매수가', '수량', '금액', '누적수량', '누적금액', '평단가', '괴리율', '주문', '체결'],
+        [
+          '구간',
+          '하락률',
+          '매수가',
+          '수량',
+          '금액',
+          '누적수량',
+          '누적금액',
+          '평단가',
+          '괴리율',
+          '주문',
+          '체결',
+        ],
         ...trades.map((t) => [
           t.step,
           `-${t.dropRate}%`,
@@ -175,7 +199,8 @@ export async function createExcelWorkbook(
       const orderedTrades = trades.filter((t) => t.isOrdered);
       const totalExecuted = executedTrades.reduce((sum, t) => sum + t.amount, 0);
       const totalOrdered = orderedTrades.reduce((sum, t) => sum + t.amount, 0);
-      const avgPrice = executedTrades.length > 0 ? executedTrades[executedTrades.length - 1].avgPrice : 0;
+      const avgPrice =
+        executedTrades.length > 0 ? executedTrades[executedTrades.length - 1].avgPrice : 0;
 
       const analysisData = [
         ['통계 분석'],
@@ -197,7 +222,9 @@ export async function createExcelWorkbook(
 
     // Blob으로 변환
     const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    return new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    return new Blob([buffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
   } catch (error) {
     console.error('Excel export failed:', error);
     return null;
@@ -241,7 +268,7 @@ export async function downloadExcel(
  * PDF 리포트 생성
  * 실제 구현 시 jspdf, jspdf-autotable 라이브러리 필요
  */
-export async function createPDFReport(
+async function createPDFReport(
   portfolio: Portfolio,
   trades: CalculatedTrade[],
   options: PDFReportOptions,
@@ -277,7 +304,9 @@ export async function createPDFReport(
 
     doc.setFontSize(10);
     doc.setTextColor(100);
-    doc.text(`생성일: ${new Date().toLocaleDateString('ko-KR')}`, pageWidth / 2, yPos, { align: 'center' });
+    doc.text(`생성일: ${new Date().toLocaleDateString('ko-KR')}`, pageWidth / 2, yPos, {
+      align: 'center',
+    });
     doc.setTextColor(0);
     yPos += 15;
 
@@ -309,7 +338,9 @@ export async function createPDFReport(
       yPos += 7;
 
       doc.setFontSize(14);
-      doc.setTextColor(result.grade === 'A' ? '#22c55e' : result.grade === 'D' ? '#ef4444' : '#030303');
+      doc.setTextColor(
+        result.grade === 'A' ? '#22c55e' : result.grade === 'D' ? '#ef4444' : '#030303'
+      );
       doc.text(`Grade ${result.grade} (${result.totalScore}/100점)`, 20, yPos);
       doc.setTextColor(0);
       yPos += 10;
@@ -350,7 +381,7 @@ export async function createPDFReport(
       ]);
 
       // autoTable은 jsPDF 확장 (jspdf-autotable 플러그인)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      /* eslint-disable @typescript-eslint/no-explicit-any */
       if ((doc as any).autoTable) {
         (doc as any).autoTable({
           startY: yPos,
@@ -361,6 +392,7 @@ export async function createPDFReport(
           alternateRowStyles: { fillColor: [245, 247, 250] },
         });
       }
+      /* eslint-enable @typescript-eslint/no-explicit-any */
     }
 
     // 푸터
@@ -429,7 +461,8 @@ export function generatePrintHTML(
   fundamentalResult?: FundamentalResult
 ): string {
   const executedTrades = trades.filter((t) => t.isExecuted);
-  const avgPrice = executedTrades.length > 0 ? executedTrades[executedTrades.length - 1].avgPrice : 0;
+  const avgPrice =
+    executedTrades.length > 0 ? executedTrades[executedTrades.length - 1].avgPrice : 0;
   const totalExecuted = executedTrades.reduce((sum, t) => sum + t.amount, 0);
 
   return `
@@ -438,9 +471,10 @@ export function generatePrintHTML(
     <head>
       <meta charset="UTF-8">
       <title>${portfolio.name} MCA 리포트</title>
+      <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
       <style>
         @media print {
-          body { font-family: 'Malgun Gothic', sans-serif; font-size: 10pt; margin: 20mm; }
+          body { font-family: 'Pretendard Variable', Pretendard, sans-serif; font-size: 10pt; margin: 20mm; }
           h1 { font-size: 18pt; margin-bottom: 5mm; }
           h2 { font-size: 12pt; margin-top: 10mm; margin-bottom: 3mm; border-bottom: 1px solid #030303; }
           table { width: 100%; border-collapse: collapse; margin-top: 5mm; }
@@ -474,12 +508,16 @@ export function generatePrintHTML(
           <strong>평균단가</strong><br>
           ${formatCurrency(avgPrice)}
         </div>
-        ${fundamentalResult ? `
+        ${
+          fundamentalResult
+            ? `
         <div class="summary-item">
           <strong>Fundamental</strong><br>
           <span class="grade grade-${fundamentalResult.grade}">Grade ${fundamentalResult.grade}</span>
         </div>
-        ` : ''}
+        `
+            : ''
+        }
       </div>
 
       <h2>매매 파라미터</h2>
@@ -501,7 +539,9 @@ export function generatePrintHTML(
           </tr>
         </thead>
         <tbody>
-          ${trades.map((t) => `
+          ${trades
+            .map(
+              (t) => `
             <tr style="background: ${t.isExecuted ? '#e6ffe6' : t.isOrdered ? '#fffde6' : ''}">
               <td>${t.step}</td>
               <td>-${t.dropRate}%</td>
@@ -512,7 +552,9 @@ export function generatePrintHTML(
               <td>${t.isOrdered || t.isExecuted ? formatPercent(t.gap) : '-'}</td>
               <td>${t.isExecuted ? '체결' : t.isOrdered ? '주문' : '대기'}</td>
             </tr>
-          `).join('')}
+          `
+            )
+            .join('')}
         </tbody>
       </table>
 

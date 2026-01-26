@@ -2,11 +2,12 @@
 // Settings Store (Zustand)
 // ============================================
 
+import * as db from '@/services/database';
+import type { ColorPalette, NotificationPreferences, Settings, ThemeMode } from '@/types';
+import { DEFAULT_SETTINGS, STORAGE_KEYS } from '@/utils/constants';
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import type { Settings, ThemeMode } from '@/types';
-import * as db from '@/services/database';
-import { DEFAULT_SETTINGS, STORAGE_KEYS } from '@/utils/constants';
+import { useNotificationStore } from './notificationStore';
 
 interface SettingsState {
   settings: Settings;
@@ -16,8 +17,12 @@ interface SettingsState {
   initialize: () => Promise<void>;
   updateSettings: (updates: Partial<Settings>) => Promise<void>;
   setTheme: (theme: ThemeMode) => void;
+  setColorPalette: (palette: ColorPalette) => void;
   setInitialCash: (amount: number) => Promise<void>;
   toggleNotifications: () => Promise<void>;
+  toggleNotificationPreference: (key: keyof NotificationPreferences) => Promise<void>;
+  toggleMusicPlayer: () => Promise<void>;
+  setLastBackupDate: (date: Date) => Promise<void>;
 }
 
 // Apply theme to document
@@ -29,6 +34,16 @@ function applyTheme(theme: ThemeMode) {
     root.classList.toggle('dark', isDark);
   } else {
     root.classList.toggle('dark', theme === 'dark');
+  }
+}
+
+// Apply color palette to document (light mode only)
+function applyColorPalette(palette: ColorPalette) {
+  const root = document.documentElement;
+  if (palette === 'default') {
+    root.removeAttribute('data-palette');
+  } else {
+    root.setAttribute('data-palette', palette);
   }
 }
 
@@ -55,6 +70,7 @@ export const useSettingsStore = create<SettingsState>()(
             const settings = await db.getSettings();
             set({ settings, isLoading: false });
             applyTheme(settings.theme);
+            applyColorPalette(settings.colorPalette || 'default');
           } catch (error) {
             console.error('Failed to load settings:', error);
             set({ isLoading: false });
@@ -76,6 +92,13 @@ export const useSettingsStore = create<SettingsState>()(
           set({ settings });
           db.updateSettings({ theme });
           applyTheme(theme);
+        },
+
+        setColorPalette: (palette) => {
+          const settings = { ...get().settings, colorPalette: palette };
+          set({ settings });
+          db.updateSettings({ colorPalette: palette });
+          applyColorPalette(palette);
         },
 
         setInitialCash: async (amount) => {
@@ -100,17 +123,47 @@ export const useSettingsStore = create<SettingsState>()(
           await db.updateSettings({ notificationsEnabled: newValue });
           set({ settings });
         },
+
+        toggleNotificationPreference: async (key) => {
+          const currentPrefs = get().settings.notificationPreferences;
+          const newPrefs = { ...currentPrefs, [key]: !currentPrefs[key] };
+          const settings = { ...get().settings, notificationPreferences: newPrefs };
+          await db.updateSettings({ notificationPreferences: newPrefs });
+          set({ settings });
+        },
+
+        toggleMusicPlayer: async () => {
+          const current = get().settings.isMusicPlayerEnabled;
+          const newValue = !current;
+          const settings = { ...get().settings, isMusicPlayerEnabled: newValue };
+          await db.updateSettings({ isMusicPlayerEnabled: newValue });
+          set({ settings });
+        },
+
+        setLastBackupDate: async (date) => {
+          const settings = { ...get().settings, lastBackupDate: date };
+          await db.updateSettings({ lastBackupDate: date });
+          set({ settings });
+
+          // Dismiss backup reminder notification after successful backup
+          useNotificationStore.getState().dismissByType('backup-reminder');
+        },
       }),
       {
         name: STORAGE_KEYS.THEME,
-        partialize: (state) => ({ settings: { theme: state.settings.theme } }),
+        partialize: (state) => ({
+          settings: {
+            theme: state.settings.theme,
+            colorPalette: state.settings.colorPalette,
+          }
+        }),
       }
     ),
     { name: 'settings-store' }
   )
 );
 
-// Initialize theme on load (before React hydration)
+// Initialize theme and palette on load (before React hydration)
 if (typeof window !== 'undefined') {
   const savedTheme = localStorage.getItem(STORAGE_KEYS.THEME);
   if (savedTheme) {
@@ -118,6 +171,9 @@ if (typeof window !== 'undefined') {
       const parsed = JSON.parse(savedTheme);
       if (parsed?.state?.settings?.theme) {
         applyTheme(parsed.state.settings.theme);
+      }
+      if (parsed?.state?.settings?.colorPalette) {
+        applyColorPalette(parsed.state.settings.colorPalette);
       }
     } catch {
       // Fallback to system theme

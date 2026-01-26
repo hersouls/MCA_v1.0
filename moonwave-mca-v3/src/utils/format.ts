@@ -78,7 +78,7 @@ export function formatKoreanCurrency(num: number): string {
 export function parseFormattedNumber(str: string | undefined | null): number {
   if (!str) return 0;
   const cleaned = str.replace(/[^0-9.-]/g, '');
-  const parsed = parseFloat(cleaned);
+  const parsed = Number.parseFloat(cleaned);
   return isNaN(parsed) ? 0 : parsed;
 }
 
@@ -98,48 +98,10 @@ export function formatDropRate(num: number): string {
 }
 
 /**
- * Format date to ISO string (YYYY-MM-DD)
- */
-export function formatDate(date: Date): string {
-  return date.toISOString().slice(0, 10);
-}
-
-/**
- * Format date to localized string
- */
-export function formatDateLocalized(date: Date): string {
-  return new Intl.DateTimeFormat('ko-KR', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  }).format(date);
-}
-
-/**
- * Format date and time
- */
-export function formatDateTime(date: Date): string {
-  return new Intl.DateTimeFormat('ko-KR', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date);
-}
-
-/**
  * Format input value with thousand separators (for input fields)
  */
 export function formatInputValue(value: string): string {
   const numericValue = value.replace(/[^0-9]/g, '');
   if (!numericValue) return '';
-  return parseInt(numericValue, 10).toLocaleString('ko-KR');
-}
-
-/**
- * Clamp a value between min and max
- */
-export function clamp(value: number, min: number, max: number): number {
-  return Math.min(Math.max(value, min), max);
+  return Number.parseInt(numericValue, 10).toLocaleString('ko-KR');
 }

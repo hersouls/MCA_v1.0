@@ -14,7 +14,25 @@ declare module 'xlsx' {
   }
 
   interface WritingOptions {
-    bookType?: 'xlsx' | 'xlsm' | 'xlsb' | 'xls' | 'biff8' | 'biff5' | 'biff2' | 'xlml' | 'ods' | 'fods' | 'csv' | 'txt' | 'sylk' | 'html' | 'dif' | 'rtf' | 'prn' | 'eth';
+    bookType?:
+      | 'xlsx'
+      | 'xlsm'
+      | 'xlsb'
+      | 'xls'
+      | 'biff8'
+      | 'biff5'
+      | 'biff2'
+      | 'xlml'
+      | 'ods'
+      | 'fods'
+      | 'csv'
+      | 'txt'
+      | 'sylk'
+      | 'html'
+      | 'dif'
+      | 'rtf'
+      | 'prn'
+      | 'eth';
     type: 'base64' | 'binary' | 'buffer' | 'file' | 'array' | 'string';
   }
 

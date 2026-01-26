@@ -17,3 +17,6 @@ export * from './useBroadcast';
 
 // 새 훅 - 종목 기본 정보 조회
 export * from './useStockFundamental';
+
+// 새 훅 - 미디어 쿼리/반응형
+export * from './useMediaQuery';

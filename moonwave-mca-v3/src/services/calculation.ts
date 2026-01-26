@@ -3,14 +3,14 @@
 // ============================================
 
 import type {
-  PortfolioParams,
   CalculatedTrade,
+  PortfolioParams,
   PortfolioStats,
   PortfolioStatus,
   SimulationResult,
 } from '@/types';
-import { calculateBuyPrice, calculateQuantity } from '@/utils/tick';
 import { GAP_WARNING_THRESHOLD } from '@/utils/constants';
+import { calculateBuyPrice, calculateQuantity } from '@/utils/tick';
 
 /**
  * Calculate all trades for a portfolio
@@ -124,6 +124,7 @@ export function calculatePortfolioStats(
     orderedAmount,
     totalExecutedAmount: executedAmount,
     totalOrderedAmount: orderedAmount,
+    totalInvestment: totalAmount, // 기보유 + 체결금액 합계
     orderedStepsCount: orderedSteps.length,
     executedStepsCount: executedSteps.length,
     totalShares,
@@ -235,23 +236,39 @@ export function autoFitParams(
 
 /**
  * Get current invested amount and quantity from calculated trades
+ * Includes legacy holdings even when no trades are executed
  */
-export function getCurrentInvestment(trades: CalculatedTrade[]): {
+export function getCurrentInvestment(
+  trades: CalculatedTrade[],
+  params?: PortfolioParams
+): {
   amount: number;
   quantity: number;
   avgPrice: number;
 } {
   const executedTrades = trades.filter((t) => t.isExecuted);
-  if (executedTrades.length === 0) {
-    return { amount: 0, quantity: 0, avgPrice: 0 };
+
+  // If there are executed trades, use the last one's cumulative values
+  if (executedTrades.length > 0) {
+    const lastExecuted = executedTrades[executedTrades.length - 1];
+    return {
+      amount: lastExecuted.cumulativeAmt,
+      quantity: lastExecuted.cumulativeQty,
+      avgPrice: lastExecuted.avgPrice,
+    };
   }
 
-  const lastExecuted = executedTrades[executedTrades.length - 1];
-  return {
-    amount: lastExecuted.cumulativeAmt,
-    quantity: lastExecuted.cumulativeQty,
-    avgPrice: lastExecuted.avgPrice,
-  };
+  // No executed trades - return legacy holdings if available
+  if (params && params.legacyQty > 0) {
+    const legacyAmount = params.legacyQty * params.legacyAvg;
+    return {
+      amount: legacyAmount,
+      quantity: params.legacyQty,
+      avgPrice: params.legacyAvg,
+    };
+  }
+
+  return { amount: 0, quantity: 0, avgPrice: 0 };
 }
 
 /**
@@ -269,15 +286,4 @@ export function calculateTotalBudget(params: PortfolioParams): number {
   }
 
   return total;
-}
-
-/**
- * Calculate progress percentage
- */
-export function calculateProgress(
-  executedSteps: number[],
-  totalSteps: number
-): number {
-  if (totalSteps === 0) return 0;
-  return (executedSteps.length / totalSteps) * 100;
 }

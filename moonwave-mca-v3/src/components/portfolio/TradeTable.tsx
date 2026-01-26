@@ -3,12 +3,15 @@
 // Interactive table with order/execute toggles
 // ============================================
 
-import { useMemo, useCallback } from 'react';
-import { clsx } from 'clsx';
-import { Check, Clock, AlertTriangle } from 'lucide-react';
-import type { CalculatedTrade, PortfolioParams } from '@/types';
+import { Card, Tooltip } from '@/components/ui';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import { calculateTrades } from '@/services/calculation';
+import type { CalculatedTrade, PortfolioParams } from '@/types';
 import { formatCurrency, formatKoreanUnit, formatPercent } from '@/utils/format';
+import { clsx } from 'clsx';
+import { AlertTriangle, Check, Clock } from 'lucide-react';
+import { useCallback, useMemo } from 'react';
+import { TradeCard } from './TradeCard';
 
 interface TradeTableProps {
   params: PortfolioParams;
@@ -48,7 +51,8 @@ export function TradeTable({
       orderedQty: ordered.reduce((sum, t) => sum + t.quantity, 0),
       orderedAmt: ordered.reduce((sum, t) => sum + t.amount, 0),
       executedQty: executed.reduce((sum, t) => sum + t.quantity, 0) + params.legacyQty,
-      executedAmt: executed.reduce((sum, t) => sum + t.amount, 0) + params.legacyQty * params.legacyAvg,
+      executedAmt:
+        executed.reduce((sum, t) => sum + t.amount, 0) + params.legacyQty * params.legacyAvg,
       avgPrice: executed.length > 0 ? executed[executed.length - 1].avgPrice : 0,
       realQty: lastExecuted?.realQty ?? params.legacyQty,
       realAmount: lastExecuted?.realAmount ?? params.legacyQty * params.legacyAvg,
@@ -69,6 +73,52 @@ export function TradeTable({
     [onMemoChange]
   );
 
+  const isMobile = useIsMobile();
+
+  // Mobile: Card View
+  if (isMobile) {
+    return (
+      <div className="space-y-3">
+        {trades.map((trade) => (
+          <TradeCard
+            key={trade.step}
+            trade={trade}
+            executionDate={executionDates[trade.step] || ''}
+            memo={stepMemos[trade.step] || ''}
+            onToggleOrdered={() => onToggleOrdered(trade.step)}
+            onToggleExecuted={() => onToggleExecuted(trade.step)}
+            onDateChange={(date) => handleDateChange(trade.step, date)}
+            onMemoChange={(memo) => handleMemoChange(trade.step, memo)}
+          />
+        ))}
+        {/* Mobile Summary Card */}
+        <Card variant="elevated" padding="md">
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="text-zinc-500 dark:text-zinc-400 text-xs block">체결 수량</span>
+              <p className="font-bold text-zinc-900 dark:text-zinc-100 tabular-nums">
+                {totals.realQty.toLocaleString()}주
+              </p>
+            </div>
+            <div>
+              <span className="text-zinc-500 dark:text-zinc-400 text-xs block">체결 금액</span>
+              <p className="font-bold text-zinc-900 dark:text-zinc-100 tabular-nums">
+                {formatKoreanUnit(totals.realAmount)}
+              </p>
+            </div>
+            <div className="col-span-2">
+              <span className="text-zinc-500 dark:text-zinc-400 text-xs block">평균 단가</span>
+              <p className="font-bold text-primary-600 dark:text-primary-400 tabular-nums text-lg">
+                {totals.avgPrice > 0 ? formatCurrency(totals.avgPrice) : '-'}
+              </p>
+            </div>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  // Desktop: Table View
   return (
     <div className="overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700/50">
       <div className="overflow-x-auto">
@@ -76,41 +126,65 @@ export function TradeTable({
           <thead className="bg-zinc-50 dark:bg-zinc-800/50 border-b border-zinc-200 dark:border-zinc-700/50">
             <tr>
               <th className="px-3 py-3 text-center text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider w-16">
-                주문
+                <Tooltip content="예약 매수 주문 등록 여부" placement="bottom">
+                  <span className="cursor-help">주문</span>
+                </Tooltip>
               </th>
               <th className="px-3 py-3 text-center text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider w-16">
-                체결
+                <Tooltip content="실제 매수 체결 완료 여부" placement="bottom">
+                  <span className="cursor-help">체결</span>
+                </Tooltip>
               </th>
               <th className="px-3 py-3 text-center text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider w-14">
-                구간
+                <Tooltip content="분할 매수 구간 번호" placement="bottom">
+                  <span className="cursor-help">구간</span>
+                </Tooltip>
               </th>
               <th className="px-3 py-3 text-right text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider">
-                하락률
+                <Tooltip content="고점 대비 하락률" placement="bottom">
+                  <span className="cursor-help">하락률</span>
+                </Tooltip>
               </th>
               <th className="px-3 py-3 text-right text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider">
-                매수가
+                <Tooltip content="해당 구간 매수 단가" placement="bottom">
+                  <span className="cursor-help">매수가</span>
+                </Tooltip>
               </th>
               <th className="px-3 py-3 text-right text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider">
-                수량
+                <Tooltip content="해당 구간 매수 수량" placement="bottom">
+                  <span className="cursor-help">수량</span>
+                </Tooltip>
               </th>
               <th className="px-3 py-3 text-right text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider">
-                금액
+                <Tooltip content="해당 구간 매수 금액" placement="bottom">
+                  <span className="cursor-help">금액</span>
+                </Tooltip>
               </th>
-              {/* New columns */}
+              {/* Accumulated columns */}
               <th className="px-3 py-3 text-right text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider border-l border-zinc-200 dark:border-zinc-700">
-                실 수량
+                <Tooltip content="체결 시 누적 보유 수량" placement="bottom">
+                  <span className="cursor-help">실 수량</span>
+                </Tooltip>
               </th>
               <th className="px-3 py-3 text-right text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider">
-                실 총액
+                <Tooltip content="체결 시 누적 투자 금액" placement="bottom">
+                  <span className="cursor-help">실 총액</span>
+                </Tooltip>
               </th>
               <th className="px-3 py-3 text-right text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider">
-                평단가
+                <Tooltip content="현재 평균 매수 단가" placement="bottom">
+                  <span className="cursor-help">평단가</span>
+                </Tooltip>
               </th>
               <th className="px-3 py-3 text-right text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider">
-                괴리율
+                <Tooltip content="이론 금액과 실제 금액의 괴리율" placement="bottom">
+                  <span className="cursor-help">괴리율</span>
+                </Tooltip>
               </th>
               <th className="px-3 py-3 text-center text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider border-l border-zinc-200 dark:border-zinc-700 w-28">
-                체결일
+                <Tooltip content="실제 매수 체결 일자" placement="bottom">
+                  <span className="cursor-help">체결일</span>
+                </Tooltip>
               </th>
               <th className="px-3 py-3 text-left text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider min-w-[120px]">
                 비고
@@ -133,23 +207,26 @@ export function TradeTable({
           </tbody>
           <tfoot className="bg-zinc-50 dark:bg-zinc-800/50 border-t-2 border-zinc-300 dark:border-zinc-600">
             <tr>
-              <td colSpan={5} className="px-3 py-3 text-right font-semibold text-zinc-700 dark:text-zinc-200">
+              <td
+                colSpan={5}
+                className="px-3 py-3 text-right font-semibold text-zinc-700 dark:text-zinc-200"
+              >
                 합계
               </td>
-              <td className="px-3 py-3 text-right font-bold text-zinc-900 dark:text-zinc-50 tabular-nums">
+              <td className="px-3 py-3 text-right font-bold text-zinc-900 dark:text-zinc-50 tabular-nums whitespace-nowrap">
                 {totals.executedQty.toLocaleString()}주
               </td>
-              <td className="px-3 py-3 text-right font-bold text-zinc-900 dark:text-zinc-50 tabular-nums">
+              <td className="px-3 py-3 text-right font-bold text-zinc-900 dark:text-zinc-50 tabular-nums whitespace-nowrap">
                 {formatKoreanUnit(totals.executedAmt)}
               </td>
               {/* Real totals */}
-              <td className="px-3 py-3 text-right font-bold text-zinc-900 dark:text-zinc-50 tabular-nums border-l border-zinc-200 dark:border-zinc-700">
+              <td className="px-3 py-3 text-right font-bold text-zinc-900 dark:text-zinc-50 tabular-nums border-l border-zinc-200 dark:border-zinc-700 whitespace-nowrap">
                 {totals.realQty.toLocaleString()}주
               </td>
-              <td className="px-3 py-3 text-right font-bold text-zinc-900 dark:text-zinc-50 tabular-nums">
+              <td className="px-3 py-3 text-right font-bold text-zinc-900 dark:text-zinc-50 tabular-nums whitespace-nowrap">
                 {formatKoreanUnit(totals.realAmount)}
               </td>
-              <td className="px-3 py-3 text-right font-bold text-primary-600 dark:text-primary-400 tabular-nums">
+              <td className="px-3 py-3 text-right font-bold text-primary-600 dark:text-primary-400 tabular-nums whitespace-nowrap">
                 {totals.avgPrice > 0 ? formatCurrency(totals.avgPrice) : '-'}
               </td>
               <td className="px-3 py-3"></td>
@@ -201,7 +278,12 @@ function TradeRow({
   };
 
   return (
-    <tr className={clsx('transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50', getRowClass())}>
+    <tr
+      className={clsx(
+        'transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50',
+        getRowClass()
+      )}
+    >
       {/* Order Checkbox */}
       <td className="px-3 py-2.5 text-center">
         <button
@@ -228,8 +310,8 @@ function TradeRow({
             trade.isExecuted
               ? 'bg-success-500 border-success-500 text-white'
               : trade.isOrdered
-              ? 'border-zinc-300 dark:border-zinc-500 hover:border-success-400 dark:hover:border-success-500'
-              : 'border-zinc-200 dark:border-zinc-700 opacity-30 cursor-not-allowed'
+                ? 'border-zinc-300 dark:border-zinc-500 hover:border-success-400 dark:hover:border-success-500'
+                : 'border-zinc-200 dark:border-zinc-700 opacity-30 cursor-not-allowed'
           )}
           aria-label={`${trade.step}구간 체결 ${trade.isExecuted ? '취소' : '등록'}`}
         >
@@ -239,43 +321,45 @@ function TradeRow({
 
       {/* Step */}
       <td className="px-3 py-2.5 text-center">
-        <span className={clsx(
-          'inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold',
-          trade.isExecuted
-            ? 'bg-success-100 text-success-700 dark:bg-success-900/50 dark:text-success-300'
-            : trade.isOrdered
-            ? 'bg-warning-100 text-warning-700 dark:bg-warning-900/50 dark:text-warning-300'
-            : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'
-        )}>
+        <span
+          className={clsx(
+            'inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold',
+            trade.isExecuted
+              ? 'bg-success-100 text-success-700 dark:bg-success-900/50 dark:text-success-300'
+              : trade.isOrdered
+                ? 'bg-warning-100 text-warning-700 dark:bg-warning-900/50 dark:text-warning-300'
+                : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'
+          )}
+        >
           {trade.step}
         </span>
       </td>
 
       {/* Drop Rate */}
-      <td className="px-3 py-2.5 text-right tabular-nums text-zinc-600 dark:text-zinc-300">
+      <td className="px-3 py-2.5 text-right tabular-nums text-zinc-600 dark:text-zinc-300 whitespace-nowrap">
         -{trade.dropRate}%
       </td>
 
       {/* Buy Price */}
-      <td className="px-3 py-2.5 text-right tabular-nums font-medium text-zinc-900 dark:text-zinc-50">
+      <td className="px-3 py-2.5 text-right tabular-nums font-medium text-zinc-900 dark:text-zinc-50 whitespace-nowrap">
         {formatCurrency(trade.buyPrice)}
       </td>
 
       {/* Quantity */}
-      <td className="px-3 py-2.5 text-right tabular-nums text-zinc-700 dark:text-zinc-200">
-        {trade.quantity.toLocaleString()}
+      <td className="px-3 py-2.5 text-right tabular-nums text-zinc-700 dark:text-zinc-200 whitespace-nowrap">
+        {trade.quantity.toLocaleString()}주
       </td>
 
       {/* Amount */}
-      <td className="px-3 py-2.5 text-right tabular-nums text-zinc-700 dark:text-zinc-200">
+      <td className="px-3 py-2.5 text-right tabular-nums text-zinc-700 dark:text-zinc-200 whitespace-nowrap">
         {formatKoreanUnit(trade.amount)}
       </td>
 
       {/* Real Quantity (new) */}
-      <td className="px-3 py-2.5 text-right tabular-nums border-l border-zinc-200 dark:border-zinc-700">
+      <td className="px-3 py-2.5 text-right tabular-nums border-l border-zinc-200 dark:border-zinc-700 whitespace-nowrap">
         {trade.isExecuted ? (
           <span className="font-bold text-zinc-900 dark:text-zinc-50">
-            {trade.realQty.toLocaleString()}
+            {trade.realQty.toLocaleString()}주
           </span>
         ) : (
           <span className="text-zinc-400 dark:text-zinc-500">-</span>
@@ -283,7 +367,7 @@ function TradeRow({
       </td>
 
       {/* Real Amount (new) */}
-      <td className="px-3 py-2.5 text-right tabular-nums">
+      <td className="px-3 py-2.5 text-right tabular-nums whitespace-nowrap">
         {trade.isExecuted ? (
           <span className="font-bold text-zinc-900 dark:text-zinc-50">
             {formatKoreanUnit(trade.realAmount)}
@@ -294,7 +378,7 @@ function TradeRow({
       </td>
 
       {/* Average Price */}
-      <td className="px-3 py-2.5 text-right tabular-nums">
+      <td className="px-3 py-2.5 text-right tabular-nums whitespace-nowrap">
         {trade.isExecuted ? (
           <span className="font-medium text-primary-600 dark:text-primary-400">
             {formatCurrency(trade.avgPrice)}
@@ -305,7 +389,12 @@ function TradeRow({
       </td>
 
       {/* Gap */}
-      <td className={clsx('px-3 py-2.5 text-right tabular-nums font-medium', getGapColor())}>
+      <td
+        className={clsx(
+          'px-3 py-2.5 text-right tabular-nums font-medium whitespace-nowrap',
+          getGapColor()
+        )}
+      >
         {trade.isExecuted || trade.isOrdered ? (
           <span className="flex items-center justify-end gap-1">
             {trade.gap < -10 && <AlertTriangle className="w-3.5 h-3.5 text-danger-500" />}

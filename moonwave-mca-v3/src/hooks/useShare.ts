@@ -3,18 +3,18 @@
 // Web Share API 및 공유 기능
 // ============================================
 
-import { useState, useCallback } from 'react';
-import type { Portfolio } from '@/types';
+import { trackFeatureUsage } from '@/services/analytics';
 import {
+  copyShareLink,
+  createPortfolioQRData,
+  generateDeepLink,
+  generateQRCodeDataURL,
+  getAvailableShareMethods,
   isWebShareSupported,
   sharePortfolio,
-  generateDeepLink,
-  copyShareLink,
-  generateQRCodeDataURL,
-  createPortfolioQRData,
-  getAvailableShareMethods,
 } from '@/services/share';
-import { trackFeatureUsage } from '@/services/analytics';
+import type { Portfolio } from '@/types';
+import { useCallback, useState } from 'react';
 
 interface UseShareReturn {
   // 상태
@@ -116,5 +116,3 @@ export function useShare(): UseShareReturn {
     generateQR,
   };
 }
-
-export default useShare;

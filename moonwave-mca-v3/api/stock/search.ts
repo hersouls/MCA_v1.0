@@ -11,10 +11,9 @@ export interface StockSearchResult {
   market: 'KOSPI' | 'KOSDAQ';
 }
 
-// 네이버 금융 자동완성 API
+// 네이버 금융 통합검색 API (메인)
 async function searchNaverStocks(query: string, limit: number): Promise<StockSearchResult[]> {
-  // 네이버 API는 URL 인코딩된 한글을 제대로 처리 못함 - 인코딩 없이 전송
-  const url = `https://m.stock.naver.com/api/json/search/searchListJson.nhn?keyword=${query}`;
+  const url = `https://m.stock.naver.com/api/search/all?query=${encodeURIComponent(query)}`;
 
   try {
     const response = await fetch(url, {
@@ -31,31 +30,37 @@ async function searchNaverStocks(query: string, limit: number): Promise<StockSea
     const data = await response.json();
     const results: StockSearchResult[] = [];
 
-    // 국내 주식만 필터링
-    const stocks = data.result?.d || [];
+    // 국내 주식 결과 파싱
+    const stocks = data.result?.stock || data.stocks || [];
 
     for (const item of stocks) {
       if (results.length >= limit) break;
 
-      // 국내 주식만 (cd가 6자리 숫자)
-      if (item.cd && /^\d{6}$/.test(item.cd)) {
+      // 다양한 응답 형식 대응
+      const code = item.itemCode || item.code || item.stockCode || item.cd;
+      const name = item.stockName || item.name || item.nm || '';
+      const marketName = item.marketName || item.mt || '';
+
+      // 국내 주식만 (6자리 숫자)
+      if (code && /^\d{6}$/.test(code)) {
         results.push({
-          ticker: item.cd,
-          name: item.nm || '',
-          market: item.mt === 'KOSDAQ' ? 'KOSDAQ' : 'KOSPI',
+          ticker: code,
+          name,
+          market: marketName.includes('코스닥') || marketName === 'KOSDAQ' ? 'KOSDAQ' : 'KOSPI',
         });
       }
     }
 
     return results;
-  } catch {
+  } catch (error) {
+    console.error('Naver search error:', error);
     return [];
   }
 }
 
-// 대체: 네이버 통합검색 API
+// 대체: 네이버 자동완성 API
 async function searchNaverStocksAlt(query: string, limit: number): Promise<StockSearchResult[]> {
-  const url = `https://m.stock.naver.com/api/search/all?query=${query}`;
+  const url = `https://ac.stock.naver.com/ac?q=${encodeURIComponent(query)}&target=stock`;
 
   try {
     const response = await fetch(url, {
@@ -72,25 +77,28 @@ async function searchNaverStocksAlt(query: string, limit: number): Promise<Stock
     const data = await response.json();
     const results: StockSearchResult[] = [];
 
-    // 국내 주식 결과
-    const stocks = data.result?.stocks || data.stocks || [];
+    // 자동완성 결과 파싱
+    const items = data.items || [];
 
-    for (const item of stocks) {
+    for (const item of items) {
       if (results.length >= limit) break;
 
-      // 국내 주식만 (itemCode가 6자리 숫자)
-      const code = item.itemCode || item.code || item.stockCode;
+      const code = item.code;
+      const name = item.name || '';
+
+      // 국내 주식만 (6자리 숫자)
       if (code && /^\d{6}$/.test(code)) {
         results.push({
           ticker: code,
-          name: item.stockName || item.name || '',
-          market: item.marketName?.includes('코스닥') ? 'KOSDAQ' : 'KOSPI',
+          name,
+          market: item.typeCode === 'KOSDAQ' ? 'KOSDAQ' : 'KOSPI',
         });
       }
     }
 
     return results;
-  } catch {
+  } catch (error) {
+    console.error('Naver alt search error:', error);
     return [];
   }
 }

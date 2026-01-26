@@ -2,14 +2,14 @@
 // Format Utilities Tests
 // ============================================
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
-  formatNumber,
-  formatCurrency,
-  formatPercent,
   formatCompact,
-  parseFormattedNumber,
+  formatCurrency,
   formatDropRate,
+  formatNumber,
+  formatPercent,
+  parseFormattedNumber,
 } from './format';
 
 describe('formatNumber', () => {

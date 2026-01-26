@@ -2,139 +2,12 @@
 // Select Component (Catalyst-style with Headless UI)
 // ============================================
 
-import { Fragment } from 'react';
-import {
-  Listbox,
-  ListboxButton,
-  ListboxOption,
-  ListboxOptions,
-  Transition,
-} from '@headlessui/react';
 import { clsx } from 'clsx';
-import { Check, ChevronDown } from 'lucide-react';
 
-export interface SelectOption<T = string> {
+interface SelectOption<T = string> {
   value: T;
   label: string;
   disabled?: boolean;
-}
-
-interface SelectProps<T = string> {
-  value: T;
-  onChange: (value: T) => void;
-  options: SelectOption<T>[];
-  label?: string;
-  placeholder?: string;
-  error?: string;
-  disabled?: boolean;
-  className?: string;
-}
-
-export function Select<T extends string | number>({
-  value,
-  onChange,
-  options,
-  label,
-  placeholder = '선택하세요',
-  error,
-  disabled = false,
-  className,
-}: SelectProps<T>) {
-  const selectedOption = options.find((opt) => opt.value === value);
-
-  return (
-    <div className={clsx('w-full', className)}>
-      {label && (
-        <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1.5">
-          {label}
-        </label>
-      )}
-      <Listbox value={value} onChange={onChange} disabled={disabled}>
-        <div className="relative">
-          <ListboxButton
-            className={clsx(
-              'relative w-full rounded-lg border bg-white dark:bg-zinc-900',
-              'py-2.5 pl-3 pr-10 text-left text-sm',
-              'transition-all duration-200',
-              'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/20',
-              error
-                ? 'border-danger-500 focus-visible:border-danger-500'
-                : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600 focus-visible:border-primary-500',
-              disabled && 'opacity-50 cursor-not-allowed'
-            )}
-          >
-            <span
-              className={clsx(
-                'block truncate',
-                selectedOption
-                  ? 'text-zinc-900 dark:text-zinc-100'
-                  : 'text-zinc-400 dark:text-zinc-500'
-              )}
-            >
-              {selectedOption?.label || placeholder}
-            </span>
-            <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-              <ChevronDown
-                className="h-4 w-4 text-zinc-400"
-                aria-hidden="true"
-              />
-            </span>
-          </ListboxButton>
-
-          <Transition
-            as={Fragment}
-            leave="transition ease-in duration-100"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <ListboxOptions
-              className={clsx(
-                'absolute z-10 mt-1 max-h-60 w-full overflow-auto',
-                'rounded-lg bg-white dark:bg-zinc-900',
-                'border border-zinc-200 dark:border-zinc-700',
-                'py-1 shadow-lg',
-                'focus:outline-none'
-              )}
-            >
-              {options.map((option) => (
-                <ListboxOption
-                  key={String(option.value)}
-                  value={option.value}
-                  disabled={option.disabled}
-                  className={({ active, selected }) =>
-                    clsx(
-                      'relative cursor-pointer select-none py-2 pl-10 pr-4 text-sm',
-                      active && 'bg-primary-50 dark:bg-primary-900/30',
-                      selected
-                        ? 'text-primary-600 dark:text-primary-400 font-medium'
-                        : 'text-zinc-900 dark:text-zinc-100',
-                      option.disabled && 'opacity-50 cursor-not-allowed'
-                    )
-                  }
-                >
-                  {({ selected }) => (
-                    <>
-                      <span className="block truncate">{option.label}</span>
-                      {selected && (
-                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-primary-600 dark:text-primary-400">
-                          <Check className="h-4 w-4" aria-hidden="true" />
-                        </span>
-                      )}
-                    </>
-                  )}
-                </ListboxOption>
-              ))}
-            </ListboxOptions>
-          </Transition>
-        </div>
-      </Listbox>
-      {error && (
-        <p className="mt-1.5 text-xs text-danger-600 dark:text-danger-400">
-          {error}
-        </p>
-      )}
-    </div>
-  );
 }
 
 // Simple native select for forms
@@ -176,20 +49,71 @@ export function NativeSelect({
         {...props}
       >
         {options.map((option) => (
-          <option
-            key={String(option.value)}
-            value={option.value}
-            disabled={option.disabled}
-          >
+          <option key={String(option.value)} value={option.value} disabled={option.disabled}>
             {option.label}
           </option>
         ))}
       </select>
-      {error && (
-        <p className="mt-1.5 text-xs text-danger-600 dark:text-danger-400">
-          {error}
-        </p>
-      )}
+      {error && <p className="mt-1.5 text-xs text-danger-600 dark:text-danger-400">{error}</p>}
+    </div>
+  );
+}
+
+// ============================================
+// Button-style Select (for Fundamental Grade, etc.)
+// ============================================
+
+import { Check } from 'lucide-react';
+
+interface ButtonSelectOption {
+  value: string;
+  label: string;
+  score?: number;
+}
+
+interface ButtonSelectProps {
+  label: string;
+  value: string | null;
+  onChange: (value: string) => void;
+  options: ButtonSelectOption[];
+  description?: string;
+  className?: string;
+}
+
+export function ButtonSelect({
+  label,
+  value,
+  onChange,
+  options,
+  description,
+  className,
+}: ButtonSelectProps) {
+  return (
+    <div className={clsx('space-y-1', className)}>
+      <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400">
+        {label}
+      </label>
+      <div className="grid gap-2 sm:grid-cols-1">
+        {options.map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => onChange(option.value)}
+            className={clsx(
+              'flex items-center justify-between rounded-lg border p-3 text-left text-sm transition-all',
+              value === option.value
+                ? 'border-primary-500 bg-primary-500/10 ring-1 ring-primary-500'
+                : 'border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800/50'
+            )}
+          >
+            <div>
+              <div className="font-medium text-zinc-900 dark:text-zinc-100">{option.label}</div>
+            </div>
+            {value === option.value && <Check className="w-4 h-4 text-primary-500" />}
+          </button>
+        ))}
+      </div>
+      {description && <p className="text-xs text-zinc-500 dark:text-zinc-400">{description}</p>}
     </div>
   );
 }

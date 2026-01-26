@@ -3,9 +3,9 @@
 // 종목 검색 + 자동완성 드롭다운
 // ============================================
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, Loader2, X } from 'lucide-react';
-import { useStockFundamental, type StockFundamentalData } from '@/hooks';
+import { type StockFundamentalData, useStockFundamental } from '@/hooks';
+import { Loader2, Search, X } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface StockSearchInputProps {
   value: string;
@@ -13,6 +13,7 @@ interface StockSearchInputProps {
   onSelect: (stock: { ticker: string; name: string; market: string }) => void;
   onFundamentalLoaded?: (data: StockFundamentalData) => void;
   className?: string;
+  autoFocus?: boolean;
 }
 
 export function StockSearchInput({
@@ -21,12 +22,14 @@ export function StockSearchInput({
   onSelect,
   onFundamentalLoaded,
   className = '',
+  autoFocus,
 }: StockSearchInputProps) {
   const [searchQuery, setSearchQuery] = useState(value);
-  const [showResults, setShowResults] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const prevValueRef = useRef(value);
 
   // 종목 검색 훅
   const {
@@ -44,44 +47,56 @@ export function StockSearchInput({
     },
   });
 
-  // value prop 변경 시 동기화
+  // value prop 변경 시 동기화 (외부 값이 변경될 때만, 편집 중이 아닐 때)
   useEffect(() => {
-    if (!isEditing) {
-      setSearchQuery(value);
+    if (prevValueRef.current !== value && !isEditing) {
+      prevValueRef.current = value;
+      queueMicrotask(() => {
+        setSearchQuery(value);
+      });
     }
   }, [value, isEditing]);
 
-  // 검색어 변경 시 검색 실행
+  // 검색어 변경 시 검색 실행 (API 호출만)
   useEffect(() => {
     if (isEditing && searchQuery.length >= 1) {
       searchByQuery(searchQuery);
-      setShowResults(true);
     } else if (searchQuery.length === 0) {
       clearSearch();
-      setShowResults(false);
     }
   }, [searchQuery, isEditing, searchByQuery, clearSearch]);
 
-  // 외부 클릭 감지
+  // 드롭다운 닫기 헬퍼 (useEffect보다 먼저 선언)
+  const closeDropdown = useCallback(() => {
+    setIsDropdownOpen(false);
+    setIsEditing(false);
+  }, []);
+
+  // 드롭다운 열기 헬퍼
+  const openDropdown = useCallback(() => {
+    setIsDropdownOpen(true);
+  }, []);
+
+  // 외부 클릭 감지 - 이벤트 핸들러이므로 setState 허용
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setShowResults(false);
-        setIsEditing(false);
+        closeDropdown();
         setSearchQuery(value); // 원래 값으로 복원
+        prevValueRef.current = value;
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [value]);
+  }, [value, closeDropdown]);
 
   // 종목 선택 핸들러
   const handleSelectStock = useCallback(
     async (ticker: string, name: string, market: string) => {
-      setShowResults(false);
-      setIsEditing(false);
+      closeDropdown();
       const displayName = `${name} (${ticker})`;
       setSearchQuery(displayName);
+      prevValueRef.current = displayName;
 
       // 부모에게 선택 알림
       onSelect({ ticker, name, market });
@@ -89,7 +104,21 @@ export function StockSearchInput({
       // fundamental 데이터 로드
       await selectStock(ticker);
     },
-    [onSelect, selectStock]
+    [onSelect, selectStock, closeDropdown]
+  );
+
+  // 입력 변경 핸들러
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newValue = e.target.value;
+      setSearchQuery(newValue);
+      if (newValue.length >= 1) {
+        openDropdown();
+      } else {
+        setIsDropdownOpen(false);
+      }
+    },
+    [openDropdown]
   );
 
   // Enter 키 핸들러
@@ -123,28 +152,31 @@ export function StockSearchInput({
         await handleSelectStock(first.ticker, first.name, first.market);
       }
     } else if (e.key === 'Escape') {
-      setShowResults(false);
-      setIsEditing(false);
+      closeDropdown();
       setSearchQuery(value);
+      prevValueRef.current = value;
       inputRef.current?.blur();
     }
   };
 
   // 포커스 핸들러
-  const handleFocus = () => {
+  const handleFocus = useCallback(() => {
     setIsEditing(true);
     if (searchQuery.length >= 1) {
-      setShowResults(true);
+      openDropdown();
     }
-  };
+  }, [searchQuery.length, openDropdown]);
 
   // 클리어 핸들러
-  const handleClear = () => {
+  const handleClear = useCallback(() => {
     setSearchQuery('');
     clearSearch();
-    setShowResults(false);
+    setIsDropdownOpen(false);
     inputRef.current?.focus();
-  };
+  }, [clearSearch]);
+
+  // 드롭다운 표시 여부 계산 (파생 상태와 명시적 상태 결합)
+  const showDropdown = isDropdownOpen && isEditing && searchQuery.length >= 1;
 
   return (
     <div ref={containerRef} className={`relative ${className}`}>
@@ -154,9 +186,10 @@ export function StockSearchInput({
           ref={inputRef}
           type="text"
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={handleInputChange}
           onKeyDown={handleKeyDown}
           onFocus={handleFocus}
+          autoFocus={autoFocus}
           placeholder={placeholder}
           className="w-full rounded-lg border border-zinc-300 bg-white py-2 pl-9 pr-10 text-sm font-medium focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white"
         />
@@ -174,7 +207,7 @@ export function StockSearchInput({
       </div>
 
       {/* 검색 결과 드롭다운 */}
-      {showResults && searchResults.length > 0 && (
+      {showDropdown && searchResults.length > 0 && (
         <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-60 overflow-auto rounded-lg border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
           {searchResults.map((result) => (
             <button
@@ -182,9 +215,7 @@ export function StockSearchInput({
               onClick={() => handleSelectStock(result.ticker, result.name, result.market)}
               className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-zinc-50 dark:hover:bg-zinc-700"
             >
-              <span className="font-medium text-zinc-900 dark:text-white">
-                {result.name}
-              </span>
+              <span className="font-medium text-zinc-900 dark:text-white">{result.name}</span>
               <span className="flex items-center gap-2 text-xs text-zinc-500">
                 <span>{result.ticker}</span>
                 <span className="rounded bg-zinc-100 px-1.5 py-0.5 dark:bg-zinc-700">
@@ -197,7 +228,7 @@ export function StockSearchInput({
       )}
 
       {/* 검색 결과 없음 */}
-      {showResults && isEditing && searchQuery.length >= 2 && !isSearching && searchResults.length === 0 && (
+      {showDropdown && !isSearching && searchResults.length === 0 && searchQuery.length >= 2 && (
         <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-lg border border-zinc-200 bg-white p-3 text-center text-sm text-zinc-500 shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
           검색 결과가 없습니다
         </div>
@@ -212,5 +243,3 @@ export function StockSearchInput({
     </div>
   );
 }
-
-export default StockSearchInput;

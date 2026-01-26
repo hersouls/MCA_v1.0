@@ -1,0 +1,100 @@
+// ============================================
+// Handbook Icon Map
+// lucide-react 전체 import 대신 필요한 아이콘만 import
+// 번들 크기 최적화: ~586KB -> ~20KB
+// ============================================
+
+import {
+  Activity,
+  AlertTriangle,
+  ArrowRight,
+  Banknote,
+  BarChart2,
+  BarChart3,
+  BookOpen,
+  Calculator,
+  Calendar,
+  CheckCircle,
+  CheckCircle2,
+  Circle,
+  ClipboardList,
+  Clock,
+  Coins,
+  FileText,
+  Flame,
+  Gauge,
+  Gem,
+  Hash,
+  LayoutDashboard,
+  LineChart,
+  Link,
+  type LucideIcon,
+  Mountain,
+  Package,
+  RefreshCw,
+  Ruler,
+  Scale,
+  Settings,
+  Shield,
+  Sprout,
+  Star,
+  Target,
+  TrendingDown,
+  TrendingUp,
+  User,
+  Wallet,
+  Waves,
+  XCircle,
+  Zap,
+} from 'lucide-react';
+
+// Icon map for dynamic lookup
+const ICON_MAP: Record<string, LucideIcon> = {
+  Activity,
+  AlertTriangle,
+  ArrowRight,
+  Banknote,
+  BarChart2,
+  BarChart3,
+  BookOpen,
+  Calculator,
+  Calendar,
+  CheckCircle,
+  CheckCircle2,
+  Circle,
+  ClipboardList,
+  Clock,
+  Coins,
+  FileText,
+  Flame,
+  Gauge,
+  Gem,
+  Hash,
+  LayoutDashboard,
+  LineChart,
+  Link,
+  Mountain,
+  Package,
+  RefreshCw,
+  Ruler,
+  Scale,
+  Settings,
+  Shield,
+  Sprout,
+  Star,
+  Target,
+  TrendingDown,
+  TrendingUp,
+  User,
+  Wallet,
+  Waves,
+  XCircle,
+  Zap,
+};
+
+// Helper function to get icon by name
+export function getIcon(name: string): LucideIcon | null {
+  return ICON_MAP[name] || null;
+}
+
+export type { LucideIcon };

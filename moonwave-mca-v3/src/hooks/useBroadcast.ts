@@ -3,31 +3,30 @@
 // 크로스탭 동기화 기능
 // ============================================
 
-import { useEffect, useRef } from 'react';
-import type { Portfolio, Settings, BroadcastMessage } from '@/types';
 import {
-  initBroadcastChannel,
-  closeBroadcastChannel,
   broadcastPortfolioCreated,
-  broadcastPortfolioUpdated,
   broadcastPortfolioDeleted,
-  broadcastTradeToggled,
+  broadcastPortfolioUpdated,
   broadcastSettingsChanged,
   broadcastThemeChanged,
-  requestSync,
-  respondToSync,
+  broadcastTradeToggled,
+  closeBroadcastChannel,
+  getTabId,
+  initBroadcastChannel,
+  isBroadcastSupported,
   onPortfolioCreated,
-  onPortfolioUpdated,
   onPortfolioDeleted,
-  onTradeToggled,
+  onPortfolioUpdated,
   onSettingsChanged,
-  onThemeChanged,
   onSyncRequest,
   onSyncResponse,
-  subscribe,
-  getTabId,
-  isBroadcastSupported,
+  onThemeChanged,
+  onTradeToggled,
+  requestSync,
+  respondToSync,
 } from '@/services/broadcast';
+import type { Portfolio, Settings } from '@/types';
+import { useEffect, useRef } from 'react';
 
 interface BroadcastHandlers {
   onPortfolioCreated?: (portfolio: Portfolio) => void;
@@ -83,9 +82,7 @@ export function useBroadcast(handlers?: BroadcastHandlers): UseBroadcastReturn {
     cleanupRef.current.push(
       onPortfolioDeleted((portfolioId) => handlersRef.current?.onPortfolioDeleted?.(portfolioId))
     );
-    cleanupRef.current.push(
-      onTradeToggled((data) => handlersRef.current?.onTradeToggled?.(data))
-    );
+    cleanupRef.current.push(onTradeToggled((data) => handlersRef.current?.onTradeToggled?.(data)));
     cleanupRef.current.push(
       onSettingsChanged((settings) => handlersRef.current?.onSettingsChanged?.(settings))
     );
@@ -95,9 +92,7 @@ export function useBroadcast(handlers?: BroadcastHandlers): UseBroadcastReturn {
     cleanupRef.current.push(
       onSyncRequest((requesterId) => handlersRef.current?.onSyncRequest?.(requesterId))
     );
-    cleanupRef.current.push(
-      onSyncResponse((data) => handlersRef.current?.onSyncResponse?.(data))
-    );
+    cleanupRef.current.push(onSyncResponse((data) => handlersRef.current?.onSyncResponse?.(data)));
 
     // 정리
     return () => {
@@ -120,20 +115,3 @@ export function useBroadcast(handlers?: BroadcastHandlers): UseBroadcastReturn {
     respondToSync,
   };
 }
-
-/**
- * 모든 Broadcast 메시지 구독 훅
- */
-export function useBroadcastAll(onMessage: (message: BroadcastMessage) => void): void {
-  useEffect(() => {
-    initBroadcastChannel();
-    const cleanup = subscribe('*', onMessage);
-
-    return () => {
-      cleanup();
-      closeBroadcastChannel();
-    };
-  }, [onMessage]);
-}
-
-export default useBroadcast;

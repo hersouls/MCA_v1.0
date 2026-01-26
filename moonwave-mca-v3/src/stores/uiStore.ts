@@ -25,8 +25,24 @@ interface UIState {
   isModalOpen: boolean;
   modalContent: React.ReactNode | null;
 
+  // Settings Modal
+  isSettingsModalOpen: boolean;
+
+  // Terms Modal
+  isTermsModalOpen: boolean;
+
+  // FAQ Modal
+  isFAQModalOpen: boolean;
+
+  // Handbook Modal
+  isHandbookOpen: boolean;
+  handbookSection: string | null;
+  handbookAnchor: string | null;
+  handbookEffortLevel: 'low' | 'medium' | 'high';
+
   // Search
   searchQuery: string;
+  isHeaderSearchOpen: boolean; // Managed globally for trigger consistency
 
   // Loading States
   isGlobalLoading: boolean;
@@ -50,8 +66,28 @@ interface UIState {
   openModal: (content: React.ReactNode) => void;
   closeModal: () => void;
 
+  // Settings Modal Actions
+  openSettingsModal: () => void;
+  closeSettingsModal: () => void;
+
+  // Terms Modal Actions
+  openTermsModal: () => void;
+  closeTermsModal: () => void;
+
+  // FAQ Modal Actions
+  openFAQModal: () => void;
+  closeFAQModal: () => void;
+
+  // Handbook Modal Actions
+  openHandbook: (sectionId?: string, anchorId?: string) => void;
+  closeHandbook: () => void;
+  setHandbookSection: (sectionId: string) => void;
+  setHandbookAnchor: (anchorId: string | null) => void;
+  setHandbookEffortLevel: (level: 'low' | 'medium' | 'high') => void;
+
   // Search Actions
   setSearchQuery: (query: string) => void;
+  setHeaderSearchOpen: (isOpen: boolean) => void;
   clearSearch: () => void;
 
   // Loading Actions
@@ -76,7 +112,10 @@ export const useUIStore = create<UIState>()(
       toasts: [],
       isModalOpen: false,
       modalContent: null,
+      isSettingsModalOpen: false,
+      isTermsModalOpen: false,
       searchQuery: '',
+      isHeaderSearchOpen: false,
       isGlobalLoading: false,
       loadingMessage: null,
       isSidebarCollapsed: false,
@@ -124,9 +163,66 @@ export const useUIStore = create<UIState>()(
         set({ isModalOpen: false, modalContent: null });
       },
 
+      // Settings Modal
+      openSettingsModal: () => {
+        set({ isSettingsModalOpen: true });
+      },
+
+      closeSettingsModal: () => {
+        set({ isSettingsModalOpen: false });
+      },
+
+      // Terms Modal
+      openTermsModal: () => {
+        set({ isTermsModalOpen: true });
+      },
+
+      closeTermsModal: () => {
+        set({ isTermsModalOpen: false });
+      },
+
+      // FAQ Modal
+      isFAQModalOpen: false,
+      openFAQModal: () => {
+        set({ isFAQModalOpen: true });
+      },
+
+      closeFAQModal: () => {
+        set({ isFAQModalOpen: false });
+      },
+
+      // Handbook Modal
+      isHandbookOpen: false,
+      handbookSection: null,
+      handbookAnchor: null,
+      handbookEffortLevel: 'medium',
+      openHandbook: (sectionId, anchorId) => {
+        set({
+          isHandbookOpen: true,
+          ...(sectionId && { handbookSection: sectionId }),
+          ...(anchorId && { handbookAnchor: anchorId }),
+        });
+      },
+      closeHandbook: () => {
+        set({ isHandbookOpen: false, handbookSection: null, handbookAnchor: null });
+      },
+      setHandbookSection: (sectionId) => {
+        set({ handbookSection: sectionId });
+      },
+      setHandbookAnchor: (anchorId) => {
+        set({ handbookAnchor: anchorId });
+      },
+      setHandbookEffortLevel: (level) => {
+        set({ handbookEffortLevel: level });
+      },
+
       // Search
       setSearchQuery: (query) => {
         set({ searchQuery: query });
+      },
+
+      setHeaderSearchOpen: (isOpen) => {
+        set({ isHeaderSearchOpen: isOpen });
       },
 
       clearSearch: () => {
@@ -162,5 +258,3 @@ export const useUIStore = create<UIState>()(
 
 // Convenience hooks for specific states
 export const useToasts = () => useUIStore((state) => state.toasts);
-export const useCurrentView = () => useUIStore((state) => state.currentView);
-export const useSearchQuery = () => useUIStore((state) => state.searchQuery);

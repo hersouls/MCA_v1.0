@@ -3,34 +3,15 @@
 // ============================================
 
 import type { Portfolio, Trade, V2Data, V2Portfolio } from '@/types';
-import { db, addPortfolio, updateSettings } from './database';
-import { calculateBuyPrice, calculateQuantity } from '@/utils/tick';
 import { STORAGE_KEYS } from '@/utils/constants';
 import { parseFormattedNumber } from '@/utils/format';
-
-/**
- * Check if migration is needed
- */
-export function needsMigration(): boolean {
-  const migrated = localStorage.getItem(STORAGE_KEYS.V3_MIGRATED);
-  if (migrated === 'true') return false;
-
-  const v2Data = localStorage.getItem(STORAGE_KEYS.V2_DATA);
-  return !!v2Data;
-}
-
-/**
- * Check if v2 data exists
- */
-export function hasV2Data(): boolean {
-  const v2Data = localStorage.getItem(STORAGE_KEYS.V2_DATA);
-  return !!v2Data;
-}
+import { calculateBuyPrice, calculateQuantity } from '@/utils/tick';
+import { addPortfolio, db, updateSettings } from './database';
 
 /**
  * Get v2 data from localStorage
  */
-export function getV2Data(): V2Data | null {
+function getV2Data(): V2Data | null {
   const v2DataStr = localStorage.getItem(STORAGE_KEYS.V2_DATA);
   if (!v2DataStr) return null;
 
@@ -57,14 +38,14 @@ function convertV2Portfolio(v2: V2Portfolio): Omit<Portfolio, 'id'> {
     updatedAt: new Date(),
     params: {
       peakPrice: parseFormattedNumber(v2.params.peakPrice),
-      strength: parseFloat(v2.params.strength) || 1.0,
-      startDrop: parseFloat(v2.params.startDrop) || 10,
-      steps: parseInt(v2.params.steps) || 20,
+      strength: Number.parseFloat(v2.params.strength) || 1.0,
+      startDrop: Number.parseFloat(v2.params.startDrop) || 10,
+      steps: Number.parseInt(v2.params.steps) || 20,
       targetBudget: parseFormattedNumber(v2.params.targetBudget),
       legacyQty: parseFormattedNumber(v2.params.legacyQty),
       legacyAvg: parseFormattedNumber(v2.params.legacyAvg),
       ma120Price: parseFormattedNumber(v2.params.ma120Price) || undefined,
-      targetMultiple: parseFloat(v2.params.targetMultiple || '') || undefined,
+      targetMultiple: Number.parseFloat(v2.params.targetMultiple || '') || undefined,
       manualTargetPrice: parseFormattedNumber(v2.params.manualTargetPrice) || undefined,
     },
     memo: v2.portfolioMemo,
@@ -74,18 +55,15 @@ function convertV2Portfolio(v2: V2Portfolio): Omit<Portfolio, 'id'> {
 /**
  * Create trades from v2 portfolio steps
  */
-function createTradesFromV2(
-  portfolioId: number,
-  v2: V2Portfolio
-): Omit<Trade, 'id'>[] {
+function createTradesFromV2(portfolioId: number, v2: V2Portfolio): Omit<Trade, 'id'>[] {
   const orderedSteps = v2.orderedSteps || [];
   const executedSteps = v2.executedSteps || [];
   const executionDates = v2.executionDates || {};
   const stepMemos = v2.stepMemos || {};
 
   const peakPrice = parseFormattedNumber(v2.params.peakPrice);
-  const strength = parseFloat(v2.params.strength) || 1.0;
-  const startDrop = parseFloat(v2.params.startDrop) || 10;
+  const strength = Number.parseFloat(v2.params.strength) || 1.0;
+  const startDrop = Number.parseFloat(v2.params.startDrop) || 10;
 
   const trades: Omit<Trade, 'id'>[] = [];
 
@@ -174,32 +152,4 @@ export async function migrateFromV2(): Promise<{
       error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
-}
-
-/**
- * Export v2 data as backup before migration
- */
-export function backupV2Data(): string | null {
-  const v2Data = localStorage.getItem(STORAGE_KEYS.V2_DATA);
-  return v2Data;
-}
-
-/**
- * Restore v2 data from backup
- */
-export function restoreV2Data(backup: string): boolean {
-  try {
-    JSON.parse(backup); // Validate JSON
-    localStorage.setItem(STORAGE_KEYS.V2_DATA, backup);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Clear migration flag (for testing/debugging)
- */
-export function clearMigrationFlag(): void {
-  localStorage.removeItem(STORAGE_KEYS.V3_MIGRATED);
 }

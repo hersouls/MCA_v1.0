@@ -3,15 +3,15 @@
 // 종목 기본 정보 자동 조회 및 폼 연동
 // ============================================
 
-import { useState, useEffect, useCallback, useRef } from 'react';
 import {
-  fetchStockFundamental,
-  searchStocks,
-  clearStockCache,
-  toFundamentalInput,
   type StockFundamentalData,
   type StockSearchResult,
+  clearStockCache,
+  fetchStockFundamental,
+  searchStocks,
+  toFundamentalInput,
 } from '@/services/stockApi';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export interface UseStockFundamentalOptions {
   /** 디바운스 지연시간 (ms) */
@@ -39,7 +39,7 @@ export interface UseStockFundamentalReturn {
   isManuallyModified: boolean;
   // 액션
   fetchByTicker: (ticker: string) => Promise<void>;
-  searchByQuery: (query: string) => Promise<void>;
+  searchByQuery: (query: string) => void;
   selectStock: (ticker: string) => Promise<void>;
   clearSearch: () => void;
   clearCache: () => void;
@@ -53,13 +53,20 @@ export interface UseStockFundamentalReturn {
   } | null;
 }
 
-// 디바운스 훅
-function useDebounce<T extends (...args: Parameters<T>) => void>(
-  callback: T,
+// 디바운스 훅 - 검색 쿼리 전용 (string 인자)
+function useDebouncedSearch(
+  callback: (query: string) => void,
   delay: number
-): T {
+): (query: string) => void {
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const callbackRef = useRef(callback);
 
+  // 최신 콜백 참조 유지
+  useEffect(() => {
+    callbackRef.current = callback;
+  }, [callback]);
+
+  // 클린업
   useEffect(() => {
     return () => {
       if (timeoutRef.current) {
@@ -69,27 +76,22 @@ function useDebounce<T extends (...args: Parameters<T>) => void>(
   }, []);
 
   return useCallback(
-    ((...args: Parameters<T>) => {
+    (query: string) => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
       timeoutRef.current = setTimeout(() => {
-        callback(...args);
+        callbackRef.current(query);
       }, delay);
-    }) as T,
-    [callback, delay]
+    },
+    [delay]
   );
 }
 
 export function useStockFundamental(
   options: UseStockFundamentalOptions = {}
 ): UseStockFundamentalReturn {
-  const {
-    debounceMs = 500,
-    useCache = true,
-    onDataLoaded,
-    onError,
-  } = options;
+  const { debounceMs = 500, useCache = true, onDataLoaded, onError } = options;
 
   const [stockData, setStockData] = useState<StockFundamentalData | null>(null);
   const [searchResults, setSearchResults] = useState<StockSearchResult[]>([]);
@@ -112,8 +114,7 @@ export function useStockFundamental(
         setIsManuallyModified(false);
         onDataLoaded?.(data);
       } catch (err) {
-        const errorMsg =
-          err instanceof Error ? err.message : '종목 정보를 가져올 수 없습니다';
+        const errorMsg = err instanceof Error ? err.message : '종목 정보를 가져올 수 없습니다';
         setError(errorMsg);
         onError?.(err instanceof Error ? err : new Error(errorMsg));
       } finally {
@@ -142,7 +143,7 @@ export function useStockFundamental(
     }
   }, []);
 
-  const searchByQuery = useDebounce(searchByQueryInternal, debounceMs);
+  const searchByQuery = useDebouncedSearch(searchByQueryInternal, debounceMs);
 
   // 검색 결과에서 종목 선택
   const selectStock = useCallback(
@@ -193,8 +194,6 @@ export function useStockFundamental(
     fundamentalInput,
   };
 }
-
-export default useStockFundamental;
 
 // Re-export types for convenience
 export type { StockFundamentalData, StockSearchResult } from '@/services/stockApi';

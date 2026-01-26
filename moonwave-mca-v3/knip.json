@@ -1,0 +1,20 @@
+{
+  "$schema": "https://unpkg.com/knip@latest/schema.json",
+  "entry": [
+    "src/main.tsx",
+    "api/**/*.ts"
+  ],
+  "project": [
+    "src/**/*.{ts,tsx}",
+    "api/**/*.ts"
+  ],
+  "ignore": [
+    "src/test/**",
+    "**/*.test.ts",
+    "**/*.test.tsx"
+  ],
+  "ignoreDependencies": [
+    "prettier-plugin-tailwindcss",
+    "tailwindcss"
+  ]
+}

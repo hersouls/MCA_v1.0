@@ -4,11 +4,11 @@
 
 import * as Headless from '@headlessui/react';
 import { clsx } from 'clsx';
-import { forwardRef, type ReactNode } from 'react';
+import { type ReactNode, forwardRef } from 'react';
 import { Link, type LinkProps } from 'react-router-dom';
 
 // TouchTarget for better mobile accessibility
-export function TouchTarget({ children }: { children: ReactNode }) {
+function TouchTarget({ children }: { children: ReactNode }) {
   return (
     <>
       <span
@@ -38,7 +38,7 @@ const sizeStyles = {
   sm: 'px-2.5 py-1.5 text-sm/5 sm:text-sm/5',
   md: 'px-3 py-2 text-sm/6 sm:text-sm/6',
   lg: 'px-4 py-2.5 text-base/6 sm:text-base/6',
-  icon: 'p-2 sm:p-1.5 [&>[data-slot=icon]]:m-0',
+  icon: 'size-9 [&>[data-slot=icon]]:m-0 [&>[data-slot=icon]]:!size-5',
 };
 
 // Color variants (solid buttons)
@@ -163,6 +163,27 @@ const plainStyles = {
 type ButtonColor = 'primary' | 'secondary' | 'danger' | 'success' | 'warning';
 type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'icon';
 
+// Loading spinner component (extracted outside render to prevent recreation)
+function LoadingSpinner() {
+  return (
+    <svg
+      className="animate-spin size-4"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      data-slot="icon"
+      aria-hidden="true"
+    >
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+      />
+    </svg>
+  );
+}
+
 type BaseButtonProps = {
   color?: ButtonColor;
   size?: ButtonSize;
@@ -214,7 +235,7 @@ export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonPr
     ref
   ) {
     // Legacy variant mapping
-    const mappedColor = variant === 'ghost' ? 'secondary' : (variant || color || 'primary');
+    const mappedColor = variant === 'ghost' ? 'secondary' : variant || color || 'primary';
     const isPlain = plain || variant === 'ghost';
 
     const classes = clsx(
@@ -224,33 +245,11 @@ export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonPr
       className
     );
 
-    // Loading spinner
-    const LoadingSpinner = () => (
-      <svg
-        className="animate-spin size-4"
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        data-slot="icon"
-      >
-        <circle
-          className="opacity-25"
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          strokeWidth="4"
-        />
-        <path
-          className="opacity-75"
-          fill="currentColor"
-          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-        />
-      </svg>
-    );
-
     const content = isLoading ? (
-      <LoadingSpinner />
+      <>
+        <LoadingSpinner />
+        <span className="sr-only">로딩 중...</span>
+      </>
     ) : (
       <>
         <TouchTarget>
@@ -265,12 +264,7 @@ export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonPr
     if ('to' in props && props.to) {
       const { to, ...linkProps } = props as LinkProps & { disabled?: boolean };
       return (
-        <Link
-          to={to}
-          {...linkProps}
-          className={classes}
-          ref={ref as React.Ref<HTMLAnchorElement>}
-        >
+        <Link to={to} {...linkProps} className={classes} ref={ref as React.Ref<HTMLAnchorElement>}>
           {content}
         </Link>
       );
@@ -284,6 +278,8 @@ export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonPr
         className={classes}
         ref={ref as React.Ref<HTMLButtonElement>}
         disabled={isLoading || buttonProps.disabled}
+        aria-busy={isLoading || undefined}
+        aria-disabled={isLoading || buttonProps.disabled || undefined}
       >
         {content}
       </Headless.Button>
@@ -292,20 +288,22 @@ export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonPr
 );
 
 // Icon Button variant (button-only, no link support)
-type IconButtonProps = BaseButtonProps &
-  Omit<Headless.ButtonProps, 'as' | 'className'>;
+type IconButtonProps = BaseButtonProps & Omit<Headless.ButtonProps, 'as' | 'className'>;
 
-export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
-  function IconButton({ className, children, ...props }, ref) {
-    return (
-      <Button
-        ref={ref as React.Ref<HTMLButtonElement | HTMLAnchorElement>}
-        size="icon"
-        className={className}
-        {...props}
-      >
-        <span data-slot="icon" className="flex-shrink-0">{children}</span>
-      </Button>
-    );
-  }
-);
+export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
+  { className, children, ...props },
+  ref
+) {
+  return (
+    <Button
+      ref={ref as React.Ref<HTMLButtonElement | HTMLAnchorElement>}
+      size="icon"
+      className={className}
+      {...props}
+    >
+      <span data-slot="icon" className="flex-shrink-0">
+        {children}
+      </span>
+    </Button>
+  );
+});

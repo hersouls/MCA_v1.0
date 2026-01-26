@@ -2,9 +2,9 @@
 // IndexedDB Database Service (Dexie.js)
 // ============================================
 
-import Dexie, { type Table } from 'dexie';
-import type { Portfolio, Trade, Settings, HistoryEntry } from '@/types';
+import type { HistoryEntry, Portfolio, Settings, Trade } from '@/types';
 import { DB_NAME, DEFAULT_SETTINGS } from '@/utils/constants';
+import Dexie, { type Table } from 'dexie';
 
 class MCADatabase extends Dexie {
   portfolios!: Table<Portfolio, number>;
@@ -51,10 +51,7 @@ export async function addPortfolio(portfolio: Omit<Portfolio, 'id'>): Promise<nu
   return db.portfolios.add(portfolio as Portfolio);
 }
 
-export async function updatePortfolio(
-  id: number,
-  updates: Partial<Portfolio>
-): Promise<void> {
+export async function updatePortfolio(id: number, updates: Partial<Portfolio>): Promise<void> {
   await db.portfolios.update(id, {
     ...updates,
     updatedAt: new Date(),
@@ -74,10 +71,6 @@ export async function deletePortfolio(id: number): Promise<void> {
 
 export async function getTradesForPortfolio(portfolioId: number): Promise<Trade[]> {
   return db.trades.where('portfolioId').equals(portfolioId).toArray();
-}
-
-export async function addTrade(trade: Omit<Trade, 'id'>): Promise<number> {
-  return db.trades.add(trade as Trade);
 }
 
 export async function updateTrade(id: number, updates: Partial<Trade>): Promise<void> {
@@ -116,33 +109,6 @@ export async function upsertTrade(
   });
 }
 
-export async function bulkUpdateTrades(
-  portfolioId: number,
-  orderedSteps: number[],
-  executedSteps: number[]
-): Promise<void> {
-  await db.transaction('rw', db.trades, async () => {
-    // Delete existing trades for this portfolio
-    await db.trades.where('portfolioId').equals(portfolioId).delete();
-
-    // Add new trades
-    const trades: Omit<Trade, 'id'>[] = orderedSteps.map((step) => ({
-      portfolioId,
-      step,
-      status: executedSteps.includes(step) ? 'executed' : 'ordered',
-      orderedAt: new Date(),
-      executedAt: executedSteps.includes(step) ? new Date() : undefined,
-      price: 0,
-      quantity: 0,
-      amount: 0,
-    }));
-
-    if (trades.length > 0) {
-      await db.trades.bulkAdd(trades as Trade[]);
-    }
-  });
-}
-
 // ============================================
 // Settings Operations
 // ============================================
@@ -162,40 +128,8 @@ export async function updateSettings(updates: Partial<Settings>): Promise<void> 
 }
 
 // ============================================
-// History Operations (Undo/Redo)
-// ============================================
-
-export async function addHistoryEntry(entry: Omit<HistoryEntry, 'id'>): Promise<number> {
-  return db.history.add(entry as HistoryEntry);
-}
-
-export async function getRecentHistory(limit = 100): Promise<HistoryEntry[]> {
-  return db.history.orderBy('timestamp').reverse().limit(limit).toArray();
-}
-
-export async function clearOldHistory(keepCount = 100): Promise<void> {
-  const count = await db.history.count();
-  if (count > keepCount) {
-    const toDelete = await db.history
-      .orderBy('timestamp')
-      .limit(count - keepCount)
-      .toArray();
-    await db.history.bulkDelete(toDelete.map((h) => h.id!));
-  }
-}
-
-// ============================================
 // Database Utilities
 // ============================================
-
-export async function clearAllData(): Promise<void> {
-  await db.transaction('rw', [db.portfolios, db.trades, db.settings, db.history], async () => {
-    await db.portfolios.clear();
-    await db.trades.clear();
-    await db.settings.clear();
-    await db.history.clear();
-  });
-}
 
 export async function exportAllData(): Promise<{
   portfolios: Portfolio[];

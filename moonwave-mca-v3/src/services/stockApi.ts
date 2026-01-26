@@ -32,8 +32,8 @@ export interface StockSearchResponse {
 
 // API Base URL (development vs production)
 const API_BASE_URL = import.meta.env.PROD
-  ? '/api'  // Vercel production
-  : import.meta.env.VITE_API_BASE_URL || '/api';  // Development proxy or local
+  ? '/api' // Vercel production
+  : import.meta.env.VITE_API_BASE_URL || '/api'; // Development proxy or local
 
 // localStorage 캐시 키
 const CACHE_PREFIX = 'mca_stock_';
@@ -81,9 +81,7 @@ export function clearStockCache(ticker?: string): void {
     localStorage.removeItem(CACHE_PREFIX + ticker);
   } else {
     // 모든 주식 캐시 삭제
-    const keys = Object.keys(localStorage).filter((k) =>
-      k.startsWith(CACHE_PREFIX)
-    );
+    const keys = Object.keys(localStorage).filter((k) => k.startsWith(CACHE_PREFIX));
     keys.forEach((k) => localStorage.removeItem(k));
   }
 }
@@ -128,10 +126,7 @@ export async function fetchStockFundamental(
  * @param query 검색어 (종목명 또는 종목코드)
  * @param limit 최대 결과 수 (기본값: 10)
  */
-export async function searchStocks(
-  query: string,
-  limit = 10
-): Promise<StockSearchResult[]> {
+export async function searchStocks(query: string, limit = 10): Promise<StockSearchResult[]> {
   if (!query || query.length < 1) {
     return [];
   }

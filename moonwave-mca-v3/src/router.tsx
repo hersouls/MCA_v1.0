@@ -1,10 +1,11 @@
 // ============================================
 // Router Configuration
 // ============================================
+/* eslint-disable react-refresh/only-export-components */
 
-import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
-import { lazy, Suspense } from 'react';
 import { LoadingState } from '@/components/layout';
+import { Suspense, lazy } from 'react';
+import { Navigate, RouterProvider, createBrowserRouter } from 'react-router-dom';
 
 // Lazy load pages for code splitting
 const Dashboard = lazy(() =>

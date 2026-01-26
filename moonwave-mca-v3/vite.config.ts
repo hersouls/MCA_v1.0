@@ -17,8 +17,22 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
+          // React core
+          'react-vendor': ['react', 'react-dom'],
+          // Router
+          'router': ['react-router-dom'],
+          // Chart (lazy loaded when needed)
           'chart': ['chart.js', 'react-chartjs-2', 'chartjs-plugin-datalabels'],
-          'ui': ['@headlessui/react', 'lucide-react'],
+          // Animation
+          'motion': ['framer-motion'],
+          // UI libraries (separated)
+          'headless': ['@headlessui/react'],
+          'icons': ['lucide-react'],
+          'aria': ['react-aria-components'],
+          // Database
+          'db': ['dexie'],
+          // State management
+          'state': ['zustand'],
         },
       },
     },

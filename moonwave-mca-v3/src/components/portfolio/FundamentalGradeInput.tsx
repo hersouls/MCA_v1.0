@@ -1,525 +1,508 @@
-// ============================================
-// Fundamental Grade Input Component
-// 100점 만점 펀더멘털 점수 입력 UI
-// ============================================
-
-import { useState, useMemo, useCallback, useEffect } from 'react';
-import { Clipboard, Calculator, Info, AlertCircle, CheckCircle } from 'lucide-react';
-import type { FundamentalInput, FundamentalResult, GrowthPotential, ManagementQuality, ClipboardParseResult, StockFundamentalData } from '@/types';
-import { calculateFundamentalScore, getGradeColor, getGradeDescription } from '@/services/fundamentalGrade';
-import { useClipboard, useDropParse } from '@/hooks';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { FUNDAMENTAL_GRADE_CONFIG } from '@/utils/constants';
-import { TEXTS } from '@/utils/texts';
+import { Card } from '@/components/ui/Card';
+import { Input, Label, Textarea } from '@/components/ui/Input';
+import { ButtonSelect as Select } from '@/components/ui/Select';
+import { useToast } from '@/components/ui/Toast';
+import { useClipboard } from '@/hooks/useClipboard';
+import { gemDataToFundamentalInput, parseGeminiGemJson } from '@/services/clipboard';
+import { calculateFundamentalScore, getGradeBadgeClass, getGradeCardClass } from '@/services/fundamentalGrade';
+import type {
+  FundamentalInput,
+  FundamentalResult,
+  FutureInvestment,
+  GlobalScalability,
+  GovernanceRisk,
+  MarketDominance,
+  TotalShareholderReturn
+} from '@/types';
+import { cn } from '@/utils/cn';
+import {
+  ArrowDown,
+  ChevronDown,
+  ChevronUp,
+  ClipboardPaste,
+  DollarSign,
+  Gift,
+  RotateCcw,
+  Sparkles,
+  TrendingUp
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface FundamentalGradeInputProps {
   initialData?: FundamentalInput;
-  stockData?: StockFundamentalData | null;
-  onChange?: (data: FundamentalInput, result: FundamentalResult) => void;
-  onSave?: (data: FundamentalInput, result: FundamentalResult, ticker?: string) => void;
-  compact?: boolean;
+  stockData?: { per: number | null; pbr: number | null; dividendYield: number | null } | null;
+  onSave: (data: FundamentalInput, result: FundamentalResult, ticker?: string) => void;
+  onCancel?: () => void;
 }
 
 const DEFAULT_INPUT: FundamentalInput = {
+  // Valuation
   per: null,
   pbr: null,
-  earningsSustainability: false,
-  isDualListed: false,
+  isDualListed: false, // false=단독(5점), true=중복(0점)으로 처리 (단순화)
+
+  // Growth
+  globalScalability: null,
+  marketDominance: null,
+  futureInvestment: null,
+
+  // Shareholder
   dividendYield: null,
-  hasQuarterlyDividend: false,
-  consecutiveDividendYears: 0,
-  hasBuybackProgram: false,
-  annualCancellationRate: 0,
-  treasuryStockRatio: 0,
-  growthPotential: 'normal',
-  managementQuality: 'professional',
-  hasGlobalBrand: false,
+  totalShareholderReturn: null,
+  governanceRisk: null,
 };
+
+const GEM_JSON_PLACEHOLDER = `{
+  "stockName": "LG씨엔에스",
+  "stockCode": "064400",
+  "per": 17.3,
+  "pbr": 3.16,
+  "governanceStructure": "partial",
+  "globalRevenueType": "expanding",
+  "marketDominance": "oligopoly",
+  "rdCapexEfficiency": "high",
+  "tsrPolicy": "dividend_only",
+  "governanceRisk": "moderate",
+  "totalScore": 65,
+  "grade": "B"
+}`;
+
+/**
+ * 데이터가 입력되지 않은 초기 상태인지 확인
+ */
+function isEmptyData(input: FundamentalInput): boolean {
+  return (
+    input.globalScalability === null &&
+    input.marketDominance === null &&
+    input.futureInvestment === null &&
+    input.totalShareholderReturn === null &&
+    input.governanceRisk === null
+  );
+}
 
 export function FundamentalGradeInput({
   initialData,
   stockData,
-  onChange,
   onSave,
-  compact = false,
+  onCancel,
 }: FundamentalGradeInputProps) {
   const [data, setData] = useState<FundamentalInput>(initialData || DEFAULT_INPUT);
-  const [showToast, setShowToast] = useState<string | null>(null);
-  const [modifiedFields, setModifiedFields] = useState<Set<string>>(new Set());
-  const [isManuallyModified, setIsManuallyModified] = useState(false);
+  const [result, setResult] = useState<FundamentalResult | null>(null);
+  const [ticker, setTicker] = useState<string | undefined>();
+  const [stockName, setStockName] = useState<string | undefined>();
 
-  // 클립보드 훅
-  const { parseClipboard, isParsing, error: clipboardError } = useClipboard();
+  // Import State
+  const [jsonInput, setJsonInput] = useState('');
+  const [isManualOpen, setIsManualOpen] = useState(false);
 
-  // stockData prop이 변경되면 폼에 자동 적용
+  const { parseGemJson, isParsing } = useClipboard();
+  const toast = useToast();
+
+  // 데이터가 비어있는지 확인
+  const isEmpty = isEmptyData(data);
+
+  // stockData로 PER, PBR, 배당수익률 자동 채우기
   useEffect(() => {
-    if (stockData) {
+    if (stockData && !initialData) {
       setData((prev) => ({
         ...prev,
         per: stockData.per ?? prev.per,
         pbr: stockData.pbr ?? prev.pbr,
         dividendYield: stockData.dividendYield ?? prev.dividendYield,
       }));
-      setModifiedFields(new Set()); // 자동 적용 시 수정 플래그 초기화
-      setIsManuallyModified(false);
-      setShowToast(`${stockData.name} (${stockData.ticker}) 데이터 적용됨`);
-      setTimeout(() => setShowToast(null), 3000);
     }
-  }, [stockData]);
+  }, [stockData, initialData]);
 
-  // 파싱된 데이터 적용 (useDropParse보다 먼저 선언해야 함)
-  const applyParsedData = useCallback((parseResult: ClipboardParseResult) => {
-    if (!parseResult.success || !parseResult.data) return;
+  // 실시간 계산
+  useEffect(() => {
+    const calcResult = calculateFundamentalScore(data);
+    setResult(calcResult);
+  }, [data]);
 
-    const { per, pbr, dividendYield, treasuryStockRatio } = parseResult.data;
-
-    setData((prev) => ({
-      ...prev,
-      ...(per !== undefined && { per }),
-      ...(pbr !== undefined && { pbr }),
-      ...(dividendYield !== undefined && { dividendYield }),
-      ...(treasuryStockRatio !== undefined && { treasuryStockRatio }),
-    }));
-
-    const appliedCount = [per, pbr, dividendYield, treasuryStockRatio].filter(
-      (v) => v !== undefined
-    ).length;
-    setShowToast(`${parseResult.source || '데이터'}에서 ${appliedCount}개 항목 적용됨`);
-    setTimeout(() => setShowToast(null), 3000);
-  }, []);
-
-  // 드래그 앤 드롭 훅
-  const { isDragging, dragHandlers } = useDropParse((parseResult) => {
-    applyParsedData(parseResult);
-  });
-
-  // 결과 계산 (useMemo로 파생 상태 처리 - setState 대신)
-  const result = useMemo(() => calculateFundamentalScore(data), [data]);
-
-  // 클립보드 붙여넣기
-  const handlePaste = async () => {
-    const result = await parseClipboard();
-    if (result) {
-      applyParsedData(result);
-    }
+  const handleChange = (field: keyof FundamentalInput, value: any) => {
+    setData((prev) => ({ ...prev, [field]: value }));
   };
 
-  // 값 변경 핸들러 - onChange 콜백도 여기서 호출
-  const handleChange = <K extends keyof FundamentalInput>(key: K, value: FundamentalInput[K]) => {
-    const newData = { ...data, [key]: value };
-    setData(newData);
-
-    // API에서 가져온 필드를 수동으로 수정한 경우 추적
-    if (stockData && ['per', 'pbr', 'dividendYield'].includes(key as string)) {
-      setModifiedFields((prev) => new Set(prev).add(key as string));
-      setIsManuallyModified(true);
-    }
-
-    // 변경 시 부모에게 알림
-    if (onChange) {
-      const newResult = calculateFundamentalScore(newData);
-      onChange(newData, newResult);
-    }
-  };
-
-  // 저장 핸들러
-  const handleSave = () => {
-    if (result) {
-      onSave?.(data, result, stockData?.ticker);
-    }
-  };
-
-  // 초기화
   const handleReset = () => {
-    setData(DEFAULT_INPUT);
+    if (confirm('모든 입력값을 초기화하시겠습니까?')) {
+      setData(DEFAULT_INPUT);
+      setTicker(undefined);
+      setStockName(undefined);
+      setJsonInput('');
+    }
+  };
+
+  /**
+   * Gemini Gem 클립보드 붙여넣기
+   */
+  const handleClipboardPaste = async () => {
+    const gemResult = await parseGemJson();
+
+    if (!gemResult) {
+      toast.error('클립보드를 읽을 수 없습니다.');
+      return;
+    }
+
+    if (!gemResult.success || !gemResult.data) {
+      toast.error(gemResult.error || 'Gem JSON 파싱 실패');
+      return;
+    }
+
+    applyGemData(gemResult.data, gemResult.rawValues);
+  };
+
+  /**
+   * 수동 JSON 텍스트 파싱 및 적용
+   */
+  const handleManualApply = () => {
+    if (!jsonInput.trim()) {
+      toast.error('JSON 데이터를 입력해주세요.');
+      return;
+    }
+
+    const gemResult = parseGeminiGemJson(jsonInput);
+
+    if (!gemResult.success || !gemResult.data) {
+      toast.error(gemResult.error || '유효하지 않은 Gem JSON 형식입니다.');
+      return;
+    }
+
+    applyGemData(gemResult.data, gemResult.rawValues);
+  };
+
+  /**
+   * 공통 데이터 적용 로직
+   */
+  const applyGemData = (gemData: any, rawValues: any) => {
+    // 종목 불일치 체크
+    if (ticker && rawValues?.stockCode && ticker !== rawValues.stockCode) {
+      toast.error(
+        `종목 불일치: 현재 ${stockName || ticker}, 붙여넣은 데이터는 ${rawValues.stockName || rawValues.stockCode}입니다.`
+      );
+      return;
+    }
+
+    // GeminiGemData → FundamentalInput 변환
+    const fundamentalInput = gemDataToFundamentalInput(gemData, rawValues);
+    setData(fundamentalInput);
+
+    // 종목코드/종목명 저장
+    if (rawValues?.stockCode) {
+      setTicker(rawValues.stockCode);
+    }
+    if (rawValues?.stockName) {
+      setStockName(rawValues.stockName);
+    }
+
+    toast.success(
+      rawValues?.stockName
+        ? `${rawValues.stockName} 데이터가 적용되었습니다.`
+        : 'Gem 데이터가 적용되었습니다.'
+    );
   };
 
   return (
-    <div
-      className={`relative rounded-lg border ${isDragging ? 'border-primary-500 bg-primary-500/5' : 'border-zinc-200 dark:border-zinc-700'} ${compact ? 'p-3' : 'p-4'}`}
-      {...dragHandlers}
-    >
-      {/* 드래그 오버레이 */}
-      {isDragging && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-primary-500/10">
-          <div className="text-center">
-            <Clipboard className="mx-auto h-8 w-8 text-primary-500" />
-            <p className="mt-2 text-sm text-primary-600 dark:text-primary-400">여기에 데이터 놓기</p>
-          </div>
-        </div>
-      )}
-
-      {/* 헤더 */}
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Calculator className="h-5 w-5 text-primary-500" />
-          <h3 className="font-semibold text-zinc-900 dark:text-white">Fundamental Grade</h3>
-          {isManuallyModified && (
-            <span className="rounded-full bg-warning-100 px-2 py-0.5 text-xs font-medium text-warning-700 dark:bg-warning-900/30 dark:text-warning-400">
-              수정됨
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            color="secondary"
-            size="sm"
-            onClick={handlePaste}
-            disabled={isParsing}
-            className="gap-1.5"
-          >
-            <Clipboard className="h-4 w-4" />
-            {isParsing ? '분석 중...' : '붙여넣기'}
-          </Button>
-        </div>
-      </div>
-
-      {/* 종목 정보 표시 */}
-      {stockData && (
-        <div className="mb-4 flex items-center justify-between rounded-lg bg-primary-50 p-3 dark:bg-primary-900/20">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-primary-700 dark:text-primary-300">
-              {stockData.name}
-            </span>
-            <span className="rounded bg-primary-100 px-1.5 py-0.5 text-xs text-primary-600 dark:bg-primary-800/50 dark:text-primary-400">
-              {stockData.ticker}
-            </span>
-            <span className="text-xs text-primary-500">{stockData.market}</span>
-          </div>
-          <span className="text-xs text-primary-500 dark:text-primary-400">
-            {new Date(stockData.fetchedAt).toLocaleDateString('ko-KR')} 기준
-          </span>
-        </div>
-      )}
-
-      {/* 토스트 메시지 */}
-      {showToast && (
-        <div className="mb-3 flex items-center gap-2 rounded-md bg-success-100 px-3 py-2 text-sm text-success-700 dark:bg-success-900/30 dark:text-success-400">
-          <CheckCircle className="h-4 w-4" />
-          {showToast}
-        </div>
-      )}
-
-      {/* 클립보드 에러 */}
-      {clipboardError && (
-        <div className="mb-3 flex items-center gap-2 rounded-md bg-danger-100 px-3 py-2 text-sm text-danger-700 dark:bg-danger-900/30 dark:text-danger-400">
-          <AlertCircle className="h-4 w-4" />
-          {clipboardError}
-        </div>
-      )}
-
-      {/* 결과 표시 */}
-      {result && (
-        <div className="mb-4 rounded-lg bg-zinc-50 p-3 dark:bg-zinc-800/50">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-sm text-zinc-500 dark:text-zinc-400">총점</span>
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold" style={{ color: getGradeColor(result.grade) }}>
-                  {result.totalScore}
-                </span>
-                <span className="text-sm text-zinc-500">/100</span>
+    <div className="space-y-[26px]">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-10 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-lg border-b border-zinc-200 dark:border-zinc-800 -mx-4 -mt-4 px-4 pt-4 pb-[6px] md:mx-0 md:mt-0 md:px-0">
+        {isEmpty ? (
+          <Card className="pt-4 px-4 pb-[6px] border-2 border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900/50">
+            <div className="flex items-center gap-4">
+              <div className="w-[68px] h-[68px] text-2xl shadow-lg flex items-center justify-center font-black rounded-2xl bg-zinc-200 dark:bg-zinc-700 text-zinc-400 dark:text-zinc-500">
+                ?
+              </div>
+              <div>
+                <div className="text-xl font-bold text-zinc-400 dark:text-zinc-500">
+                  미등록
+                </div>
+                <div className="text-sm text-zinc-500 dark:text-zinc-400 mt-[6px]">
+                  Fundamental Grade가 등록되지 않았습니다
+                </div>
               </div>
             </div>
-            <div className="text-right">
-              <span
-                className="text-4xl font-bold"
-                style={{ color: getGradeColor(result.grade) }}
-              >
-                {result.grade}
-              </span>
-              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                {getGradeDescription(result.grade)}
+            <div className="mt-[10px] pt-[10px] border-t border-zinc-200 dark:border-zinc-700">
+              <div className="flex items-start gap-[6px]">
+                <Sparkles className="h-4 w-4 text-indigo-500 mt-0.5 flex-shrink-0" />
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  아래 <span className="font-semibold text-indigo-600 dark:text-indigo-400">Gemini Gem Analysis</span>를 통해 종목을 분석하고 결과를 붙여넣어 주세요.
+                </p>
+              </div>
+            </div>
+          </Card>
+        ) : result && (
+          <Card className={cn("pt-4 px-4 pb-[6px] border-2 transition-all", getGradeCardClass(result.grade))}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className={cn("grade-badge w-[68px] h-[68px] text-3xl shadow-lg flex items-center justify-center font-black rounded-2xl", getGradeBadgeClass(result.grade))}>
+                  {result.grade}
+                </div>
+                <div>
+                  <div className="text-3xl font-bold font-mono">
+                    {result.totalScore}
+                    <span className="text-lg text-muted-foreground font-normal">/100</span>
+                  </div>
+                  <div className="flex gap-[6px] mt-[6px] text-xs text-zinc-500 dark:text-zinc-400">
+                    <span>Val {result.categoryScores.valuation}</span>
+                    <span>|</span>
+                    <span>Growth {result.categoryScores.growthMoat}</span>
+                    <span>|</span>
+                    <span>Return {result.categoryScores.shareholderReturn}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="mt-[10px] pt-[10px] border-t border-zinc-200 dark:border-zinc-700">
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {result.actionGuideline}
               </p>
             </div>
-          </div>
+          </Card>
+        )}
+      </div>
 
-          {/* 점수 분포 바 */}
-          <div className="mt-3 space-y-1.5">
-            <ScoreBar label={TEXTS.FUNDAMENTAL.CATEGORY_VALUATION} score={result.categoryScores.valuation} max={FUNDAMENTAL_GRADE_CONFIG.CATEGORY_MAX.VALUATION} color="#00A86B" />
-            <ScoreBar label={TEXTS.FUNDAMENTAL.CATEGORY_SHAREHOLDER} score={result.categoryScores.shareholderReturn} max={FUNDAMENTAL_GRADE_CONFIG.CATEGORY_MAX.SHAREHOLDER_RETURN} color="#22c55e" />
-            <ScoreBar label={TEXTS.FUNDAMENTAL.CATEGORY_GROWTH} score={result.categoryScores.growthManagement} max={FUNDAMENTAL_GRADE_CONFIG.CATEGORY_MAX.GROWTH_MANAGEMENT} color="#f59e0b" />
+      {/* Gemini Analysis Section (Always Visible, No Toggle) */}
+      <Card className="border-indigo-100 dark:border-indigo-900/50 bg-indigo-50/50 dark:bg-indigo-950/10">
+        <div className="p-4 flex items-center justify-between border-b border-indigo-100 dark:border-indigo-900/30">
+          <div className="flex items-center gap-[6px]">
+            <Sparkles className="h-4 w-4 text-indigo-500" />
+            <span className="font-semibold text-indigo-700 dark:text-indigo-300">Gemini Gem Analysis</span>
           </div>
         </div>
-      )}
 
-      {/* 입력 폼 */}
-      <div className={`space-y-4 ${compact ? 'text-sm' : ''}`}>
-        {/* Category I: 가치평가 */}
-        <CategorySection title={`I. 가치평가 (${FUNDAMENTAL_GRADE_CONFIG.CATEGORY_MAX.VALUATION}${TEXTS.UNITS.POINTS})`} color="#00A86B">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <InputField
-              label="PER"
-              type="number"
-              value={data.per ?? ''}
-              onChange={(v) => handleChange('per', v ? parseFloat(v) : null)}
-              placeholder="예: 8.5"
-              hint="10 이하: 10점, 10-15: 5점"
-              modified={modifiedFields.has('per')}
-            />
-            <InputField
-              label="PBR"
-              type="number"
-              value={data.pbr ?? ''}
-              onChange={(v) => handleChange('pbr', v ? parseFloat(v) : null)}
-              placeholder="예: 0.8"
-              hint="1 이하: 10점, 1-2: 5점"
-              modified={modifiedFields.has('pbr')}
-            />
+        <div className="p-4 space-y-4 pt-4">
+          <div className="flex flex-col sm:flex-row gap-[10px]">
+            <Button
+              variant="secondary"
+              className="flex-1 gap-[6px] border-indigo-200 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-300 dark:hover:bg-indigo-900/30 ring-1 ring-inset ring-indigo-200 dark:ring-indigo-800"
+              onClick={() => window.open('https://gemini.google.com/gem/1hVQdXM7dV3BdGILb2-UKvdKlncTTaNop?usp=sharing', '_blank')}
+            >
+              <Sparkles className="h-4 w-4" />
+              Gemini Gem 열기
+            </Button>
+            <Button
+              variant="secondary"
+              className="flex-1 gap-[6px]"
+              onClick={handleClipboardPaste}
+              disabled={isParsing}
+            >
+              <ClipboardPaste className="h-4 w-4" />
+              {isParsing ? '파싱 중...' : 'Gem 결과 클립보드 붙여넣기'}
+            </Button>
           </div>
-          <CheckboxField
-            label="이익 지속 가능성 (3년 연속 흑자)"
-            checked={data.earningsSustainability}
-            onChange={(v) => handleChange('earningsSustainability', v)}
-          />
-          <CheckboxField
-            label="이중상장 여부 (해외 상장)"
-            checked={data.isDualListed}
-            onChange={(v) => handleChange('isDualListed', v)}
-          />
-        </CategorySection>
 
-        {/* Category II: 주주환원 */}
-        <CategorySection title={`II. 주주환원 (${FUNDAMENTAL_GRADE_CONFIG.CATEGORY_MAX.SHAREHOLDER_RETURN}${TEXTS.UNITS.POINTS})`} color="#22c55e">
-          <InputField
-            label="배당수익률 (%)"
-            type="number"
-            value={data.dividendYield ?? ''}
-            onChange={(v) => handleChange('dividendYield', v ? parseFloat(v) : null)}
-            placeholder="예: 3.5"
-            hint="3% 이상: 10점, 1-3%: 5점"
-            modified={modifiedFields.has('dividendYield')}
-          />
-          <CheckboxField
-            label="분기 배당 시행"
-            checked={data.hasQuarterlyDividend}
-            onChange={(v) => handleChange('hasQuarterlyDividend', v)}
-          />
-          <InputField
-            label="연속 배당 년수"
-            type="number"
-            value={data.consecutiveDividendYears}
-            onChange={(v) => handleChange('consecutiveDividendYears', parseInt(v) || 0)}
-            placeholder="예: 10"
-            hint="5년 이상: 5점"
-          />
-          <CheckboxField
-            label="자사주 매입 프로그램"
-            checked={data.hasBuybackProgram}
-            onChange={(v) => handleChange('hasBuybackProgram', v)}
-          />
-          <InputField
-            label="연간 자사주 소각률 (%)"
-            type="number"
-            value={data.annualCancellationRate}
-            onChange={(v) => handleChange('annualCancellationRate', parseFloat(v) || 0)}
-            placeholder="예: 1.5"
-            hint="1% 이상: 5점"
-          />
-          <InputField
-            label="자사주 비율 (%)"
-            type="number"
-            value={data.treasuryStockRatio}
-            onChange={(v) => handleChange('treasuryStockRatio', parseFloat(v) || 0)}
-            placeholder="예: 10"
-            hint="5% 이상: 5점"
-          />
-        </CategorySection>
+          <div className="relative">
+            <div className="flex items-baseline justify-between mb-[6px]">
+              <Label className="text-xs text-muted-foreground">Gem JSON 결과 붙여넣기</Label>
+              <span className="text-xs text-muted-foreground">Gemini 결과를 붙여넣고 적용</span>
+            </div>
+            <Textarea
+              value={jsonInput}
+              onChange={(val) => setJsonInput(val)}
+              placeholder={GEM_JSON_PLACEHOLDER}
+              className="min-h-[136px] font-mono text-xs bg-white dark:bg-zinc-950 resize-y"
+            />
+            <div className="flex justify-end mt-[10px]">
+              <Button
+                onClick={handleManualApply}
+                className="gap-[6px] shadow-lg py-[6px] px-[16px] h-auto font-bold"
+              >
+                <ArrowDown className="h-[10px] w-[10px]" />
+                적용하기
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Card>
 
-        {/* Category III: 성장/경영 */}
-        <CategorySection title={`III. 성장/경영 (${FUNDAMENTAL_GRADE_CONFIG.CATEGORY_MAX.GROWTH_MANAGEMENT}${TEXTS.UNITS.POINTS})`} color="#f59e0b">
-          <SelectField
-            label={TEXTS.FUNDAMENTAL.GROWTH_POTENTIAL}
-            value={data.growthPotential}
-            onChange={(v) => handleChange('growthPotential', v as GrowthPotential)}
-            options={[
-              { value: 'very_high', label: `${TEXTS.FUNDAMENTAL.GROWTH_VERY_HIGH} (${FUNDAMENTAL_GRADE_CONFIG.GROWTH_SCORES.very_high}${TEXTS.UNITS.POINTS})` },
-              { value: 'high', label: `${TEXTS.FUNDAMENTAL.GROWTH_HIGH} (${FUNDAMENTAL_GRADE_CONFIG.GROWTH_SCORES.high}${TEXTS.UNITS.POINTS})` },
-              { value: 'normal', label: `${TEXTS.FUNDAMENTAL.GROWTH_NORMAL} (${FUNDAMENTAL_GRADE_CONFIG.GROWTH_SCORES.normal}${TEXTS.UNITS.POINTS})` },
-              { value: 'low', label: `${TEXTS.FUNDAMENTAL.GROWTH_LOW} (${FUNDAMENTAL_GRADE_CONFIG.GROWTH_SCORES.low}${TEXTS.UNITS.POINTS})` },
-            ]}
-          />
-          <SelectField
-            label={TEXTS.FUNDAMENTAL.MANAGEMENT_QUALITY}
-            value={data.managementQuality}
-            onChange={(v) => handleChange('managementQuality', v as ManagementQuality)}
-            options={[
-              { value: 'excellent', label: `${TEXTS.FUNDAMENTAL.MGMT_EXCELLENT} (${FUNDAMENTAL_GRADE_CONFIG.MANAGEMENT_SCORES.excellent}${TEXTS.UNITS.POINTS})` },
-              { value: 'professional', label: `${TEXTS.FUNDAMENTAL.MGMT_PROFESSIONAL} (${FUNDAMENTAL_GRADE_CONFIG.MANAGEMENT_SCORES.professional}${TEXTS.UNITS.POINTS})` },
-              { value: 'owner_risk', label: `${TEXTS.FUNDAMENTAL.MGMT_OWNER_RISK} (${FUNDAMENTAL_GRADE_CONFIG.MANAGEMENT_SCORES.owner_risk}${TEXTS.UNITS.POINTS})` },
-            ]}
-          />
-          <CheckboxField
-            label="글로벌 브랜드 보유"
-            checked={data.hasGlobalBrand}
-            onChange={(v) => handleChange('hasGlobalBrand', v)}
-          />
-        </CategorySection>
+      {/* Manual Input Section (Collapsible) */}
+      <div className="space-y-4">
+        <button
+          type="button"
+          onClick={() => setIsManualOpen(!isManualOpen)}
+          className="flex items-center justify-between w-full p-[6px] hover:bg-zinc-100 dark:hover:bg-zinc-800/50 rounded-[10px] transition-colors group"
+        >
+          <div className="flex items-center gap-[6px]">
+            <div className="p-1 rounded bg-zinc-200 dark:bg-zinc-700 group-hover:bg-zinc-300 dark:group-hover:bg-zinc-600 transition-colors">
+              {isManualOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </div>
+            <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+              상세 평가 항목 (Manual Adjustments)
+            </span>
+          </div>
+          <div className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800 ml-4" />
+        </button>
+
+        {isManualOpen && (
+          <div className="grid gap-[26px] md:grid-cols-2 lg:grid-cols-3 animate-in fade-in slide-in-from-top-4 duration-300">
+            {/* Category 1: Valuation (35pts) */}
+            <Card padding="md" className="space-y-4">
+              <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-700 pb-[6px]">
+                <div className="flex items-center gap-[6px]">
+                  <div className="p-1.5 rounded-[10px] bg-zinc-100 dark:bg-zinc-800">
+                    <DollarSign className="h-4 w-4 text-zinc-600 dark:text-zinc-400" />
+                  </div>
+                  <h4 className="font-semibold text-zinc-900 dark:text-zinc-100">1. Valuation</h4>
+                </div>
+                <span className="font-mono text-sm text-zinc-500">{result?.categoryScores.valuation}/35</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <Label>PER (주가수익비율)</Label>
+                  <Input
+                    type="number"
+                    placeholder="예: 12.5"
+                    value={data.per ?? ''}
+                    onChange={(value) => handleChange('per', value ? Number(value) : null)}
+                  />
+                  <p className="text-xs text-muted-foreground">10미만(15), 20미만(12), 30미만(8)</p>
+                </div>
+                <div className="space-y-1">
+                  <Label>PBR (주가순자산비율)</Label>
+                  <Input
+                    type="number"
+                    placeholder="예: 1.2"
+                    value={data.pbr ?? ''}
+                    onChange={(value) => handleChange('pbr', value ? Number(value) : null)}
+                  />
+                  <p className="text-xs text-muted-foreground">0.8미만(15), 1.5미만(12), 2.5미만(8)</p>
+                </div>
+              </div>
+
+              <div className="space-y-2 pt-[6px]">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="dual-list">지배구조/중복상장 이슈</Label>
+                  <div className="flex items-center gap-[6px]">
+                    <input
+                      id="dual-list"
+                      type="checkbox"
+                      className="toggle toggle-sm toggle-error"
+                      checked={data.isDualListed}
+                      onChange={(e) => handleChange('isDualListed', e.target.checked)}
+                    />
+                    <span className="text-xs">{data.isDualListed ? '이슈 있음 (0점)' : '양호 (5점)'}</span>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">핵심 자회사 중복 상장 또는 지주사 할인 대상인 경우 체크</p>
+              </div>
+            </Card>
+
+            {/* Category 2: Growth & Moat (40pts) */}
+            <Card padding="md" className="space-y-4">
+              <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-700 pb-[6px]">
+                <div className="flex items-center gap-[6px]">
+                  <div className="p-1.5 rounded-[10px] bg-zinc-100 dark:bg-zinc-800">
+                    <TrendingUp className="h-4 w-4 text-zinc-600 dark:text-zinc-400" />
+                  </div>
+                  <h4 className="font-semibold text-zinc-900 dark:text-zinc-100">2. Growth</h4>
+                </div>
+                <span className="font-mono text-sm text-zinc-500">{result?.categoryScores.growthMoat}/40</span>
+              </div>
+
+              <Select
+                label="글로벌 확장성 (Scalability)"
+                value={data.globalScalability}
+                onChange={(val) => handleChange('globalScalability', val as GlobalScalability)}
+                options={[
+                  { value: 'high_growth', label: '글로벌 High Growth / Tech (20점)' },
+                  { value: 'expanding', label: '글로벌 확장 진행 중 (12점)' },
+                  { value: 'domestic_regulated', label: '내수 중심 / 규제 산업 (5점)' },
+                ]}
+              />
+
+              <Select
+                label="시장 지배력 (Moat)"
+                value={data.marketDominance}
+                onChange={(val) => handleChange('marketDominance', val as MarketDominance)}
+                options={[
+                  { value: 'monopoly_top', label: '독점적 1위 / Global Top Tier (10점)' },
+                  { value: 'oligopoly_top3', label: '과점 시장 내 Top 3 (7점)' },
+                  { value: 'competitive', label: '경쟁 심화 / 변별력 낮음 (3점)' },
+                ]}
+              />
+
+              <Select
+                label="미래 투자 효율 (CAPEX/R&D)"
+                value={data.futureInvestment}
+                onChange={(val) => handleChange('futureInvestment', val as FutureInvestment)}
+                options={[
+                  { value: 'high', label: '성장 위한 적극적 재투자 (10점)' },
+                  { value: 'maintain', label: '현상 유지 수준 (5점)' },
+                  { value: 'decreasing', label: '투자 감소 / 정체 (0점)' },
+                ]}
+              />
+            </Card>
+
+            {/* Category 3: Shareholder Return (25pts) */}
+            <Card padding="md" className="space-y-4 md:col-span-2 lg:col-span-1">
+              <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-700 pb-[6px]">
+                <div className="flex items-center gap-[6px]">
+                  <div className="p-1.5 rounded-[10px] bg-zinc-100 dark:bg-zinc-800">
+                    <Gift className="h-4 w-4 text-zinc-600 dark:text-zinc-400" />
+                  </div>
+                  <h4 className="font-semibold text-zinc-900 dark:text-zinc-100">3. Return</h4>
+                </div>
+                <span className="font-mono text-sm text-zinc-500">{result?.categoryScores.shareholderReturn}/25</span>
+              </div>
+
+              <div className="space-y-1">
+                <Label>참고: 배당수익률 (%)</Label>
+                <Input
+                  type="number"
+                  placeholder="직관적 참고용"
+                  value={data.dividendYield ?? ''}
+                  onChange={(value) => handleChange('dividendYield', value ? Number(value) : null)}
+                />
+              </div>
+
+              <Select
+                label="총주주환원 (TSR Policy)"
+                value={data.totalShareholderReturn}
+                onChange={(val) => handleChange('totalShareholderReturn', val as TotalShareholderReturn)}
+                options={[
+                  { value: 'active_growth', label: '적극적 소각 + 배당 성장 (15점)' },
+                  { value: 'high_yield', label: '단순 고배당 유지 / 성장 정체 (10점)' },
+                  { value: 'minimum', label: '법적/최소 배당 (5점)' },
+                  { value: 'none', label: '주주환원 미흡 (0점)' },
+                ]}
+              />
+
+              <Select
+                label="거버넌스 리스크 (Governance)"
+                value={data.governanceRisk}
+                onChange={(val) => handleChange('governanceRisk', val as GovernanceRisk)}
+                options={[
+                  { value: 'clean', label: 'Clean / 소각 원칙 (10점)' },
+                  { value: 'shareholder_friendly', label: '주주친화적 행보 (7점)' },
+                  { value: 'defense_doubt', label: '단순 자사주 보유 / 방어 목적 (3점)' },
+                ]}
+              />
+            </Card>
+          </div>
+        )}
       </div>
 
-      {/* 액션 버튼 */}
-      <div className="mt-4 flex justify-end gap-2">
-        <Button plain color="secondary" size="sm" onClick={handleReset}>
+      {/* Footer Actions */}
+      <div className="flex items-center justify-between pt-4 border-t">
+        <Button variant="ghost" type="button" onClick={handleReset} className="text-muted-foreground">
+          <RotateCcw className="mr-2 h-4 w-4" />
           초기화
         </Button>
-        {onSave && (
-          <Button size="sm" onClick={handleSave}>
+        <div className="flex gap-[6px]">
+          {onCancel && (
+            <Button variant="secondary" type="button" onClick={onCancel}>취소</Button>
+          )}
+          <Button
+            type="button"
+            onClick={() => result && onSave(data, result, ticker)}
+            disabled={!result || isEmpty}
+            className="px-8 font-bold"
+          >
             저장
           </Button>
-        )}
+        </div>
       </div>
     </div>
   );
 }
-
-// ============================================
-// Sub-components
-// ============================================
-
-function CategorySection({
-  title,
-  color,
-  children,
-}: {
-  title: string;
-  color: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-3">
-      <h4 className="flex items-center gap-2 text-sm font-medium">
-        <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
-        {title}
-      </h4>
-      <div className="space-y-2 pl-4">{children}</div>
-    </div>
-  );
-}
-
-function ScoreBar({
-  label,
-  score,
-  max,
-  color,
-}: {
-  label: string;
-  score: number;
-  max: number;
-  color: string;
-}) {
-  const percentage = (score / max) * 100;
-
-  return (
-    <div className="flex items-center gap-2">
-      <span className="w-28 text-xs text-zinc-500 dark:text-zinc-400">{label}</span>
-      <div className="h-2 flex-1 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700">
-        <div
-          className="h-full rounded-full transition-all"
-          style={{ width: `${percentage}%`, backgroundColor: color }}
-        />
-      </div>
-      <span className="w-12 text-right text-xs font-medium">
-        {score}/{max}
-      </span>
-    </div>
-  );
-}
-
-function InputField({
-  label,
-  type = 'text',
-  value,
-  onChange,
-  placeholder,
-  hint,
-  modified,
-}: {
-  label: string;
-  type?: string;
-  value: string | number;
-  onChange: (value: string) => void;
-  placeholder?: string;
-  hint?: string;
-  modified?: boolean;
-}) {
-  return (
-    <div className="space-y-1">
-      <label className="flex items-center justify-between">
-        <span className="flex items-center gap-1.5 text-sm text-zinc-700 dark:text-zinc-300">
-          {label}
-          {modified && (
-            <span className="rounded bg-warning-100 px-1 py-0.5 text-[10px] font-medium text-warning-600 dark:bg-warning-900/30 dark:text-warning-400">
-              수정됨
-            </span>
-          )}
-        </span>
-        {hint && (
-          <span className="text-xs text-zinc-400" title={hint}>
-            <Info className="h-3.5 w-3.5" />
-          </span>
-        )}
-      </label>
-      <Input
-        type={type}
-        value={value}
-        onChange={(val) => onChange(String(val))}
-        placeholder={placeholder}
-        className="h-8 text-sm"
-      />
-    </div>
-  );
-}
-
-function CheckboxField({
-  label,
-  checked,
-  onChange,
-}: {
-  label: string;
-  checked: boolean;
-  onChange: (value: boolean) => void;
-}) {
-  return (
-    <label className="flex cursor-pointer items-center gap-2">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-        className="h-4 w-4 rounded border-zinc-300 text-primary-500 focus:ring-primary-500 dark:border-zinc-600"
-      />
-      <span className="text-sm text-zinc-700 dark:text-zinc-300">{label}</span>
-    </label>
-  );
-}
-
-function SelectField({
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  options: { value: string; label: string }[];
-}) {
-  return (
-    <div className="space-y-1">
-      <label className="text-sm text-zinc-700 dark:text-zinc-300">{label}</label>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="h-8 w-full rounded-md border border-zinc-300 bg-white px-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-zinc-600 dark:bg-zinc-800"
-      >
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-}
-
-export default FundamentalGradeInput;

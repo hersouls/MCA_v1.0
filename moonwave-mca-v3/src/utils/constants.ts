@@ -2,9 +2,13 @@
 // Application Constants
 // ============================================
 
-// App Info
-export const APP_NAME = 'Moonwave MCA';
-export const APP_VERSION = '3.0.0';
+// Backup Configuration
+export const BACKUP_CONFIG = {
+  CURRENT_VERSION: '3.0.0',
+  SUPPORTED_VERSIONS: ['3.0.0', '3.0'],
+  APP_NAME: 'Moonwave MCA',
+  FILE_PREFIX: 'MCA_Backup',
+} as const;
 
 // Storage Keys
 export const STORAGE_KEYS = {
@@ -22,108 +26,115 @@ export const STORAGE_KEYS = {
 
 // Database
 export const DB_NAME = 'MoonwaveMCA_v3';
-export const DB_VERSION = 2;
 
 // Default Values
 export const DEFAULT_PORTFOLIO_PARAMS = {
   peakPrice: 100000,
   strength: 1.0,
-  startDrop: 10,
+  startDrop: 12,
   steps: 20,
   targetBudget: 10000000,
   legacyQty: 0,
   legacyAvg: 0,
 } as const;
 
+export const DEFAULT_NOTIFICATION_PREFERENCES = {
+  gapWarning: true,
+  backupReminder: true,
+  gradeChange: true,
+};
+
+// Color Palette Definitions (Light Mode Only)
+export interface PaletteDefinition {
+  id: string;
+  name: string;
+  nameKo: string;
+  colors: {
+    primary: string;
+    secondary: string;
+  };
+}
+
+export const COLOR_PALETTES: Record<string, PaletteDefinition> = {
+  default: {
+    id: 'default',
+    name: 'Mint',
+    nameKo: '민트',
+    colors: {
+      primary: '#2EFFB4',
+      secondary: '#00A86B',
+    },
+  },
+  ocean: {
+    id: 'ocean',
+    name: 'Ocean',
+    nameKo: '오션',
+    colors: {
+      primary: '#3B82F6',
+      secondary: '#1D4ED8',
+    },
+  },
+  rose: {
+    id: 'rose',
+    name: 'Rose',
+    nameKo: '로즈',
+    colors: {
+      primary: '#F472B6',
+      secondary: '#DB2777',
+    },
+  },
+  purple: {
+    id: 'purple',
+    name: 'Purple',
+    nameKo: '퍼플',
+    colors: {
+      primary: '#A78BFA',
+      secondary: '#7C3AED',
+    },
+  },
+  forest: {
+    id: 'forest',
+    name: 'Forest',
+    nameKo: '포레스트',
+    colors: {
+      primary: '#34D399',
+      secondary: '#059669',
+    },
+  },
+};
+
 export const DEFAULT_SETTINGS = {
   id: 'main',
   theme: 'system' as const,
+  colorPalette: 'default' as const,
   initialCash: 0,
   notificationsEnabled: false,
+  notificationPreferences: DEFAULT_NOTIFICATION_PREFERENCES,
+  isMusicPlayerEnabled: false,
 };
 
 // Chart Colors - Trendy & Sophisticated (Neon Mint / Jade Green)
 export const CHART_COLORS = {
   light: {
-    primary: '#00A86B',    // Jade Green (차트 가시성)
+    primary: '#00A86B', // Jade Green (차트 가시성)
     success: '#22c55e',
     warning: '#f59e0b',
     danger: '#ef4444',
-    text: '#030303',       // Near Black
-    grid: '#dbd9d4',       // Off White border
+    text: '#030303', // Near Black
+    grid: '#dbd9d4', // Off White border
   },
   dark: {
-    primary: '#2EFFB4',    // Neon Mint (다크 대비)
+    primary: '#2EFFB4', // Neon Mint (다크 대비)
     success: '#4ade80',
     warning: '#fbbf24',
     danger: '#f87171',
-    text: '#EDECE8',       // Off White
+    text: '#EDECE8', // Off White
     grid: '#262626',
-  },
-} as const;
-
-// Status Colors
-export const STATUS_COLORS = {
-  executed: {
-    bg: 'bg-success-500',
-    text: 'text-success-foreground',
-    border: 'border-success-500',
-  },
-  ordered: {
-    bg: 'bg-warning-500',
-    text: 'text-warning-foreground',
-    border: 'border-warning-500',
-  },
-  pending: {
-    bg: 'bg-zinc-200 dark:bg-zinc-700',
-    text: 'text-zinc-600 dark:text-zinc-400',
-    border: 'border-zinc-300 dark:border-zinc-600',
-  },
-} as const;
-
-// Portfolio Status Colors
-// Icons: Use Lucide icon names (CheckCircle2, AlertTriangle, Circle)
-export const PORTFOLIO_STATUS_COLORS = {
-  normal: {
-    badge: 'bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400',
-    border: 'border-success-200 dark:border-success-800',
-    iconName: 'CheckCircle2' as const,
-    iconColor: 'text-success-500',
-    label: '정상 운용',
-  },
-  'gap-warning': {
-    badge: 'bg-danger-100 text-danger-700 dark:bg-danger-900/30 dark:text-danger-400',
-    border: 'border-danger-200 dark:border-danger-800',
-    iconName: 'AlertTriangle' as const,
-    iconColor: 'text-danger-500',
-    label: '추가 주문 필요',
-  },
-  'no-orders': {
-    badge: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400',
-    border: 'border-zinc-200 dark:border-zinc-700',
-    iconName: 'Circle' as const,
-    iconColor: 'text-zinc-400',
-    label: '주문 없음',
   },
 } as const;
 
 // Gap Threshold
 export const GAP_WARNING_THRESHOLD = 3;
-
-// Max History Entries (for Undo/Redo)
-export const MAX_HISTORY_ENTRIES = 100;
-
-// Keyboard Shortcuts
-export const KEYBOARD_SHORTCUTS = {
-  NEW_PORTFOLIO: { key: 'n', modifiers: ['ctrl'] },
-  SAVE: { key: 's', modifiers: ['ctrl'] },
-  EXPORT: { key: 'e', modifiers: ['ctrl'] },
-  UNDO: { key: 'z', modifiers: ['ctrl'] },
-  REDO: { key: 'z', modifiers: ['ctrl', 'shift'] },
-  DASHBOARD: { key: 'd', modifiers: ['ctrl'] },
-  SEARCH: { key: '/', modifiers: [] },
-  CLOSE: { key: 'Escape', modifiers: [] },
-} as const;
 
 // Chart Configuration
 export const CHART_CONFIG = {
@@ -214,26 +225,52 @@ export const FUNDAMENTAL_GRADE_CONFIG = {
   TOTAL_MAX: 100,
 } as const;
 
-// Golden Ratio Design Constants (φ = 1.618)
-export const GOLDEN_RATIO = 1.618;
+// ============================================
+// UI Design Tokens
+// ============================================
 
-export const GOLDEN_LAYOUT = {
-  MAIN: 61.8,
-  SIDE: 38.2,
+/** Tailwind breakpoint values (px) */
+export const BREAKPOINTS = {
+  xs: 0,
+  sm: 640,
+  md: 768,
+  lg: 1024,
+  xl: 1280,
+  '2xl': 1536,
 } as const;
 
-export const GOLDEN_TYPOGRAPHY = {
-  BASE: 16,    // 16px - base
-  LG: 26,      // 26px - 16 × 1.618
-  XL: 42,      // 42px - 26 × 1.618
-  XXL: 68,     // 68px - 42 × 1.618
-  SCALE: 1.618,
-} as const;
+export type Breakpoint = keyof typeof BREAKPOINTS;
 
-export const GOLDEN_SPACING = {
-  XS: 6,       // ~6px - base / φ²
-  SM: 10,      // ~10px - base / φ
-  MD: 16,      // 16px - base
-  LG: 26,      // ~26px - base × φ
-  XL: 42,      // ~42px - base × φ²
+/** Form state CSS variable references */
+export const FORM_STATE_TOKENS = {
+  default: {
+    border: 'var(--border)',
+    background: 'transparent',
+    text: 'var(--foreground)',
+    ring: 'var(--ring)',
+  },
+  success: {
+    border: 'var(--input-success-border)',
+    background: 'var(--input-success-bg)',
+    text: 'var(--input-success-text)',
+    ring: 'var(--input-success-ring)',
+  },
+  warning: {
+    border: 'var(--input-warning-border)',
+    background: 'var(--input-warning-bg)',
+    text: 'var(--input-warning-text)',
+    ring: 'var(--input-warning-ring)',
+  },
+  error: {
+    border: 'var(--input-error-border)',
+    background: 'var(--input-error-bg)',
+    text: 'var(--input-error-text)',
+    ring: 'var(--input-error-ring)',
+  },
+  disabled: {
+    border: 'var(--input-disabled-border)',
+    background: 'var(--input-disabled-bg)',
+    text: 'var(--input-disabled-text)',
+    ring: 'var(--ring)',
+  },
 } as const;

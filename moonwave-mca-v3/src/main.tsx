@@ -1,14 +1,15 @@
 // ============================================
 // Application Entry Point
 // ============================================
+/* eslint-disable react-refresh/only-export-components */
 
 import { StrictMode } from 'react';
+import { Suspense, lazy } from 'react';
 import { createRoot } from 'react-dom/client';
-import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
-import { lazy, Suspense } from 'react';
+import { Navigate, RouterProvider, createBrowserRouter } from 'react-router-dom';
 
-import { App } from './App';
 import { LoadingState } from '@/components/layout';
+import { App } from './App';
 import './index.css';
 
 // Lazy load pages for code splitting
@@ -87,19 +88,67 @@ const router = createBrowserRouter(
   }
 );
 
-// Register Service Worker for PWA
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/sw.js')
-      .then((registration) => {
-        console.log('SW registered:', registration);
-      })
-      .catch((error) => {
-        console.log('SW registration failed:', error);
-      });
-  });
+// Service Worker handling
+if ('serviceWorker' in navigator) {
+  if (import.meta.env.PROD) {
+    // Production: Register SW with update detection
+    window.addEventListener('load', async () => {
+      try {
+        const registration = await navigator.serviceWorker.register('/sw.js');
+
+        // Check for updates periodically (every 60 minutes)
+        setInterval(() => registration.update(), 60 * 60 * 1000);
+
+        // Handle SW updates
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          if (!newWorker) return;
+
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              // New version available - show update prompt
+              if (window.confirm('새 버전이 있습니다. 업데이트하시겠습니까?')) {
+                newWorker.postMessage('skipWaiting');
+                window.location.reload();
+              }
+            }
+          });
+        });
+      } catch (error) {
+        console.error('SW registration failed:', error);
+      }
+    });
+  } else {
+    // Development: Unregister all SWs to avoid cache issues
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      registrations.forEach((registration) => registration.unregister());
+    });
+  }
 }
+
+// PWA Install Prompt handling
+let deferredPrompt: BeforeInstallPromptEvent | null = null;
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e as BeforeInstallPromptEvent;
+  // Dispatch custom event for UI components to listen
+  window.dispatchEvent(new CustomEvent('pwaInstallAvailable'));
+});
+
+// Export install function for UI components
+(window as Window & { installPWA?: () => Promise<boolean> }).installPWA = async () => {
+  if (!deferredPrompt) return false;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  return outcome === 'accepted';
+};
 
 // Render app
 const rootElement = document.getElementById('root');

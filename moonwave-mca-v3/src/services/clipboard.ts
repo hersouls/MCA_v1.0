@@ -3,14 +3,23 @@
 // 스마트 클립보드 파싱 및 자동 데이터 추출
 // ============================================
 
-import type { ParsedFinancialData, ClipboardParseResult } from '@/types';
+import type {
+  ClipboardParseResult,
+  FutureInvestment,
+  GeminiGemData,
+  GlobalScalability,
+  GovernanceRisk,
+  MarketDominance,
+  ParsedFinancialData,
+  TotalShareholderReturn,
+} from '@/types';
 
 /**
  * 숫자 문자열 파싱 (쉼표, 공백 제거)
  */
 function parseNumber(str: string): number | undefined {
   const cleaned = str.replace(/[,\s원주배%]/g, '').trim();
-  const num = parseFloat(cleaned);
+  const num = Number.parseFloat(cleaned);
   return isNaN(num) ? undefined : num;
 }
 
@@ -64,11 +73,7 @@ function parseNaverFinance(text: string): ParsedFinancialData {
   }
 
   // 현재가 파싱
-  const pricePatterns = [
-    /현재가[:\s]*([0-9,]+)/,
-    /종가[:\s]*([0-9,]+)/,
-    /Price[:\s]*([0-9,]+)/i,
-  ];
+  const pricePatterns = [/현재가[:\s]*([0-9,]+)/, /종가[:\s]*([0-9,]+)/, /Price[:\s]*([0-9,]+)/i];
   for (const pattern of pricePatterns) {
     const match = text.match(pattern);
     if (match) {
@@ -78,10 +83,7 @@ function parseNaverFinance(text: string): ParsedFinancialData {
   }
 
   // 시가총액 파싱
-  const capPatterns = [
-    /시가총액[:\s]*([0-9,]+)\s*(억|조)?/,
-    /Market\s*Cap[:\s]*([0-9,]+)/i,
-  ];
+  const capPatterns = [/시가총액[:\s]*([0-9,]+)\s*(억|조)?/, /Market\s*Cap[:\s]*([0-9,]+)/i];
   for (const pattern of capPatterns) {
     const match = text.match(pattern);
     if (match) {
@@ -304,110 +306,265 @@ export async function readClipboard(): Promise<string | null> {
   }
 }
 
+// ============================================
+// Gemini Gem JSON Parsing
+// ============================================
+
 /**
- * 클립보드에 텍스트 쓰기
+ * GlobalScalability 값 검증
  */
-export async function writeClipboard(text: string): Promise<boolean> {
+function validateGlobalScalability(value: unknown): GlobalScalability {
+  const validValues: GlobalScalability[] = ['high_growth', 'expanding', 'domestic_regulated'];
+  if (typeof value === 'string' && validValues.includes(value as GlobalScalability)) {
+    return value as GlobalScalability;
+  }
+  return 'domestic_regulated';
+}
+
+/**
+ * MarketDominance 값 검증
+ */
+function validateMarketDominance(value: unknown): MarketDominance {
+  const validValues: MarketDominance[] = ['monopoly_top', 'oligopoly_top3', 'competitive'];
+  if (typeof value === 'string' && validValues.includes(value as MarketDominance)) {
+    return value as MarketDominance;
+  }
+  return 'competitive';
+}
+
+/**
+ * FutureInvestment 값 검증
+ */
+function validateFutureInvestment(value: unknown): FutureInvestment {
+  const validValues: FutureInvestment[] = ['high', 'maintain', 'decreasing'];
+  if (typeof value === 'string' && validValues.includes(value as FutureInvestment)) {
+    return value as FutureInvestment;
+  }
+  return 'maintain';
+}
+
+/**
+ * GovernanceRisk 값 검증
+ */
+function validateGovernanceRisk(value: unknown): GovernanceRisk {
+  const validValues: GovernanceRisk[] = ['clean', 'shareholder_friendly', 'defense_doubt'];
+  if (typeof value === 'string' && validValues.includes(value as GovernanceRisk)) {
+    return value as GovernanceRisk;
+  }
+  return 'defense_doubt';
+}
+
+/**
+ * Gemini Gem JSON 파싱 결과
+ */
+export interface GemRawValues {
+  per?: number;
+  pbr?: number;
+  stockCode?: string;
+  stockName?: string;
+  tsrPolicy?: string;
+}
+
+export interface GemParseResult {
+  success: boolean;
+  data?: GeminiGemData;
+  rawValues?: GemRawValues;
+  error?: string;
+}
+
+/**
+ * globalRevenueType → GlobalScalability 변환
+ */
+function mapGlobalRevenueType(value: string): GlobalScalability {
+  const mapping: Record<string, GlobalScalability> = {
+    high_growth: 'high_growth',
+    expanding: 'expanding',
+    domestic: 'domestic_regulated',
+    regulated: 'domestic_regulated',
+  };
+  return mapping[value] || 'domestic_regulated';
+}
+
+/**
+ * marketDominance 문자열 → MarketDominance 변환
+ */
+function mapMarketDominanceStr(value: string): MarketDominance {
+  const mapping: Record<string, MarketDominance> = {
+    monopoly: 'monopoly_top',
+    monopoly_top: 'monopoly_top',
+    oligopoly: 'oligopoly_top3',
+    oligopoly_top3: 'oligopoly_top3',
+    competitive: 'competitive',
+  };
+  return mapping[value] || 'competitive';
+}
+
+/**
+ * rdCapexEfficiency → FutureInvestment 변환
+ */
+function mapRdCapexEfficiency(value: string): FutureInvestment {
+  const mapping: Record<string, FutureInvestment> = {
+    high: 'high',
+    maintain: 'maintain',
+    moderate: 'maintain',
+    decreasing: 'decreasing',
+    low: 'decreasing',
+  };
+  return mapping[value] || 'maintain';
+}
+
+/**
+ * governanceRisk 문자열 → GovernanceRisk 변환
+ */
+function mapGovernanceRiskStr(value: string): GovernanceRisk {
+  const mapping: Record<string, GovernanceRisk> = {
+    clean: 'clean',
+    low: 'clean',
+    friendly: 'shareholder_friendly',
+    shareholder_friendly: 'shareholder_friendly',
+    moderate: 'defense_doubt',
+    defense_doubt: 'defense_doubt',
+    high: 'defense_doubt',
+  };
+  return mapping[value] || 'defense_doubt';
+}
+
+/**
+ * tsrPolicy → TotalShareholderReturn 변환
+ */
+function mapTsrPolicy(value: string): TotalShareholderReturn {
+  const mapping: Record<string, TotalShareholderReturn> = {
+    active_growth: 'active_growth',
+    buyback_dividend: 'active_growth',
+    high_yield: 'high_yield',
+    dividend_only: 'high_yield',
+    minimum: 'minimum',
+    none: 'none',
+  };
+  return mapping[value] || 'none';
+}
+
+/**
+ * Gemini Gem JSON 파싱 함수
+ *
+ * Supports two formats:
+ *
+ * Format 1 (Legacy):
+ * {
+ *   "earningsSustainability": true,
+ *   "isDualListed": false,
+ *   "globalScalability": "expanding",
+ *   ...
+ * }
+ *
+ * Format 2 (New Gem):
+ * {
+ *   "stockName": "LG씨엔에스",
+ *   "stockCode": "064400",
+ *   "per": 17.3,
+ *   "pbr": 3.16,
+ *   "governanceStructure": "partial",
+ *   "globalRevenueType": "expanding",
+ *   "marketDominance": "oligopoly",
+ *   "rdCapexEfficiency": "high",
+ *   "tsrPolicy": "dividend_only",
+ *   "governanceRisk": "moderate",
+ *   "totalScore": 65,
+ *   "grade": "B"
+ * }
+ */
+export function parseGeminiGemJson(text: string): GemParseResult {
   try {
-    if (!navigator.clipboard) {
-      // Fallback: execCommand
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      textarea.style.position = 'fixed';
-      textarea.style.opacity = '0';
-      document.body.appendChild(textarea);
-      textarea.select();
-      const success = document.execCommand('copy');
-      document.body.removeChild(textarea);
-      return success;
+    // JSON 코드 블록 추출 (마크다운 코드 블록 처리)
+    let jsonText = text.trim();
+
+    // ```json ... ``` 형식 처리
+    const codeBlockMatch = jsonText.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (codeBlockMatch) {
+      jsonText = codeBlockMatch[1].trim();
     }
 
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch (error) {
-    console.error('Failed to write to clipboard:', error);
-    return false;
+    const json = JSON.parse(jsonText);
+
+    // Detect format: new format has stockCode or globalRevenueType
+    const isNewFormat = json.stockCode || json.globalRevenueType || json.rdCapexEfficiency;
+
+    // 데이터 검증 및 기본값 적용
+    const data: GeminiGemData = isNewFormat
+      ? {
+          // 가치평가 (new format)
+          earningsSustainability: true, // 기본값 (new format에서 미제공)
+          isDualListed: json.governanceStructure === 'partial' || json.governanceStructure === 'complex',
+
+          // 주주환원 (new format에서 미제공, 기본값 설정)
+          hasQuarterlyDividend: false,
+          consecutiveDividendYears: 0,
+          hasBuybackProgram: json.tsrPolicy === 'buyback_dividend' || json.tsrPolicy === 'active_growth',
+          annualCancellationRate: 0,
+          treasuryStockRatio: 0,
+
+          // 성장/경영 (new format 매핑)
+          globalScalability: mapGlobalRevenueType(json.globalRevenueType || ''),
+          marketDominance: mapMarketDominanceStr(json.marketDominance || ''),
+          futureInvestment: mapRdCapexEfficiency(json.rdCapexEfficiency || ''),
+          governanceRisk: mapGovernanceRiskStr(json.governanceRisk || ''),
+        }
+      : {
+          // Legacy format
+          earningsSustainability: Boolean(json.earningsSustainability),
+          isDualListed: Boolean(json.isDualListed),
+
+          hasQuarterlyDividend: Boolean(json.hasQuarterlyDividend),
+          consecutiveDividendYears: Math.max(0, Number(json.consecutiveDividendYears) || 0),
+          hasBuybackProgram: Boolean(json.hasBuybackProgram),
+          annualCancellationRate: Math.max(0, Number(json.annualCancellationRate) || 0),
+          treasuryStockRatio: Math.max(0, Number(json.treasuryStockRatio) || 0),
+
+          globalScalability: validateGlobalScalability(json.globalScalability),
+          marketDominance: validateMarketDominance(json.marketDominance),
+          futureInvestment: validateFutureInvestment(json.futureInvestment),
+          governanceRisk: validateGovernanceRisk(json.governanceRisk),
+        };
+
+    // Raw values from new format (per, pbr, stockCode, stockName, tsrPolicy)
+    const rawValues: GemRawValues | undefined = isNewFormat
+      ? {
+          per: typeof json.per === 'number' ? json.per : undefined,
+          pbr: typeof json.pbr === 'number' ? json.pbr : undefined,
+          stockCode: json.stockCode || undefined,
+          stockName: json.stockName || undefined,
+          tsrPolicy: json.tsrPolicy || undefined,
+        }
+      : undefined;
+
+    return { success: true, data, rawValues };
+  } catch (e) {
+    const errorMessage =
+      e instanceof SyntaxError
+        ? '유효한 JSON 형식이 아닙니다.'
+        : '데이터 파싱 중 오류가 발생했습니다.';
+    return { success: false, error: errorMessage };
   }
 }
 
 /**
- * 클립보드에서 데이터 파싱하여 반환
+ * GeminiGemData + rawValues → FundamentalInput 변환
  */
-export async function parseClipboardContent(): Promise<ClipboardParseResult | null> {
-  const text = await readClipboard();
-  if (!text) return null;
-  return parseClipboardData(text);
-}
-
-/**
- * 포트폴리오 데이터를 클립보드용 텍스트로 변환
- */
-export function formatPortfolioForClipboard(portfolio: {
-  name: string;
-  params: {
-    peakPrice: number;
-    strength: number;
-    startDrop: number;
-    steps: number;
-    targetBudget: number;
-  };
-}): string {
-  const lines = [
-    `[Moonwave MCA 포트폴리오]`,
-    `종목명: ${portfolio.name}`,
-    `고점가격: ${portfolio.params.peakPrice.toLocaleString()}원`,
-    `투자강도: ${portfolio.params.strength}`,
-    `시작하락률: -${portfolio.params.startDrop}%`,
-    `분할구간: ${portfolio.params.steps}구간`,
-    `목표예산: ${portfolio.params.targetBudget.toLocaleString()}원`,
-    ``,
-    `Generated by Moonwave MCA v3.0`,
-  ];
-
-  return lines.join('\n');
-}
-
-/**
- * Fundamental Grade 데이터를 클립보드용 텍스트로 변환
- */
-export function formatFundamentalForClipboard(data: {
-  name: string;
-  score: number;
-  grade: string;
-  per?: number | null;
-  pbr?: number | null;
-  dividendYield?: number | null;
-}): string {
-  const lines = [
-    `[Moonwave Fundamental Grade]`,
-    `종목명: ${data.name}`,
-    `총점: ${data.score}/100점`,
-    `Grade: ${data.grade}`,
-    ``,
-    `PER: ${data.per ?? 'N/A'}배`,
-    `PBR: ${data.pbr ?? 'N/A'}배`,
-    `배당수익률: ${data.dividendYield ?? 'N/A'}%`,
-    ``,
-    `Generated by Moonwave MCA v3.0`,
-  ];
-
-  return lines.join('\n');
-}
-
-/**
- * 붙여넣기 이벤트 핸들러 생성
- */
-export function createPasteHandler(
-  onParsed: (result: ClipboardParseResult) => void
-): (e: ClipboardEvent) => void {
-  return (e: ClipboardEvent) => {
-    const text = e.clipboardData?.getData('text/plain');
-    if (text) {
-      const result = parseClipboardData(text);
-      if (result.success) {
-        e.preventDefault(); // 기본 붙여넣기 방지
-        onParsed(result);
-      }
-    }
+export function gemDataToFundamentalInput(
+  gemData: GeminiGemData,
+  rawValues?: GemRawValues
+): import('@/types').FundamentalInput {
+  return {
+    per: rawValues?.per ?? null,
+    pbr: rawValues?.pbr ?? null,
+    isDualListed: gemData.isDualListed,
+    globalScalability: gemData.globalScalability,
+    marketDominance: gemData.marketDominance,
+    futureInvestment: gemData.futureInvestment,
+    dividendYield: null,
+    totalShareholderReturn: rawValues?.tsrPolicy
+      ? mapTsrPolicy(rawValues.tsrPolicy)
+      : 'none',
+    governanceRisk: gemData.governanceRisk,
   };
 }

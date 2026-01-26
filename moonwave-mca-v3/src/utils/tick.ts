@@ -6,7 +6,7 @@
  * Get the tick size (호가 단위) based on price
  * Korean stock market tick rules
  */
-export function getTickSize(price: number): number {
+function getTickSize(price: number): number {
   if (price < 2_000) return 1;
   if (price < 5_000) return 5;
   if (price < 20_000) return 10;
@@ -19,17 +19,9 @@ export function getTickSize(price: number): number {
 /**
  * Round price to nearest tick
  */
-export function roundToTick(price: number): number {
+function roundToTick(price: number): number {
   const tick = getTickSize(price);
   return Math.floor(price / tick) * tick;
-}
-
-/**
- * Round price up to nearest tick
- */
-export function ceilToTick(price: number): number {
-  const tick = getTickSize(price);
-  return Math.ceil(price / tick) * tick;
 }
 
 /**

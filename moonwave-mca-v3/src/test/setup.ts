@@ -38,4 +38,5 @@ class IntersectionObserverMock {
   disconnect() {}
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 window.IntersectionObserver = IntersectionObserverMock as any;

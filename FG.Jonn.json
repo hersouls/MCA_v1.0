@@ -1,0 +1,132 @@
+{
+  "title": "종목 선정 점수표 (Korea Tech-Value Mix 2026 Ver.)",
+  "source": "Moonyou",
+  "target_market": "South Korea (KOSPI/KOSDAQ)",
+  "version_note": "성장주(Tech) 우대 및 내수주(Telco) 상단 제한 버전",
+  "total_max_score": 100,
+  "categories": [
+    {
+      "category_name": "1. 밸류에이션 (Valuation)",
+      "max_score": 35,
+      "criteria": [
+        {
+          "name": "PER (주가수익비율)",
+          "description": "성장주 용인을 위해 평가 기준 대폭 완화",
+          "max_score": 15,
+          "scoring": [
+            { "condition": "< 10배", "score": 15 },
+            { "condition": "< 20배", "score": 12 },
+            { "condition": "< 30배", "score": 8 },
+            { "condition": "≥ 30배", "score": 4 }
+          ]
+        },
+        {
+          "name": "PBR (주가순자산비율)",
+          "description": "무형자산 비중이 높은 기술주 및 배터리주 고려",
+          "max_score": 15,
+          "scoring": [
+            { "condition": "< 0.8", "score": 15 },
+            { "condition": "< 1.5", "score": 12 },
+            { "condition": "< 2.5", "score": 8 },
+            { "condition": "≥ 2.5", "score": 4 }
+          ]
+        },
+        {
+          "name": "지배구조 및 중복 상장",
+          "description": "핵심 사업부 물적분할(쪼개기) 및 지주사 할인 여부",
+          "max_score": 5,
+          "scoring": [
+            { "condition": "중복 상장 없음 (단독 사업)", "score": 5 },
+            { "condition": "비핵심 자회사 일부 상장", "score": 3 },
+            { "condition": "핵심 자회사 중복 상장 (지주사)", "score": 0 }
+          ]
+        }
+      ]
+    },
+    {
+      "category_name": "2. 글로벌 경쟁력 및 성장성 (Growth & Moat)",
+      "max_score": 40,
+      "criteria": [
+        {
+          "name": "글로벌 매출 확장성 (핵심 변별력)",
+          "type": "정량/정성 복합",
+          "description": "내수 포화 산업(통신/금융 등)에 대한 구조적 페널티 적용",
+          "max_score": 20,
+          "scoring": [
+            { "condition": "글로벌 매출 비중 높음 & 고성장 (Tech, Battery, Ent)", "score": 20 },
+            { "condition": "내수 기반이나 글로벌 확장 진행 중 (Food, Cosmetic)", "score": 12 },
+            { "condition": "내수 90% 이상 & 규제 산업 (Telco, Utility, Finance)", "score": 5 }
+          ]
+        },
+        {
+          "name": "시장 지배력 (해자)",
+          "max_score": 10,
+          "scoring": [
+            { "condition": "압도적 1위 (국내 독점 or 글로벌 Top Tier)", "score": 10 },
+            { "condition": "과점 시장 내 경쟁 우위 (Top 3)", "score": 7 },
+            { "condition": "경쟁 치열", "score": 3 }
+          ]
+        },
+        {
+          "name": "미래 투자 효율성 (R&D/CAPEX)",
+          "description": "당장의 배당보다 미래 성장을 위한 재투자가 활발한가",
+          "max_score": 10,
+          "scoring": [
+            { "condition": "매출 대비 R&D/CAPEX 비중 높음 (성장 지향)", "score": 10 },
+            { "condition": "현상 유지 수준의 투자", "score": 5 },
+            { "condition": "투자 감소 및 정체", "score": 0 }
+          ]
+        }
+      ]
+    },
+    {
+      "category_name": "3. 주주환원 및 리스크 (Shareholder Return)",
+      "max_score": 25,
+      "criteria": [
+        {
+          "name": "총주주환원 의지 (TSR)",
+          "description": "단순 시가배당률이 아닌 자사주 소각 포함 환원 총액",
+          "max_score": 15,
+          "scoring": [
+            { "condition": "자사주 소각 + 배당 성장 (적극적 환원)", "score": 15 },
+            { "condition": "단순 고배당 유지 (성장 정체)", "score": 10 },
+            { "condition": "법적 의무 수준의 최소 배당", "score": 5 },
+            { "condition": "환원 미흡", "score": 0 }
+          ]
+        },
+        {
+          "name": "거버넌스 리스크 (자사주 오남용)",
+          "description": "미소각 자사주의 경영권 방어 악용 가능성 평가",
+          "max_score": 10,
+          "scoring": [
+            { "condition": "보유 자사주 1% 미만 or 전량 소각 원칙", "score": 10 },
+            { "condition": "보유 중이나 주주가치 제고 연동 (교환사채 등 활용 포함)", "score": 7 },
+            { "condition": "단순 대량 보유 (방어 목적 의심)", "score": 3 }
+          ]
+        }
+      ]
+    }
+  ],
+  "investment_grades": [
+    {
+      "score_range": "85점 초과",
+      "grade": "S",
+      "description": "Global Top Pick (성장성과 밸류에이션, 환원의 완벽한 조화)"
+    },
+    {
+      "score_range": "70점 ~ 85점",
+      "grade": "A",
+      "description": "매수 (글로벌 확장성이 뛰어난 성장 우량주)"
+    },
+    {
+      "score_range": "50점 ~ 70점",
+      "grade": "B",
+      "description": "보유/관망 (안정적이나 내수 한계가 있거나 환원이 부족함)"
+    },
+    {
+      "score_range": "50점 미만",
+      "grade": "C",
+      "description": "매수 추천하지 않음 (성장성도 없고 주주환원도 없음)"
+    }
+  ]
+}

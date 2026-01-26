@@ -3,16 +3,13 @@
 // Target price and profit simulation
 // ============================================
 
-import { useState, useMemo } from 'react';
-import { clsx } from 'clsx';
-import { TrendingUp, Calculator } from 'lucide-react';
 import { Card, NumericInput } from '@/components/ui';
+import { calculateAutoTargetPrice, calculateSimulation } from '@/services/calculation';
 import type { PortfolioParams } from '@/types';
-import {
-  calculateSimulation,
-  calculateAutoTargetPrice,
-} from '@/services/calculation';
-import { formatNumber, formatCurrency, formatKoreanUnit, formatPercent } from '@/utils/format';
+import { formatCurrency, formatKoreanUnit, formatNumber, formatPercent } from '@/utils/format';
+import { clsx } from 'clsx';
+import { Calculator, TrendingUp } from 'lucide-react';
+import { useMemo, useState } from 'react';
 
 interface ExitSimulatorProps {
   params: PortfolioParams;
@@ -43,7 +40,7 @@ export function ExitSimulator({
   );
 
   // Effective target price (manual overrides auto)
-  const effectiveTargetPrice = manualTargetPrice > 0 ? manualTargetPrice : (autoTargetPrice || 0);
+  const effectiveTargetPrice = manualTargetPrice > 0 ? manualTargetPrice : autoTargetPrice || 0;
 
   // Simulation result
   const simulation = useMemo(
@@ -61,9 +58,10 @@ export function ExitSimulator({
   };
 
   // Calculate potential from current average price
-  const potentialFromAvg = avgPrice > 0 && effectiveTargetPrice > 0
-    ? ((effectiveTargetPrice - avgPrice) / avgPrice) * 100
-    : 0;
+  const potentialFromAvg =
+    avgPrice > 0 && effectiveTargetPrice > 0
+      ? ((effectiveTargetPrice - avgPrice) / avgPrice) * 100
+      : 0;
 
   return (
     <Card padding="lg">
@@ -84,7 +82,7 @@ export function ExitSimulator({
             label="목표 배수"
             value={targetMultiple > 0 ? targetMultiple.toString() : ''}
             onChange={(value) => {
-              setTargetMultiple(parseFloat(String(value)) || 0);
+              setTargetMultiple(Number.parseFloat(String(value)) || 0);
             }}
             onBlur={handleUpdateParams}
             placeholder="2.5"
@@ -186,9 +184,7 @@ export function ExitSimulator({
               )}
             >
               <div className="flex items-center justify-between">
-                <span className="text-sm text-zinc-600 dark:text-zinc-400">
-                  예상 수익금
-                </span>
+                <span className="text-sm text-zinc-600 dark:text-zinc-400">예상 수익금</span>
                 <span
                   className={clsx(
                     'text-xl font-bold tabular-nums',

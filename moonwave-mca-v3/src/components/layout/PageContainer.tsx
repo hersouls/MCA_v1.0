@@ -2,8 +2,24 @@
 // Page Container Component
 // ============================================
 
-import { type ReactNode } from 'react';
+import { Tooltip, TooltipTriggerButton } from '@/components/ui';
 import { clsx } from 'clsx';
+import { motion } from 'framer-motion';
+import { HelpCircle } from 'lucide-react';
+import type { ReactNode } from 'react';
+
+// Page transition animation variants
+const pageVariants = {
+  initial: { opacity: 0, y: 8 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -8 },
+};
+
+const pageTransition = {
+  type: 'tween',
+  ease: 'easeOut',
+  duration: 0.2,
+} as const;
 
 interface PageContainerProps {
   children: ReactNode;
@@ -29,6 +45,7 @@ export function PageContainer({
 }: PageContainerProps) {
   return (
     <main
+      id="main-content"
       className={clsx(
         'flex-1 overflow-y-auto',
         padding && 'p-4 lg:p-6',
@@ -36,7 +53,16 @@ export function PageContainer({
         className
       )}
     >
-      <div className={clsx('mx-auto', maxWidthStyles[maxWidth])}>{children}</div>
+      <motion.div
+        className={clsx('mx-auto', maxWidthStyles[maxWidth])}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        variants={pageVariants}
+        transition={pageTransition}
+      >
+        {children}
+      </motion.div>
     </main>
   );
 }
@@ -55,13 +81,9 @@ export function PageHeader({ title, description, action, breadcrumb }: PageHeade
       {breadcrumb && <div className="mb-2">{breadcrumb}</div>}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-[1.625rem] font-bold text-zinc-900 dark:text-zinc-100">
-            {title}
-          </h1>
+          <h1 className="text-[1.625rem] font-bold text-zinc-900 dark:text-zinc-100">{title}</h1>
           {description && (
-            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-              {description}
-            </p>
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{description}</p>
           )}
         </div>
         {action && <div className="flex-shrink-0">{action}</div>}
@@ -75,32 +97,47 @@ interface SectionProps {
   children: ReactNode;
   title?: string;
   description?: string;
+  tooltip?: string;
   action?: ReactNode;
   className?: string;
   icon?: ReactNode;
 }
 
-export function Section({ children, title, description, action, className, icon }: SectionProps) {
+export function Section({ children, title, description, tooltip, action, className, icon }: SectionProps) {
   return (
-    <section className={clsx('mb-8', className)}>
+    <section
+      className={clsx('mb-8', className)}
+      aria-labelledby={title ? `section-${title.replace(/\s+/g, '-').toLowerCase()}` : undefined}
+    >
       {(title || action) && (
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             {icon && (
-              <span className="flex-shrink-0 text-zinc-500 dark:text-zinc-400">
+              <span className="flex-shrink-0 text-zinc-500 dark:text-zinc-400" aria-hidden="true">
                 {icon}
               </span>
             )}
             <div>
               {title && (
-                <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+                <h2
+                  id={`section-${title.replace(/\s+/g, '-').toLowerCase()}`}
+                  className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 inline-flex items-center gap-1"
+                >
                   {title}
+                  {tooltip && (
+                    <Tooltip content={tooltip} placement="top">
+                      <TooltipTriggerButton
+                        className="hover:bg-zinc-200 dark:hover:bg-zinc-700 p-0.5 -m-0.5 transition-colors"
+                        aria-label={`${title} 도움말`}
+                      >
+                        <HelpCircle className="w-4 h-4 text-zinc-400 dark:text-zinc-500" />
+                      </TooltipTriggerButton>
+                    </Tooltip>
+                  )}
                 </h2>
               )}
               {description && (
-                <p className="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">
-                  {description}
-                </p>
+                <p className="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">{description}</p>
               )}
             </div>
           </div>
@@ -134,11 +171,7 @@ const gapStyles = {
 };
 
 export function Grid({ children, cols = 3, gap = 'md', className }: GridProps) {
-  return (
-    <div className={clsx('grid', colStyles[cols], gapStyles[gap], className)}>
-      {children}
-    </div>
-  );
+  return <div className={clsx('grid', colStyles[cols], gapStyles[gap], className)}>{children}</div>;
 }
 
 // Empty State
@@ -151,19 +184,18 @@ interface EmptyStateProps {
 
 export function EmptyState({ icon, title, description, action }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
+    <div className="flex flex-col items-center justify-center py-12 text-center" role="status">
       {icon && (
-        <div className="mb-4 p-4 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500">
+        <div
+          className="mb-4 p-4 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500"
+          aria-hidden="true"
+        >
           {icon}
         </div>
       )}
-      <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-100">
-        {title}
-      </h3>
+      <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-100">{title}</h3>
       {description && (
-        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400 max-w-sm">
-          {description}
-        </p>
+        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400 max-w-sm">{description}</p>
       )}
       {action && <div className="mt-4">{action}</div>}
     </div>
@@ -177,27 +209,17 @@ interface LoadingStateProps {
 
 export function LoadingState({ message = '불러오는 중...' }: LoadingStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-12">
-      <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+    <div
+      className="flex flex-col items-center justify-center py-12"
+      role="status"
+      aria-live="polite"
+    >
+      <div
+        className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"
+        aria-hidden="true"
+      />
       <p className="mt-4 text-sm text-zinc-500 dark:text-zinc-400">{message}</p>
-    </div>
-  );
-}
-
-// Golden Ratio Split Layout (62:38)
-interface GoldenSplitProps {
-  children: [ReactNode, ReactNode];
-  /** Reverse the ratio (38:62 instead of 62:38) */
-  reversed?: boolean;
-  className?: string;
-}
-
-export function GoldenSplit({ children, reversed = false, className }: GoldenSplitProps) {
-  const [main, side] = reversed ? [children[1], children[0]] : children;
-  return (
-    <div className={clsx('flex flex-col lg:flex-row gap-6', className)}>
-      <div className="w-full lg:w-[61.8%]">{main}</div>
-      <div className="w-full lg:w-[38.2%]">{side}</div>
+      <span className="sr-only">{message}</span>
     </div>
   );
 }
@@ -209,20 +231,14 @@ interface ErrorStateProps {
   action?: ReactNode;
 }
 
-export function ErrorState({
-  title = '오류가 발생했습니다',
-  message,
-  action,
-}: ErrorStateProps) {
+export function ErrorState({ title = '오류가 발생했습니다', message, action }: ErrorStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
-      <div className="mb-4 p-4 rounded-full bg-danger-100 dark:bg-danger-900/30 text-danger-500">
-        <svg
-          className="w-8 h-8"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
+    <div className="flex flex-col items-center justify-center py-12 text-center" role="alert">
+      <div
+        className="mb-4 p-4 rounded-full bg-danger-100 dark:bg-danger-900/30 text-danger-500"
+        aria-hidden="true"
+      >
+        <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -231,13 +247,9 @@ export function ErrorState({
           />
         </svg>
       </div>
-      <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-100">
-        {title}
-      </h3>
+      <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-100">{title}</h3>
       {message && (
-        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400 max-w-sm">
-          {message}
-        </p>
+        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400 max-w-sm">{message}</p>
       )}
       {action && <div className="mt-4">{action}</div>}
     </div>

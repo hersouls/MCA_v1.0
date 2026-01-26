@@ -1,113 +1,131 @@
 // ============================================
-// Fundamental Grade Scoring Engine
+// Fundamental Grade Scoring Engine (Korea Tech-Value Mix 2026)
 // 100점 만점 펀더멘털 평가 시스템
 // ============================================
 
 import type {
+  FundamentalCategoryScores,
+  FundamentalGrade,
   FundamentalInput,
   FundamentalResult,
   FundamentalScores,
-  FundamentalCategoryScores,
-  FundamentalGrade,
-  FundamentalData,
+  GlobalScalability,
+  MarketDominance,
+  FutureInvestment,
+  TotalShareholderReturn,
+  GovernanceRisk
 } from '@/types';
-import { FUNDAMENTAL_GRADE_CONFIG } from '@/utils/constants';
 
-// Grade 설정 - centralized config 참조
-const GRADE_CONFIG = FUNDAMENTAL_GRADE_CONFIG.GRADES;
-
-const ACTION_GUIDELINES = {
-  A: 'Step 4(기술적 분석)로 무조건 진행. Zone 3/4 진입 시 MCA/DCA 가동. 포트폴리오 핵심 종목으로 편입(10-20%).',
-  B: 'Step 4 진행. 멀티플 1.2 이하 시 적극 고려. 포트폴리오 편입 권장(5-10%).',
-  C: 'Step 4 진행 가능. 멀티플 1.0 이하 + Zone 3 한정 + 소량 매수. 기존 보유자 홀딩 가능.',
-  D: '[경고] 어떤 조건에서도 매수 불가. 기존 보유 시 매도 또는 교체 권고. 차트가 아무리 좋아도 매수 금지.',
+// Grade 설정 - centralized config 참조 (등급 임계값 변경 필요 시 constants도 확인 필요)
+// S등급(85점 초과) 추가로 인해 로직 내 하드코딩된 기준 변경
+const GRADE_THRESHOLDS = {
+  S: 85,
+  A: 70,
+  B: 50,
+  C: 0
 };
 
+const ACTION_GUIDELINES = {
+  S: 'Global Top Pick. 밸류에이션, 성장성, 주주환원의 완벽한 조화. Zone 3 진입 시 적극 매수(Strength 2.0 권장).',
+  A: '매수 (Buy). 글로벌 확장성이 뛰어난 성장 우량주. 포트폴리오 편입 권장(Strength 1.0~2.0).',
+  B: '관망/보유 (Hold). 내수 한계가 있거나 환원이 부족함. Zone 3 중반 이후 분할 매수 고려.',
+  C: '매수 금지 (Avoid). 성장성도 없고 주주환원도 없음. 투자 대상 제외.',
+  D: '매수 금지 (Avoid). 투자 대상 제외.', // Legacy support
+};
+
+// ==========================================
+// 1. Valuation (35 pts)
+// ==========================================
+
 /**
- * PER 점수 계산 (20점 만점)
+ * PER 점수 계산 (15점 만점) - Tech 기업 용인
  */
 function calculatePERScore(per: number | null): number {
-  if (per === null || per <= 0) return 5; // 적자 또는 데이터 없음
-  if (per < 5) return 20;   // 극도로 저평가
-  if (per < 8) return 15;   // 저평가
-  if (per < 10) return 10;  // 적정 수준
-  return 5;                  // 고평가 경계
+  if (per === null || per <= 0) return 4; // 적자 등
+  if (per < 10) return 15;
+  if (per < 20) return 12;
+  if (per < 30) return 8;
+  return 4; // 30배 이상
 }
 
 /**
- * PBR 점수 계산 (5점 만점)
+ * PBR 점수 계산 (15점 만점) - 무형자산 고려
  */
 function calculatePBRScore(pbr: number | null): number {
-  if (pbr === null || pbr <= 0) return 0;
-  if (pbr < 0.3) return 5;  // 극도로 저평가
-  if (pbr < 0.6) return 4;  // 저평가
-  if (pbr < 1.0) return 3;  // 적정 수준
-  return 0;                  // 고평가
+  if (pbr === null || pbr <= 0) return 4;
+  if (pbr < 0.8) return 15;
+  if (pbr < 1.5) return 12;
+  if (pbr < 2.5) return 8;
+  return 4; // 2.5배 이상
 }
 
 /**
- * 배당수익률 점수 계산 (10점 만점)
+ * 이중 상장/지배구조 점수 (5점 만점)
  */
-function calculateDividendYieldScore(yield_: number | null): number {
-  if (yield_ === null || yield_ <= 0) return 2;
-  if (yield_ > 7) return 10;  // 고배당
-  if (yield_ > 5) return 7;   // 우수
-  if (yield_ > 3) return 5;   // 양호
-  return 2;                    // 미흡
+function calculateDualListingScore(isDualListed: boolean): number {
+  // Input에서 boolean으로 받지만, 실제로는 3단계 평가가 필요함.
+  // 현재 UI 구조상 boolean이므로, true=중복상장(0점), false=단독(5점)으로 처리하되,
+  // 추후 UI 개선 시 3단계를 지원하도록 확장성 고려.
+  // 여기서는 '핵심 중복 상장'일 경우 true로 간주하여 0점 부여.
+  return isDualListed ? 0 : 5;
 }
 
-/**
- * 배당 연속 인상 점수 계산 (5점 만점)
- */
-function calculateConsecutiveDividendScore(years: number): number {
-  if (years >= 10) return 5;  // 배당 귀족
-  if (years >= 5) return 4;   // 우수
-  if (years >= 3) return 3;   // 양호
-  return 0;                    // 미흡
-}
+// ==========================================
+// 2. Growth & Moat (40 pts)
+// ==========================================
 
-/**
- * 연간 소각 비율 점수 계산 (8점 만점)
- */
-function calculateCancellationRateScore(rate: number): number {
-  if (rate > 2) return 8;     // 공격적 소각
-  if (rate > 1.5) return 5;   // 우수
-  if (rate > 0.5) return 3;   // 양호
-  return 0;                    // 미흡
-}
-
-/**
- * 자사주 보유 비율 점수 계산 (5점 만점) - 낮을수록 좋음
- */
-function calculateTreasuryStockScore(ratio: number): number {
-  if (ratio === 0) return 5;  // 전량 소각 (최우수)
-  if (ratio < 2) return 4;    // 우수
-  if (ratio < 5) return 2;    // 양호
-  return 0;                    // 미흡
-}
-
-/**
- * 성장 잠재력 점수 계산 (10점 만점)
- */
-function calculateGrowthScore(potential: FundamentalInput['growthPotential']): number {
-  switch (potential) {
-    case 'very_high': return 10;
-    case 'high': return 7;
-    case 'normal': return 5;
-    case 'low': return 3;
-    default: return 5;
+function calculateScalabilityScore(val: GlobalScalability | null): number {
+  if (val === null) return 0;
+  switch (val) {
+    case 'high_growth': return 20;
+    case 'expanding': return 12;
+    case 'domestic_regulated': return 5;
+    default: return 0;
   }
 }
 
-/**
- * 경영진 점수 계산 (10점 만점)
- */
-function calculateManagementScore(quality: FundamentalInput['managementQuality']): number {
-  switch (quality) {
-    case 'excellent': return 10;
-    case 'professional': return 5;
-    case 'owner_risk': return 0;
-    default: return 5;
+function calculateDominanceScore(val: MarketDominance | null): number {
+  if (val === null) return 0;
+  switch (val) {
+    case 'monopoly_top': return 10;
+    case 'oligopoly_top3': return 7;
+    case 'competitive': return 3;
+    default: return 0;
+  }
+}
+
+function calculateInvestmentScore(val: FutureInvestment | null): number {
+  if (val === null) return 0;
+  switch (val) {
+    case 'high': return 10;
+    case 'maintain': return 5;
+    case 'decreasing': return 0;
+    default: return 0;
+  }
+}
+
+// ==========================================
+// 3. Shareholder Return (25 pts)
+// ==========================================
+
+function calculateTSRScore(val: TotalShareholderReturn | null): number {
+  if (val === null) return 0;
+  switch (val) {
+    case 'active_growth': return 15;
+    case 'high_yield': return 10;
+    case 'minimum': return 5;
+    case 'none': return 0;
+    default: return 0;
+  }
+}
+
+function calculateGovernanceScore(val: GovernanceRisk | null): number {
+  if (val === null) return 0;
+  switch (val) {
+    case 'clean': return 10;
+    case 'shareholder_friendly': return 7;
+    case 'defense_doubt': return 3;
+    default: return 0;
   }
 }
 
@@ -115,10 +133,10 @@ function calculateManagementScore(quality: FundamentalInput['managementQuality']
  * Grade 판정
  */
 function determineGrade(totalScore: number): FundamentalGrade {
-  if (totalScore >= GRADE_CONFIG.A.min) return 'A';
-  if (totalScore >= GRADE_CONFIG.B.min) return 'B';
-  if (totalScore >= GRADE_CONFIG.C.min) return 'C';
-  return 'D';
+  if (totalScore > GRADE_THRESHOLDS.S) return 'S';
+  if (totalScore >= GRADE_THRESHOLDS.A) return 'A';
+  if (totalScore >= GRADE_THRESHOLDS.B) return 'B';
+  return 'C';
 }
 
 /**
@@ -127,182 +145,93 @@ function determineGrade(totalScore: number): FundamentalGrade {
 export function calculateFundamentalScore(input: FundamentalInput): FundamentalResult {
   // 개별 점수 계산
   const scores: FundamentalScores = {
+    // Valuation
     per: calculatePERScore(input.per),
     pbr: calculatePBRScore(input.pbr),
-    earningsSustainability: input.earningsSustainability ? 5 : 0,
-    dualListing: input.isDualListed ? 0 : 5,
-    dividendYield: calculateDividendYieldScore(input.dividendYield),
-    quarterlyDividend: input.hasQuarterlyDividend ? 5 : 0,
-    consecutiveDividend: calculateConsecutiveDividendScore(input.consecutiveDividendYears),
-    buybackProgram: input.hasBuybackProgram ? 7 : 0,
-    cancellationRate: calculateCancellationRateScore(input.annualCancellationRate),
-    treasuryStockRatio: calculateTreasuryStockScore(input.treasuryStockRatio),
-    growthPotential: calculateGrowthScore(input.growthPotential),
-    management: calculateManagementScore(input.managementQuality),
-    globalBrand: input.hasGlobalBrand ? 5 : 0,
+    dualListing: calculateDualListingScore(input.isDualListed),
+
+    // Growth
+    globalScalability: calculateScalabilityScore(input.globalScalability),
+    marketDominance: calculateDominanceScore(input.marketDominance),
+    futureInvestment: calculateInvestmentScore(input.futureInvestment),
+
+    // Shareholder
+    totalShareholderReturn: calculateTSRScore(input.totalShareholderReturn),
+    governanceRisk: calculateGovernanceScore(input.governanceRisk),
   };
 
   // 카테고리별 소계
   const categoryScores: FundamentalCategoryScores = {
-    valuation: scores.per + scores.pbr + scores.earningsSustainability + scores.dualListing,
-    shareholderReturn:
-      scores.dividendYield +
-      scores.quarterlyDividend +
-      scores.consecutiveDividend +
-      scores.buybackProgram +
-      scores.cancellationRate +
-      scores.treasuryStockRatio,
-    growthManagement: scores.growthPotential + scores.management + scores.globalBrand,
+    valuation: scores.per + scores.pbr + scores.dualListing, // Max 35
+    growthMoat: scores.globalScalability + scores.marketDominance + scores.futureInvestment, // Max 40
+    shareholderReturn: scores.totalShareholderReturn + scores.governanceRisk, // Max 25
   };
 
   // 총점
   const totalScore =
-    categoryScores.valuation + categoryScores.shareholderReturn + categoryScores.growthManagement;
+    categoryScores.valuation + categoryScores.growthMoat + categoryScores.shareholderReturn;
 
   // Grade 판정
   const grade = determineGrade(totalScore);
+
+  // Color Mapping
+  const gradeColorMap: Record<FundamentalGrade, string> = {
+    S: 'rgb(99, 102, 241)', // Indigo
+    A: 'rgb(34, 197, 94)',  // Green
+    B: 'rgb(59, 130, 246)', // Blue
+    C: 'rgb(239, 68, 68)',  // Red
+    D: 'rgb(107, 114, 128)' // Gray
+  };
 
   return {
     scores,
     categoryScores,
     totalScore,
     grade,
-    gradeLabel: GRADE_CONFIG[grade].label,
-    gradeColor: GRADE_CONFIG[grade].color,
+    gradeLabel: `Grade ${grade}`,
+    gradeColor: gradeColorMap[grade],
     actionGuideline: ACTION_GUIDELINES[grade],
   };
 }
 
 /**
- * 기본 Fundamental Input 생성
- */
-export function createDefaultFundamentalInput(): FundamentalInput {
-  return {
-    per: null,
-    pbr: null,
-    earningsSustainability: true,
-    isDualListed: false,
-    dividendYield: null,
-    hasQuarterlyDividend: false,
-    consecutiveDividendYears: 0,
-    hasBuybackProgram: false,
-    annualCancellationRate: 0,
-    treasuryStockRatio: 0,
-    growthPotential: 'normal',
-    managementQuality: 'professional',
-    hasGlobalBrand: false,
-  };
-}
-
-/**
- * FundamentalData 생성 (저장용)
- */
-export function createFundamentalData(
-  input: FundamentalInput,
-  source: FundamentalData['dataSource'] = 'manual',
-  notes?: string
-): FundamentalData {
-  return {
-    ...input,
-    dataSource: source,
-    lastUpdated: new Date(),
-    notes,
-  };
-}
-
-/**
- * Grade 색상 가져오기
+ * Grade 색상 가져오기 helper (legacy - for inline styles)
  */
 export function getGradeColor(grade: FundamentalGrade): string {
-  return GRADE_CONFIG[grade].color;
-}
-
-/**
- * Grade 라벨 가져오기
- */
-export function getGradeLabel(grade: FundamentalGrade): string {
-  return GRADE_CONFIG[grade].label;
-}
-
-/**
- * Grade 설명 가져오기
- */
-export function getGradeDescription(grade: FundamentalGrade): string {
-  const descriptions = {
-    A: '적극 매수 권장',
-    B: '매수 고려 가치',
-    C: '신중한 접근 필요',
-    D: '매수 비권장',
+  const map: Record<FundamentalGrade, string> = {
+    S: 'rgb(99, 102, 241)',
+    A: 'rgb(34, 197, 94)',
+    B: 'rgb(59, 130, 246)',
+    C: 'rgb(239, 68, 68)',
+    D: 'rgb(107, 114, 128)'
   };
-  return descriptions[grade];
+  return map[grade] || map.D;
 }
 
 /**
- * Grade 배지 스타일 클래스
+ * Grade Badge CSS 클래스 반환 (index.css의 .grade-badge-* 사용)
  */
 export function getGradeBadgeClass(grade: FundamentalGrade): string {
-  const classes = {
-    A: 'bg-success-100 text-success-700 dark:bg-success-900/50 dark:text-success-300',
-    B: 'bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-300',
-    C: 'bg-warning-100 text-warning-700 dark:bg-warning-900/50 dark:text-warning-300',
-    D: 'bg-danger-100 text-danger-700 dark:bg-danger-900/50 dark:text-danger-300',
+  const map: Record<FundamentalGrade, string> = {
+    S: 'grade-badge-s',
+    A: 'grade-badge-a',
+    B: 'grade-badge-b',
+    C: 'grade-badge-c',
+    D: 'grade-badge-d',
   };
-  return classes[grade];
+  return map[grade] || map.D;
 }
 
 /**
- * 점수 범위 검증
+ * Grade Card Border CSS 클래스 반환 (index.css의 .grade-card-* 사용)
  */
-export function validateFundamentalInput(input: Partial<FundamentalInput>): string[] {
-  const errors: string[] = [];
-
-  if (input.per !== null && input.per !== undefined && input.per < 0) {
-    errors.push('PER은 0 이상이어야 합니다');
-  }
-
-  if (input.pbr !== null && input.pbr !== undefined && input.pbr < 0) {
-    errors.push('PBR은 0 이상이어야 합니다');
-  }
-
-  if (input.dividendYield !== null && input.dividendYield !== undefined) {
-    if (input.dividendYield < 0 || input.dividendYield > 100) {
-      errors.push('배당수익률은 0-100% 범위여야 합니다');
-    }
-  }
-
-  if (input.consecutiveDividendYears !== undefined && input.consecutiveDividendYears < 0) {
-    errors.push('배당 연속 인상 연수는 0 이상이어야 합니다');
-  }
-
-  if (input.annualCancellationRate !== undefined) {
-    if (input.annualCancellationRate < 0 || input.annualCancellationRate > 100) {
-      errors.push('연간 소각 비율은 0-100% 범위여야 합니다');
-    }
-  }
-
-  if (input.treasuryStockRatio !== undefined) {
-    if (input.treasuryStockRatio < 0 || input.treasuryStockRatio > 100) {
-      errors.push('자사주 보유 비율은 0-100% 범위여야 합니다');
-    }
-  }
-
-  return errors;
-}
-
-/**
- * 점수 요약 텍스트 생성
- */
-export function generateScoreSummary(result: FundamentalResult): string {
-  const lines = [
-    `[SCORE] Fundamental Grade: ${result.grade} (${result.totalScore}점)`,
-    ``,
-    `▸ 밸류에이션: ${result.categoryScores.valuation}/35점`,
-    `▸ 주주환원: ${result.categoryScores.shareholderReturn}/40점`,
-    `▸ 성장/경영: ${result.categoryScores.growthManagement}/25점`,
-    ``,
-    `[TIP] ${result.gradeLabel}`,
-    result.actionGuideline,
-  ];
-
-  return lines.join('\n');
+export function getGradeCardClass(grade: FundamentalGrade): string {
+  const map: Record<FundamentalGrade, string> = {
+    S: 'grade-card-s',
+    A: 'grade-card-a',
+    B: 'grade-card-b',
+    C: 'grade-card-c',
+    D: 'grade-card-d',
+  };
+  return map[grade] || map.D;
 }

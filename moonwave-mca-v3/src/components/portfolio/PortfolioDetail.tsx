@@ -2,21 +2,43 @@
 // Portfolio Detail Page Component
 // ============================================
 
-import { useEffect, useMemo, useState, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Star, Trash2, Settings2, FileText } from 'lucide-react';
+import { ArrowLeft, BookOpen, FileText, Settings2, Star, Trash2 } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
-import { PageContainer, Section, ErrorState } from '@/components/layout';
-import { Button, IconButton, Card, StatsCard, StatItem, StatGrid, StockSearchInput } from '@/components/ui';
-import { TradeTable } from './TradeTable';
-import { MCAChart } from './MCAChart';
-import { ParameterEditor } from './ParameterEditor';
+import { ErrorState, PageContainer, Section } from '@/components/layout';
+import {
+  Button,
+  Card,
+  IconButton,
+  StatGrid,
+  StatItem,
+  StatsCard,
+  StockLogo,
+  Tooltip,
+} from '@/components/ui';
+import {
+  calculateTotalBudget,
+  calculateTrades,
+  getCurrentInvestment,
+} from '@/services/calculation';
+import { selectPortfolioStats, usePortfolioStore } from '@/stores/portfolioStore';
+import type {
+  FundamentalData,
+  FundamentalInput,
+  FundamentalResult,
+  PortfolioParams,
+  StockFundamentalData,
+  Trade,
+} from '@/types';
+import { formatCurrency, formatKoreanUnit, formatPercent } from '@/utils/format';
+import { TEXTS } from '@/utils/texts';
+import { getBlogUrl } from '@/data/stockBlogUrls';
 import { ExitSimulator } from './ExitSimulator';
 import { FundamentalGradeInput } from './FundamentalGradeInput';
-import { usePortfolioStore, selectPortfolioStats } from '@/stores/portfolioStore';
-import { calculateTrades, getCurrentInvestment, calculateTotalBudget } from '@/services/calculation';
-import { formatCurrency, formatKoreanUnit, formatPercent } from '@/utils/format';
-import type { PortfolioParams, FundamentalInput, FundamentalResult, FundamentalData, Trade, StockFundamentalData } from '@/types';
+import { MCAChart } from './MCAChart';
+import { ParameterEditor } from './ParameterEditor';
+import { TradeTable } from './TradeTable';
 
 // Stable empty array to avoid creating new reference on each render
 const EMPTY_TRADES: Trade[] = [];
@@ -28,7 +50,7 @@ export function PortfolioDetail() {
   // State
   const [isParamEditorOpen, setIsParamEditorOpen] = useState(false);
   const [portfolioMemo, setPortfolioMemo] = useState('');
-  const [stockFundamentalData, setStockFundamentalData] = useState<StockFundamentalData | null>(null);
+  const [stockFundamentalData] = useState<StockFundamentalData | null>(null);
 
   // Store
   const portfolios = usePortfolioStore((state) => state.portfolios);
@@ -63,7 +85,8 @@ export function PortfolioDetail() {
 
   // Derived data
   const orderedSteps = useMemo(
-    () => trades.filter((t) => t.status === 'ordered' || t.status === 'executed').map((t) => t.step),
+    () =>
+      trades.filter((t) => t.status === 'ordered' || t.status === 'executed').map((t) => t.step),
     [trades]
   );
 
@@ -72,11 +95,11 @@ export function PortfolioDetail() {
     [trades]
   );
 
-  // Calculate current investment from trades
+  // Calculate current investment from trades (includes legacy holdings)
   const currentInvestment = useMemo(() => {
     if (!portfolio) return { amount: 0, quantity: 0, avgPrice: 0 };
     const calculatedTrades = calculateTrades(portfolio.params, orderedSteps, executedSteps);
-    return getCurrentInvestment(calculatedTrades);
+    return getCurrentInvestment(calculatedTrades, portfolio.params);
   }, [portfolio, orderedSteps, executedSteps]);
 
   // Total budget
@@ -155,7 +178,11 @@ export function PortfolioDetail() {
   };
 
   // Fundamental Grade 저장 핸들러
-  const handleSaveFundamental = async (data: FundamentalInput, result: FundamentalResult, ticker?: string) => {
+  const handleSaveFundamental = async (
+    data: FundamentalInput,
+    result: FundamentalResult,
+    ticker?: string
+  ) => {
     if (portfolio?.id) {
       const fundamentalData: FundamentalData = {
         ...data,
@@ -172,21 +199,6 @@ export function PortfolioDetail() {
     }
   };
 
-  // Stock search handlers
-  const handleStockSelect = async (stock: { ticker: string; name: string; market: string }) => {
-    if (portfolio?.id) {
-      const displayName = `${stock.name} (${stock.ticker})`;
-      await updatePortfolio(portfolio.id, {
-        name: displayName,
-        stockCode: stock.ticker,
-      });
-    }
-  };
-
-  const handleFundamentalLoaded = (data: StockFundamentalData) => {
-    setStockFundamentalData(data);
-  };
-
   // Error state
   if (!portfolio) {
     return (
@@ -194,11 +206,7 @@ export function PortfolioDetail() {
         <ErrorState
           title="종목을 찾을 수 없습니다"
           message="요청하신 종목이 존재하지 않거나 삭제되었습니다."
-          action={
-            <Button onClick={() => navigate('/dashboard')}>
-              대시보드로 돌아가기
-            </Button>
-          }
+          action={<Button onClick={() => navigate('/dashboard')}>대시보드로 돌아가기</Button>}
         />
       </PageContainer>
     );
@@ -211,45 +219,81 @@ export function PortfolioDetail() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <IconButton plain color="secondary" onClick={handleBack} aria-label="뒤로 가기">
-            <ArrowLeft className="w-5 h-5" />
-          </IconButton>
-          <div className="flex items-center gap-2">
-            <StockSearchInput
-              value={portfolio.name}
-              placeholder="종목명 또는 종목코드 검색"
-              onSelect={handleStockSelect}
-              onFundamentalLoaded={handleFundamentalLoaded}
-              className="w-64"
-            />
-            <button
-              onClick={handleToggleFavorite}
-              className="p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors"
-              aria-label={portfolio.isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+          <Tooltip content="뒤로 가기" placement="bottom">
+            <IconButton plain color="secondary" onClick={handleBack} aria-label="뒤로 가기">
+              <ArrowLeft className="w-5 h-5" />
+            </IconButton>
+          </Tooltip>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3">
+              {portfolio.stockCode && (
+                <StockLogo
+                  code={portfolio.stockCode}
+                  name={portfolio.name}
+                  size={40}
+                  className="shadow-sm"
+                />
+              )}
+              <div>
+                <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                  {portfolio.name}
+                </h1>
+                {portfolio.stockCode && (
+                  <span className="text-xs font-medium text-zinc-500 font-mono tracking-wide">
+                    {portfolio.stockCode} • {portfolio.market || 'KRX'}
+                  </span>
+                )}
+              </div>
+            </div>
+            <Tooltip
+              content={portfolio.isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+              placement="bottom"
             >
-              <Star
-                className={`w-5 h-5 ${
-                  portfolio.isFavorite
-                    ? 'text-warning-500 fill-warning-500'
-                    : 'text-zinc-400 dark:text-zinc-500'
-                }`}
-              />
-            </button>
+              <button
+                onClick={handleToggleFavorite}
+                className="p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors"
+                aria-label={portfolio.isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+              >
+                <Star
+                  className={`w-5 h-5 ${portfolio.isFavorite
+                      ? 'text-warning-500 fill-warning-500'
+                      : 'text-zinc-400 dark:text-zinc-500'
+                    }`}
+                />
+              </button>
+            </Tooltip>
+            {portfolio.stockCode && getBlogUrl(portfolio.stockCode) && (
+              <Tooltip content="블로그 포스팅" placement="bottom">
+                <a
+                  href={getBlogUrl(portfolio.stockCode)!}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors"
+                  aria-label="블로그 포스팅 보기"
+                >
+                  <BookOpen className="w-5 h-5 text-primary-500" />
+                </a>
+              </Tooltip>
+            )}
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <IconButton
-            plain
-            color="secondary"
-            onClick={() => setIsParamEditorOpen(true)}
-            aria-label="설정"
-          >
-            <Settings2 className="w-5 h-5" />
-          </IconButton>
-          <IconButton color="danger" onClick={handleDelete} aria-label="삭제">
-            <Trash2 className="w-5 h-5" />
-          </IconButton>
+          <Tooltip content="파라미터 설정" placement="bottom">
+            <IconButton
+              plain
+              color="secondary"
+              onClick={() => setIsParamEditorOpen(true)}
+              aria-label="설정"
+            >
+              <Settings2 className="w-5 h-5" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip content="종목 삭제" placement="bottom">
+            <IconButton color="danger" onClick={handleDelete} aria-label="삭제">
+              <Trash2 className="w-5 h-5" />
+            </IconButton>
+          </Tooltip>
         </div>
       </div>
 
@@ -257,37 +301,41 @@ export function PortfolioDetail() {
       <Section>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatsCard
-            label="진행률"
+            label={TEXTS.PORTFOLIO.PROGRESS}
             value={formatPercent(progress)}
+            tooltip={TEXTS.PORTFOLIO.PROGRESS_TOOLTIP}
             progress={{
               value: progress,
               label: `${stats?.executedStepsCount ?? 0}/${portfolio.params.steps} 구간 체결`,
             }}
           />
           <StatsCard
-            label="투입 금액"
+            label={TEXTS.PORTFOLIO.INVESTED_AMOUNT}
             value={formatKoreanUnit(currentInvestment.amount)}
             subValue={`예산: ${formatKoreanUnit(portfolio.params.targetBudget)}`}
+            tooltip={TEXTS.PORTFOLIO.INVESTED_AMOUNT_TOOLTIP}
           />
           <StatsCard
-            label="평균 단가"
+            label={TEXTS.PORTFOLIO.AVG_PRICE}
             value={currentInvestment.avgPrice ? formatCurrency(currentInvestment.avgPrice) : '-'}
             subValue={`보유: ${currentInvestment.quantity.toLocaleString()}주`}
+            tooltip={TEXTS.PORTFOLIO.AVG_PRICE_TOOLTIP}
             valueColor="primary"
           />
           <StatsCard
-            label="주문 대기"
+            label={TEXTS.PORTFOLIO.PENDING_ORDERS}
             value={formatKoreanUnit(stats?.totalOrderedAmount ?? 0)}
             subValue={`${(stats?.orderedStepsCount ?? 0) - (stats?.executedStepsCount ?? 0)}개 구간`}
+            tooltip={TEXTS.PORTFOLIO.PENDING_ORDERS_TOOLTIP}
             valueColor="warning"
           />
         </div>
       </Section>
 
       {/* Parameter Panel */}
-      <Section title="매매 파라미터">
+      <Section title="매매 파라미터" tooltip="상단의 설정 아이콘을 클릭하면 설정할 수 있습니다">
         <Card>
-          <StatGrid columns={6} divided>
+          <StatGrid columns={6} responsive>
             <StatItem label="고점 가격" value={formatCurrency(portfolio.params.peakPrice)} />
             <StatItem label="매수 강도" value={`${portfolio.params.strength}x`} />
             <StatItem label="시작 하락률" value={`-${portfolio.params.startDrop}%`} />
