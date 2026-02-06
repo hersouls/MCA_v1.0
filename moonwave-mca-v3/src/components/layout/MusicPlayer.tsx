@@ -135,12 +135,12 @@ export function MusicPlayer() {
   };
 
   return (
-    <div className="flex items-center gap-2 p-2 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 ml-4">
+    <div className="flex items-center gap-2 p-2 rounded-full bg-surface-hover border border-border ml-4">
       <audio ref={audioRef} src={TRACKS[currentTrackIndex]} onEnded={handleEnded} />
 
       <button
         onClick={togglePlay}
-        className="p-1.5 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+        className="p-1.5 rounded-full hover:bg-surface-active transition-colors"
         aria-label={isPlaying ? 'Pause music' : 'Play music'}
       >
         {isPlaying ? <Pause size={14} /> : <Play size={14} />}
@@ -148,7 +148,7 @@ export function MusicPlayer() {
 
       <button
         onClick={nextTrack}
-        className="p-1.5 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+        className="p-1.5 rounded-full hover:bg-surface-active transition-colors"
         aria-label="Next track (Random)"
       >
         <SkipForward size={14} />
@@ -157,7 +157,7 @@ export function MusicPlayer() {
       <div className="flex items-center gap-1 group relative">
         <button
           onClick={toggleMute}
-          className="p-1.5 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+          className="p-1.5 rounded-full hover:bg-surface-active transition-colors"
         >
           {isMuted || volume === 0 ? <VolumeX size={14} /> : <Volume2 size={14} />}
         </button>
@@ -173,12 +173,12 @@ export function MusicPlayer() {
             setVolume(Number.parseFloat(e.target.value));
             setIsMuted(false);
           }}
-          className="w-16 h-1 bg-zinc-300 dark:bg-zinc-600 rounded-lg appearance-none cursor-pointer accent-primary-600"
+          className="w-16 h-1 bg-surface-active rounded-lg appearance-none cursor-pointer accent-primary-600"
           aria-label="Volume"
         />
       </div>
 
-      <div className="text-[10px] text-zinc-500 max-w-[100px] truncate select-none">
+      <div className="text-[10px] text-muted-foreground max-w-[100px] truncate select-none">
         {TRACKS[currentTrackIndex].split('/').pop()?.replace('.wav', '')}
       </div>
     </div>

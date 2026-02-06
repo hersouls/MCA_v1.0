@@ -206,7 +206,7 @@ export function Settings() {
               onChange={handleInitialCashChange}
               placeholder="예: 100,000,000"
             />
-            <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+            <p className="mt-2 text-xs text-muted-foreground">
               총 투자 가능 금액을 설정합니다. 대시보드에서 잔여 현금 계산에 사용됩니다.
             </p>
           </div>
@@ -217,7 +217,7 @@ export function Settings() {
       <Section title="알림 설정" icon={<Bell className="w-5 h-5" />}>
         <Card>
           <div className="space-y-4">
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="text-sm text-muted-foreground">
               알림 유형별로 수신 여부를 설정할 수 있습니다.
             </p>
             <div className="space-y-3">
@@ -255,13 +255,13 @@ export function Settings() {
         <Card>
           <div className="space-y-4">
             {/* Stats */}
-            <div className="flex items-center gap-3 p-3 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
-              <Database className="w-5 h-5 text-zinc-500" />
+            <div className="flex items-center gap-3 p-3 bg-surface-hover rounded-lg">
+              <Database className="w-5 h-5 text-muted-foreground" />
               <div>
-                <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                <p className="text-sm font-medium text-foreground">
                   저장된 데이터
                 </p>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                <p className="text-xs text-muted-foreground">
                   {portfolios.length}개 종목
                 </p>
               </div>
@@ -287,7 +287,7 @@ export function Settings() {
             </div>
 
             {/* Danger Zone */}
-            <div className="pt-4 border-t border-zinc-200 dark:border-zinc-700">
+            <div className="pt-4 border-t border-border">
               <h4 className="text-sm font-medium text-danger-600 dark:text-danger-400 mb-2">
                 위험 영역
               </h4>
@@ -314,7 +314,7 @@ export function Settings() {
               </div>
             ) : canInstallPWA ? (
               <>
-                <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                <p className="text-sm text-muted-foreground">
                   Moonwave MCA를 홈 화면에 추가하여 네이티브 앱처럼 사용할 수 있습니다.
                 </p>
                 <Button
@@ -326,7 +326,7 @@ export function Settings() {
                 </Button>
               </>
             ) : (
-              <div className="text-sm text-zinc-500 dark:text-zinc-400">
+              <div className="text-sm text-muted-foreground">
                 <p className="mb-2">
                   브라우저 메뉴에서 "홈 화면에 추가"를 선택하여 앱을 설치할 수 있습니다.
                 </p>
@@ -348,7 +348,7 @@ export function Settings() {
             <StatItem label="버전" value="3.1.0" />
             <StatItem label="개발자" value="Moonwave" />
             <div>
-              <span className="text-xs text-zinc-500 dark:text-zinc-400">저장소</span>
+              <span className="text-xs text-muted-foreground">저장소</span>
               <p className="font-semibold text-right">
                 <a
                   href="https://github.com/hersouls/moonwave-mca"
@@ -389,21 +389,21 @@ interface NotificationToggleProps {
 
 function NotificationToggle({ icon, label, description, enabled, onChange }: NotificationToggleProps) {
   return (
-    <div className="flex items-center justify-between p-3 rounded-lg bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700">
+    <div className="flex items-center justify-between p-3 rounded-lg bg-surface-hover border border-border">
       <div className="flex items-center gap-3">
-        <div className="flex-shrink-0 text-zinc-500 dark:text-zinc-400">
+        <div className="flex-shrink-0 text-muted-foreground">
           {icon}
         </div>
         <div>
-          <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{label}</p>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">{description}</p>
+          <p className="text-sm font-medium text-foreground">{label}</p>
+          <p className="text-xs text-muted-foreground">{description}</p>
         </div>
       </div>
       <button
         type="button"
         onClick={onChange}
         className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 ${
-          enabled ? 'bg-primary-500' : 'bg-zinc-300 dark:bg-zinc-600'
+          enabled ? 'bg-primary-500' : 'bg-surface-active'
         }`}
         role="switch"
         aria-checked={enabled}

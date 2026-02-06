@@ -20,6 +20,8 @@ export const STORAGE_KEYS = {
   BROADCAST_MESSAGE: 'mca-broadcast-message',
   ANALYTICS: 'mca-analytics',
   SESSION_START: 'mca-session-start',
+  // Onboarding
+  ONBOARDING_COMPLETED: 'mca-onboarding-completed',
   // v2 호환용
   DARK_MODE: 'darkMode',
 } as const;
@@ -113,23 +115,33 @@ export const DEFAULT_SETTINGS = {
   isMusicPlayerEnabled: false,
 };
 
-// Chart Colors - Trendy & Sophisticated (Neon Mint / Jade Green)
+// CSS Variable Reader (런타임에 현재 테마 값을 읽음)
+export function getCSSVar(name: string): string {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+// Hex → RGBA 변환 (Chart.js 인라인 스타일용)
+export function hexToRgba(hex: string, alpha: number): string {
+  const r = Number.parseInt(hex.slice(1, 3), 16);
+  const g = Number.parseInt(hex.slice(3, 5), 16);
+  const b = Number.parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+// Chart Colors - Accent colors per theme (primary/success etc.)
+// text/grid는 getCSSVar()로 런타임에 읽음
 export const CHART_COLORS = {
   light: {
     primary: '#00A86B', // Jade Green (차트 가시성)
     success: '#22c55e',
     warning: '#f59e0b',
     danger: '#ef4444',
-    text: '#030303', // Near Black
-    grid: '#dbd9d4', // Off White border
   },
   dark: {
     primary: '#2EFFB4', // Neon Mint (다크 대비)
     success: '#4ade80',
     warning: '#fbbf24',
     danger: '#f87171',
-    text: '#EDECE8', // Off White
-    grid: '#262626',
   },
 } as const;
 

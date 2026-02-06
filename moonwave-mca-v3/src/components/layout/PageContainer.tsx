@@ -81,9 +81,9 @@ export function PageHeader({ title, description, action, breadcrumb }: PageHeade
       {breadcrumb && <div className="mb-2">{breadcrumb}</div>}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-[1.625rem] font-bold text-zinc-900 dark:text-zinc-100">{title}</h1>
+          <h1 className="text-[1.625rem] font-bold text-foreground">{title}</h1>
           {description && (
-            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{description}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{description}</p>
           )}
         </div>
         {action && <div className="flex-shrink-0">{action}</div>}
@@ -113,7 +113,7 @@ export function Section({ children, title, description, tooltip, action, classNa
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             {icon && (
-              <span className="flex-shrink-0 text-zinc-500 dark:text-zinc-400" aria-hidden="true">
+              <span className="flex-shrink-0 text-muted-foreground" aria-hidden="true">
                 {icon}
               </span>
             )}
@@ -121,23 +121,23 @@ export function Section({ children, title, description, tooltip, action, classNa
               {title && (
                 <h2
                   id={`section-${title.replace(/\s+/g, '-').toLowerCase()}`}
-                  className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 inline-flex items-center gap-1"
+                  className="text-lg font-semibold text-foreground inline-flex items-center gap-1"
                 >
                   {title}
                   {tooltip && (
                     <Tooltip content={tooltip} placement="top">
                       <TooltipTriggerButton
-                        className="hover:bg-zinc-200 dark:hover:bg-zinc-700 p-0.5 -m-0.5 transition-colors"
+                        className="hover:bg-surface-active p-0.5 -m-0.5 transition-colors"
                         aria-label={`${title} 도움말`}
                       >
-                        <HelpCircle className="w-4 h-4 text-zinc-400 dark:text-zinc-500" />
+                        <HelpCircle className="w-4 h-4 text-muted-foreground" />
                       </TooltipTriggerButton>
                     </Tooltip>
                   )}
                 </h2>
               )}
               {description && (
-                <p className="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">{description}</p>
+                <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>
               )}
             </div>
           </div>
@@ -187,15 +187,15 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
     <div className="flex flex-col items-center justify-center py-12 text-center" role="status">
       {icon && (
         <div
-          className="mb-4 p-4 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500"
+          className="mb-4 p-4 rounded-full bg-surface-hover text-muted-foreground"
           aria-hidden="true"
         >
           {icon}
         </div>
       )}
-      <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-100">{title}</h3>
+      <h3 className="text-lg font-medium text-foreground">{title}</h3>
       {description && (
-        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400 max-w-sm">{description}</p>
+        <p className="mt-1 text-sm text-muted-foreground max-w-sm">{description}</p>
       )}
       {action && <div className="mt-4">{action}</div>}
     </div>
@@ -218,7 +218,7 @@ export function LoadingState({ message = '불러오는 중...' }: LoadingStatePr
         className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"
         aria-hidden="true"
       />
-      <p className="mt-4 text-sm text-zinc-500 dark:text-zinc-400">{message}</p>
+      <p className="mt-4 text-sm text-muted-foreground">{message}</p>
       <span className="sr-only">{message}</span>
     </div>
   );
@@ -247,9 +247,9 @@ export function ErrorState({ title = '오류가 발생했습니다', message, ac
           />
         </svg>
       </div>
-      <h3 className="text-lg font-medium text-zinc-900 dark:text-zinc-100">{title}</h3>
+      <h3 className="text-lg font-medium text-foreground">{title}</h3>
       {message && (
-        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400 max-w-sm">{message}</p>
+        <p className="mt-1 text-sm text-muted-foreground max-w-sm">{message}</p>
       )}
       {action && <div className="mt-4">{action}</div>}
     </div>

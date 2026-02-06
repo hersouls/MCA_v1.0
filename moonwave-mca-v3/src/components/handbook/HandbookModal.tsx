@@ -84,7 +84,7 @@ export function HandbookModal() {
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-zinc-900/60 backdrop-blur-sm" aria-hidden="true" />
+          <div className="fixed inset-0 bg-foreground/60 backdrop-blur-sm" aria-hidden="true" />
         </TransitionChild>
 
         {/* Modal Panel */}
@@ -98,38 +98,38 @@ export function HandbookModal() {
             leaveFrom="opacity-100 scale-100"
             leaveTo="opacity-0 scale-95"
           >
-            <DialogPanel className="w-full max-w-7xl h-[90vh] bg-white dark:bg-zinc-950 rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row border border-zinc-200 dark:border-zinc-800">
+            <DialogPanel className="w-full max-w-7xl h-[90vh] bg-background rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row border border-border">
               {/* Header (Mobile Only) */}
-              <div className="md:hidden flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 z-20">
+              <div className="md:hidden flex items-center justify-between p-4 border-b border-border bg-background z-20">
                 <button
                   onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                  className="p-2 -ml-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                  className="p-2 -ml-2 rounded-lg hover:bg-surface-hover"
                 >
-                  <Menu className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
+                  <Menu className="w-5 h-5 text-muted-foreground" />
                 </button>
-                <span className="font-semibold text-zinc-900 dark:text-zinc-100 truncate max-w-[200px]">
+                <span className="font-semibold text-foreground truncate max-w-[200px]">
                   {activeSection.title}
                 </span>
                 <button
                   onClick={closeHandbook}
-                  className="p-2 -mr-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                  className="p-2 -mr-2 rounded-lg hover:bg-surface-hover"
                 >
-                  <X className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
+                  <X className="w-5 h-5 text-muted-foreground" />
                 </button>
               </div>
 
               {/* Sidebar (Desktop + Mobile Drawer) */}
               <aside
                 className={clsx(
-                  'fixed md:relative inset-y-0 left-0 z-10 w-72 bg-zinc-50 dark:bg-zinc-900/50 border-r border-zinc-200 dark:border-zinc-800 flex flex-col transition-transform duration-300 ease-in-out md:translate-x-0',
+                  'fixed md:relative inset-y-0 left-0 z-10 w-72 bg-surface-hover border-r border-border flex flex-col transition-transform duration-300 ease-in-out md:translate-x-0',
                   isSidebarOpen ? 'translate-x-0' : '-translate-x-full',
                   'md:flex' // Always flex on desktop
                 )}
               >
                 {/* Sidebar Header */}
-                <div className="h-16 flex items-center px-6 border-b border-zinc-200 dark:border-zinc-800">
+                <div className="h-16 flex items-center px-6 border-b border-border">
                   <BookOpen className="w-5 h-5 text-primary-600 dark:text-primary-400 mr-3" />
-                  <span className="font-bold text-zinc-900 dark:text-zinc-100">
+                  <span className="font-bold text-foreground">
                     Moonwave Handbook
                   </span>
                 </div>
@@ -146,8 +146,8 @@ export function HandbookModal() {
                       className={clsx(
                         'w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-colors',
                         activeSectionId === section.id
-                          ? 'bg-white dark:bg-zinc-800 text-primary-600 dark:text-primary-400 shadow-sm ring-1 ring-zinc-200 dark:ring-zinc-700'
-                          : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-200'
+                          ? 'bg-card text-primary-600 dark:text-primary-400 shadow-sm ring-1 ring-border'
+                          : 'text-muted-foreground hover:bg-surface-hover hover:text-foreground'
                       )}
                     >
                       <span className="truncate text-left">{section.title}</span>
@@ -159,19 +159,19 @@ export function HandbookModal() {
                 </nav>
 
                 {/* Sidebar Footer */}
-                <div className="p-4 border-t border-zinc-200 dark:border-zinc-800 text-xs text-zinc-500 text-center">
+                <div className="p-4 border-t border-border text-xs text-muted-foreground text-center">
                   v3.0.0
                 </div>
               </aside>
 
               {/* Main Content Area */}
-              <main className="flex-1 flex flex-col relative min-w-0 bg-white dark:bg-zinc-950">
+              <main className="flex-1 flex flex-col relative min-w-0 bg-background">
                 {/* Desktop Close Button */}
                 <div className="absolute top-4 right-4 z-20 hidden md:block">
                   <IconButton
                     plain
                     onClick={closeHandbook}
-                    className="hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                    className="hover:bg-surface-hover"
                   >
                     <X className="w-5 h-5" />
                   </IconButton>

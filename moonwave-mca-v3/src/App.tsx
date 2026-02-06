@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 
 import { HandbookPanel } from '@/components/handbook/HandbookPanel';
+import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 import {
   BottomNav,
   Footer,
@@ -88,7 +89,7 @@ export function App() {
 
   if (!isInitialized) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <LoadingState
           message={
             isMigrating ? TEXTS.COMMON.MIGRATION_IN_PROGRESS_LONG : TEXTS.COMMON.APP_INIT_LONG
@@ -99,7 +100,7 @@ export function App() {
   }
 
   return (
-    <div className="min-h-screen flex bg-zinc-50 dark:bg-zinc-950">
+    <div className="min-h-screen flex bg-background">
       {/* Desktop Sidebar */}
       <Sidebar />
 
@@ -144,6 +145,9 @@ export function App() {
 
       {/* FAQ Modal */}
       <FAQModal />
+
+      {/* Onboarding Tour */}
+      <OnboardingTour />
     </div>
   );
 }

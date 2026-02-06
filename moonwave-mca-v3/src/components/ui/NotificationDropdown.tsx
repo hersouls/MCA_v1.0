@@ -96,7 +96,7 @@ function NotificationItem({ notification, onClose }: NotificationItemProps) {
         'group relative flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-500',
         notification.read
-          ? 'bg-transparent hover:bg-zinc-50 dark:hover:bg-zinc-800/50'
+          ? 'bg-transparent hover:bg-surface-hover'
           : 'bg-primary-50/50 dark:bg-primary-900/10 hover:bg-primary-50 dark:hover:bg-primary-900/20'
       )}
       aria-label={`${notification.title}: ${notification.message}${notification.read ? '' : ' (읽지 않음)'}`}
@@ -112,16 +112,16 @@ function NotificationItem({ notification, onClose }: NotificationItemProps) {
           className={clsx(
             'text-sm font-medium truncate',
             notification.read
-              ? 'text-zinc-700 dark:text-zinc-300'
-              : 'text-zinc-900 dark:text-zinc-100'
+              ? 'text-muted-foreground'
+              : 'text-foreground'
           )}
         >
           {notification.title}
         </p>
-        <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2">
+        <p className="text-xs text-muted-foreground line-clamp-2">
           {notification.message}
         </p>
-        <p className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-1">
+        <p className="text-[10px] text-muted-foreground mt-1">
           {formatRelativeTime(notification.createdAt)}
         </p>
       </div>
@@ -134,10 +134,10 @@ function NotificationItem({ notification, onClose }: NotificationItemProps) {
       {/* Remove button (visible on hover) */}
       <button
         onClick={handleRemove}
-        className="absolute top-2 right-2 p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-opacity"
+        className="absolute top-2 right-2 p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-surface-active transition-opacity"
         aria-label="알림 삭제"
       >
-        <X className="w-3 h-3 text-zinc-400" />
+        <X className="w-3 h-3 text-muted-foreground" />
       </button>
     </div>
   );
@@ -155,7 +155,7 @@ export function NotificationDropdown() {
         <>
           {/* Trigger Button */}
           <PopoverButton
-            className="relative p-2 rounded-lg text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+            className="relative p-2 rounded-lg text-muted-foreground hover:bg-surface-hover transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
             aria-label={unreadCount > 0 ? `알림 ${unreadCount}개 읽지 않음` : '알림'}
             aria-haspopup="dialog"
           >
@@ -181,19 +181,19 @@ export function NotificationDropdown() {
             leaveTo="opacity-0 translate-y-1"
           >
             <PopoverPanel
-              className="absolute right-0 z-50 mt-2 w-80 sm:w-96 origin-top-right rounded-xl bg-white dark:bg-zinc-900 shadow-lg ring-1 ring-zinc-200 dark:ring-zinc-700 focus:outline-none"
+              className="absolute right-0 z-50 mt-2 w-80 sm:w-96 origin-top-right rounded-xl bg-card shadow-lg ring-1 ring-border focus:outline-none"
               role="dialog"
               aria-labelledby="notification-panel-title"
             >
               {/* Header */}
-              <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-200 dark:border-zinc-700">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                 <h3
                   id="notification-panel-title"
-                  className="text-sm font-semibold text-zinc-900 dark:text-zinc-100"
+                  className="text-sm font-semibold text-foreground"
                 >
                   알림
                   {unreadCount > 0 && (
-                    <span className="ml-2 text-xs font-normal text-zinc-500">
+                    <span className="ml-2 text-xs font-normal text-muted-foreground">
                       {unreadCount}개 읽지 않음
                     </span>
                   )}
@@ -212,7 +212,7 @@ export function NotificationDropdown() {
 
               {/* Notification List */}
               <div
-                className="max-h-80 overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-800"
+                className="max-h-80 overflow-y-auto divide-y divide-border"
                 role="list"
                 aria-label="알림 목록"
               >
@@ -227,20 +227,20 @@ export function NotificationDropdown() {
                 ) : (
                   <div className="py-12 text-center" role="status">
                     <Bell
-                      className="w-8 h-8 mx-auto text-zinc-300 dark:text-zinc-600 mb-2"
+                      className="w-8 h-8 mx-auto text-muted-foreground/50 mb-2"
                       aria-hidden="true"
                     />
-                    <p className="text-sm text-zinc-500 dark:text-zinc-400">알림이 없습니다</p>
+                    <p className="text-sm text-muted-foreground">알림이 없습니다</p>
                   </div>
                 )}
               </div>
 
               {/* Footer */}
               {notifications.length > 0 && (
-                <div className="px-4 py-2 border-t border-zinc-200 dark:border-zinc-700">
+                <div className="px-4 py-2 border-t border-border">
                   <button
                     onClick={clearAll}
-                    className="flex items-center justify-center gap-1 w-full py-1.5 text-xs text-zinc-500 dark:text-zinc-400 hover:text-danger-600 dark:hover:text-danger-400 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
+                    className="flex items-center justify-center gap-1 w-full py-1.5 text-xs text-muted-foreground hover:text-danger-600 dark:hover:text-danger-400 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
                     aria-label="모든 알림 삭제"
                   >
                     <Trash2 className="w-3 h-3" aria-hidden="true" />

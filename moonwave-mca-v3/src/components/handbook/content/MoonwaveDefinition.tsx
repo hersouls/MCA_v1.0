@@ -34,7 +34,7 @@ export const MoonwaveDefinition = () => (
     <img
       src="/images/handbook/moonwave_philosophy_new.png"
       alt="Moonwave Philosophy"
-      className="w-full h-auto rounded-xl shadow-lg my-8 border border-zinc-200 dark:border-zinc-800"
+      className="w-full h-auto rounded-xl shadow-lg my-8 border border-border"
     />
 
     <Hr />
@@ -120,7 +120,7 @@ export const MoonwaveDefinition = () => (
       loop
       muted
       playsInline
-      className="w-full h-auto rounded-xl shadow-lg my-8 border border-zinc-200 dark:border-zinc-800"
+      className="w-full h-auto rounded-xl shadow-lg my-8 border border-border"
     />
 
     <Hr />
@@ -178,7 +178,7 @@ export const MoonwaveDefinition = () => (
     <img
       src="/images/handbook/moonyou_wavie_future.jpg"
       alt="Moonyou and Wavie Future"
-      className="w-full h-auto rounded-xl shadow-lg my-8 border border-zinc-200 dark:border-zinc-800"
+      className="w-full h-auto rounded-xl shadow-lg my-8 border border-border"
     />
 
     <H2 id="moonwave-wavie">6. 문유와 웨이비, 그리고 미래</H2>

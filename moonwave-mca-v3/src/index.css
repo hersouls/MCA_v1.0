@@ -103,6 +103,25 @@
   --spacing-golden-xl: 2.618rem; /* ~42px */
 }
 
+/* Semantic Color Utilities (auto light/dark via CSS variables) */
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-surface-hover: var(--surface-hover);
+  --color-surface-active: var(--surface-active);
+}
+
 /* CSS Variables for Light/Dark Mode - Trendy & Sophisticated */
 :root {
   --background: #edece8;
@@ -155,6 +174,10 @@
   --input-disabled-border: var(--border);
   --input-disabled-bg: var(--muted);
   --input-disabled-text: var(--muted-foreground);
+
+  /* Interactive surface states */
+  --surface-hover: #f0efeb;
+  --surface-active: #e5e4e0;
 }
 
 .dark {
@@ -210,6 +233,10 @@
   --input-error-text: var(--color-danger-400);
 
   --input-disabled-bg: var(--muted);
+
+  /* Interactive surface states (dark) */
+  --surface-hover: #1a1a1a;
+  --surface-active: #262626;
 }
 
 /* ============================================
@@ -404,12 +431,9 @@ body {
 
 /* Glass Effect - Trendy & Sophisticated */
 .glass {
-  background: rgba(237, 236, 232, 0.85);
+  background: color-mix(in srgb, var(--background) 85%, transparent);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-}
-.dark .glass {
-  background: rgba(3, 3, 3, 0.85);
 }
 
 /* Focus Ring */
@@ -976,6 +1000,169 @@ button {
 .grade-card-b { border-color: rgb(var(--grade-b-rgb) / 0.4); }
 .grade-card-c { border-color: rgb(var(--grade-c-rgb) / 0.4); }
 .grade-card-d { border-color: rgb(var(--grade-d-rgb) / 0.4); }
+/* ============================================
+   Onboarding Tour (driver.js) Theme
+   ============================================ */
+
+/* Light Mode */
+.driver-popover.mca-tour.mca-tour-light {
+  background-color: var(--card);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  font-family: var(--font-sans);
+}
+
+.driver-popover.mca-tour.mca-tour-light .driver-popover-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.driver-popover.mca-tour.mca-tour-light .driver-popover-description {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+  line-height: 1.6;
+}
+
+.driver-popover.mca-tour.mca-tour-light .driver-popover-progress-text {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+
+.driver-popover.mca-tour.mca-tour-light button.driver-popover-next-btn,
+.driver-popover.mca-tour.mca-tour-light button.driver-popover-close-btn-custom {
+  background-color: var(--color-primary-600, #00a86b);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 16px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  text-shadow: none;
+}
+
+.driver-popover.mca-tour.mca-tour-light button.driver-popover-next-btn:hover {
+  background-color: var(--color-primary-700, #047857);
+}
+
+.driver-popover.mca-tour.mca-tour-light button.driver-popover-prev-btn {
+  background-color: transparent;
+  color: var(--muted-foreground);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 16px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  text-shadow: none;
+}
+
+.driver-popover.mca-tour.mca-tour-light button.driver-popover-prev-btn:hover {
+  background-color: var(--surface-hover);
+}
+
+/* Light Arrow */
+.driver-popover.mca-tour.mca-tour-light .driver-popover-arrow-side-left.driver-popover-arrow {
+  border-left-color: var(--card);
+}
+.driver-popover.mca-tour.mca-tour-light .driver-popover-arrow-side-right.driver-popover-arrow {
+  border-right-color: var(--card);
+}
+.driver-popover.mca-tour.mca-tour-light .driver-popover-arrow-side-top.driver-popover-arrow {
+  border-top-color: var(--card);
+}
+.driver-popover.mca-tour.mca-tour-light .driver-popover-arrow-side-bottom.driver-popover-arrow {
+  border-bottom-color: var(--card);
+}
+
+/* Dark Mode */
+.driver-popover.mca-tour.mca-tour-dark {
+  background-color: var(--card);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.3), 0 8px 10px -6px rgb(0 0 0 / 0.3);
+  font-family: var(--font-sans);
+}
+
+.driver-popover.mca-tour.mca-tour-dark .driver-popover-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.driver-popover.mca-tour.mca-tour-dark .driver-popover-description {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+  line-height: 1.6;
+}
+
+.driver-popover.mca-tour.mca-tour-dark .driver-popover-progress-text {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+
+.driver-popover.mca-tour.mca-tour-dark button.driver-popover-next-btn,
+.driver-popover.mca-tour.mca-tour-dark button.driver-popover-close-btn-custom {
+  background-color: var(--color-primary-500, #2effb4);
+  color: #030303;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 16px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  text-shadow: none;
+}
+
+.driver-popover.mca-tour.mca-tour-dark button.driver-popover-next-btn:hover {
+  background-color: var(--color-primary-400, #34d399);
+}
+
+.driver-popover.mca-tour.mca-tour-dark button.driver-popover-prev-btn {
+  background-color: transparent;
+  color: var(--muted-foreground);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 16px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  text-shadow: none;
+}
+
+.driver-popover.mca-tour.mca-tour-dark button.driver-popover-prev-btn:hover {
+  background-color: var(--surface-hover);
+}
+
+/* Dark Arrow */
+.driver-popover.mca-tour.mca-tour-dark .driver-popover-arrow-side-left.driver-popover-arrow {
+  border-left-color: var(--card);
+}
+.driver-popover.mca-tour.mca-tour-dark .driver-popover-arrow-side-right.driver-popover-arrow {
+  border-right-color: var(--card);
+}
+.driver-popover.mca-tour.mca-tour-dark .driver-popover-arrow-side-top.driver-popover-arrow {
+  border-top-color: var(--card);
+}
+.driver-popover.mca-tour.mca-tour-dark .driver-popover-arrow-side-bottom.driver-popover-arrow {
+  border-bottom-color: var(--card);
+}
+
+/* Close button (X) shared styles */
+.driver-popover.mca-tour .driver-popover-close-btn {
+  color: var(--muted-foreground);
+  font-size: 1.25rem;
+  width: 28px;
+  height: 28px;
+}
+.driver-popover.mca-tour .driver-popover-close-btn:hover {
+  color: var(--foreground);
+}
+
 @layer utilities {
   .p-golden-xs { padding: 6px; }
   .p-golden-sm { padding: 10px; }

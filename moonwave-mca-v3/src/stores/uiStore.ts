@@ -54,6 +54,9 @@ interface UIState {
   // Mobile menu
   isMobileMenuOpen: boolean;
 
+  // Onboarding Tour
+  isTourActive: boolean;
+
   // Actions
   setView: (view: 'dashboard' | 'detail' | 'settings') => void;
 
@@ -100,6 +103,10 @@ interface UIState {
   // Mobile Menu Actions
   toggleMobileMenu: () => void;
   closeMobileMenu: () => void;
+
+  // Onboarding Tour Actions
+  startTour: () => void;
+  endTour: () => void;
 }
 
 let toastIdCounter = 0;
@@ -120,6 +127,7 @@ export const useUIStore = create<UIState>()(
       loadingMessage: null,
       isSidebarCollapsed: false,
       isMobileMenuOpen: false,
+      isTourActive: false,
 
       // Navigation
       setView: (view) => {
@@ -250,6 +258,15 @@ export const useUIStore = create<UIState>()(
 
       closeMobileMenu: () => {
         set({ isMobileMenuOpen: false });
+      },
+
+      // Onboarding Tour
+      startTour: () => {
+        set({ isTourActive: true });
+      },
+
+      endTour: () => {
+        set({ isTourActive: false });
       },
     }),
     { name: 'ui-store' }

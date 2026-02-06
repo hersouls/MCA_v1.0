@@ -175,12 +175,11 @@ export function FundamentalGradeInput({
    * 공통 데이터 적용 로직
    */
   const applyGemData = (gemData: any, rawValues: any) => {
-    // 종목 불일치 체크
+    // 종목 불일치 체크 - 경고 메시지 표시 하되 덮어쓰기 허용
     if (ticker && rawValues?.stockCode && ticker !== rawValues.stockCode) {
-      toast.error(
-        `종목 불일치: 현재 ${stockName || ticker}, 붙여넣은 데이터는 ${rawValues.stockName || rawValues.stockCode}입니다.`
-      );
-      return;
+      if (!confirm(`현재 종목(${stockName || ticker})과 붙여넣은 종목(${rawValues.stockName || rawValues.stockCode})이 다릅니다. \n\n새로운 종목 데이터로 덮어쓰시겠습니까?`)) {
+        return;
+      }
     }
 
     // GeminiGemData → FundamentalInput 변환
@@ -205,23 +204,23 @@ export function FundamentalGradeInput({
   return (
     <div className="space-y-[26px]">
       {/* Sticky Header */}
-      <div className="sticky top-0 z-10 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-lg border-b border-zinc-200 dark:border-zinc-800 -mx-4 -mt-4 px-4 pt-4 pb-[6px] md:mx-0 md:mt-0 md:px-0">
+      <div className="sticky top-0 z-10 bg-card/80 backdrop-blur-lg border-b border-border -mx-4 -mt-4 px-4 pt-4 pb-[6px] md:mx-0 md:mt-0 md:px-0">
         {isEmpty ? (
-          <Card className="pt-4 px-4 pb-[6px] border-2 border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900/50">
+          <Card className="pt-4 px-4 pb-[6px] border-2 border-border bg-surface-hover">
             <div className="flex items-center gap-4">
-              <div className="w-[68px] h-[68px] text-2xl shadow-lg flex items-center justify-center font-black rounded-2xl bg-zinc-200 dark:bg-zinc-700 text-zinc-400 dark:text-zinc-500">
+              <div className="w-[68px] h-[68px] text-2xl shadow-lg flex items-center justify-center font-black rounded-2xl bg-surface-active text-muted-foreground">
                 ?
               </div>
               <div>
-                <div className="text-xl font-bold text-zinc-400 dark:text-zinc-500">
+                <div className="text-xl font-bold text-muted-foreground">
                   미등록
                 </div>
-                <div className="text-sm text-zinc-500 dark:text-zinc-400 mt-[6px]">
+                <div className="text-sm text-muted-foreground mt-[6px]">
                   Fundamental Grade가 등록되지 않았습니다
                 </div>
               </div>
             </div>
-            <div className="mt-[10px] pt-[10px] border-t border-zinc-200 dark:border-zinc-700">
+            <div className="mt-[10px] pt-[10px] border-t border-border">
               <div className="flex items-start gap-[6px]">
                 <Sparkles className="h-4 w-4 text-indigo-500 mt-0.5 flex-shrink-0" />
                 <p className="text-sm text-muted-foreground leading-relaxed">
@@ -242,7 +241,7 @@ export function FundamentalGradeInput({
                     {result.totalScore}
                     <span className="text-lg text-muted-foreground font-normal">/100</span>
                   </div>
-                  <div className="flex gap-[6px] mt-[6px] text-xs text-zinc-500 dark:text-zinc-400">
+                  <div className="flex gap-[6px] mt-[6px] text-xs text-muted-foreground">
                     <span>Val {result.categoryScores.valuation}</span>
                     <span>|</span>
                     <span>Growth {result.categoryScores.growthMoat}</span>
@@ -252,7 +251,7 @@ export function FundamentalGradeInput({
                 </div>
               </div>
             </div>
-            <div className="mt-[10px] pt-[10px] border-t border-zinc-200 dark:border-zinc-700">
+            <div className="mt-[10px] pt-[10px] border-t border-border">
               <p className="text-sm text-muted-foreground leading-relaxed">
                 {result.actionGuideline}
               </p>
@@ -300,7 +299,7 @@ export function FundamentalGradeInput({
               value={jsonInput}
               onChange={(val) => setJsonInput(val)}
               placeholder={GEM_JSON_PLACEHOLDER}
-              className="min-h-[136px] font-mono text-xs bg-white dark:bg-zinc-950 resize-y"
+              className="min-h-[136px] font-mono text-xs bg-card resize-y"
             />
             <div className="flex justify-end mt-[10px]">
               <Button
@@ -320,31 +319,31 @@ export function FundamentalGradeInput({
         <button
           type="button"
           onClick={() => setIsManualOpen(!isManualOpen)}
-          className="flex items-center justify-between w-full p-[6px] hover:bg-zinc-100 dark:hover:bg-zinc-800/50 rounded-[10px] transition-colors group"
+          className="flex items-center justify-between w-full p-[6px] hover:bg-surface-hover rounded-[10px] transition-colors group"
         >
           <div className="flex items-center gap-[6px]">
-            <div className="p-1 rounded bg-zinc-200 dark:bg-zinc-700 group-hover:bg-zinc-300 dark:group-hover:bg-zinc-600 transition-colors">
+            <div className="p-1 rounded bg-surface-active group-hover:bg-border transition-colors">
               {isManualOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </div>
-            <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+            <span className="text-sm font-medium text-muted-foreground">
               상세 평가 항목 (Manual Adjustments)
             </span>
           </div>
-          <div className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800 ml-4" />
+          <div className="h-px flex-1 bg-border ml-4" />
         </button>
 
         {isManualOpen && (
           <div className="grid gap-[26px] md:grid-cols-2 lg:grid-cols-3 animate-in fade-in slide-in-from-top-4 duration-300">
             {/* Category 1: Valuation (35pts) */}
             <Card padding="md" className="space-y-4">
-              <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-700 pb-[6px]">
+              <div className="flex items-center justify-between border-b border-border pb-[6px]">
                 <div className="flex items-center gap-[6px]">
-                  <div className="p-1.5 rounded-[10px] bg-zinc-100 dark:bg-zinc-800">
-                    <DollarSign className="h-4 w-4 text-zinc-600 dark:text-zinc-400" />
+                  <div className="p-1.5 rounded-[10px] bg-surface-hover">
+                    <DollarSign className="h-4 w-4 text-muted-foreground" />
                   </div>
-                  <h4 className="font-semibold text-zinc-900 dark:text-zinc-100">1. Valuation</h4>
+                  <h4 className="font-semibold text-foreground">1. Valuation</h4>
                 </div>
-                <span className="font-mono text-sm text-zinc-500">{result?.categoryScores.valuation}/35</span>
+                <span className="font-mono text-sm text-muted-foreground">{result?.categoryScores.valuation}/35</span>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -390,14 +389,14 @@ export function FundamentalGradeInput({
 
             {/* Category 2: Growth & Moat (40pts) */}
             <Card padding="md" className="space-y-4">
-              <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-700 pb-[6px]">
+              <div className="flex items-center justify-between border-b border-border pb-[6px]">
                 <div className="flex items-center gap-[6px]">
-                  <div className="p-1.5 rounded-[10px] bg-zinc-100 dark:bg-zinc-800">
-                    <TrendingUp className="h-4 w-4 text-zinc-600 dark:text-zinc-400" />
+                  <div className="p-1.5 rounded-[10px] bg-surface-hover">
+                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
                   </div>
-                  <h4 className="font-semibold text-zinc-900 dark:text-zinc-100">2. Growth</h4>
+                  <h4 className="font-semibold text-foreground">2. Growth</h4>
                 </div>
-                <span className="font-mono text-sm text-zinc-500">{result?.categoryScores.growthMoat}/40</span>
+                <span className="font-mono text-sm text-muted-foreground">{result?.categoryScores.growthMoat}/40</span>
               </div>
 
               <Select
@@ -436,14 +435,14 @@ export function FundamentalGradeInput({
 
             {/* Category 3: Shareholder Return (25pts) */}
             <Card padding="md" className="space-y-4 md:col-span-2 lg:col-span-1">
-              <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-700 pb-[6px]">
+              <div className="flex items-center justify-between border-b border-border pb-[6px]">
                 <div className="flex items-center gap-[6px]">
-                  <div className="p-1.5 rounded-[10px] bg-zinc-100 dark:bg-zinc-800">
-                    <Gift className="h-4 w-4 text-zinc-600 dark:text-zinc-400" />
+                  <div className="p-1.5 rounded-[10px] bg-surface-hover">
+                    <Gift className="h-4 w-4 text-muted-foreground" />
                   </div>
-                  <h4 className="font-semibold text-zinc-900 dark:text-zinc-100">3. Return</h4>
+                  <h4 className="font-semibold text-foreground">3. Return</h4>
                 </div>
-                <span className="font-mono text-sm text-zinc-500">{result?.categoryScores.shareholderReturn}/25</span>
+                <span className="font-mono text-sm text-muted-foreground">{result?.categoryScores.shareholderReturn}/25</span>
               </div>
 
               <div className="space-y-1">

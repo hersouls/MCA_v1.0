@@ -64,10 +64,10 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
           <div className="mb-6 p-4 rounded-full bg-danger-100 dark:bg-danger-900/30">
             <AlertTriangle className="w-12 h-12 text-danger-500" aria-hidden="true" />
           </div>
-          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 mb-2">
+          <h1 className="text-2xl font-bold text-foreground mb-2">
             오류가 발생했습니다
           </h1>
-          <p className="text-zinc-600 dark:text-zinc-400 mb-6 max-w-md">
+          <p className="text-muted-foreground mb-6 max-w-md">
             페이지를 표시하는 중에 문제가 발생했습니다.
             <br />
             다시 시도하거나 대시보드로 이동해 주세요.
@@ -76,10 +76,10 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
           {/* Error details in development */}
           {import.meta.env.DEV && this.state.error && (
             <details className="mb-6 w-full max-w-lg text-left">
-              <summary className="cursor-pointer text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300">
+              <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
                 오류 상세 정보
               </summary>
-              <pre className="mt-2 p-4 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-xs text-zinc-700 dark:text-zinc-300 overflow-auto max-h-48">
+              <pre className="mt-2 p-4 rounded-lg bg-surface-hover text-xs text-muted-foreground overflow-auto max-h-48">
                 {this.state.error.toString()}
                 {this.state.errorInfo?.componentStack}
               </pre>
@@ -127,10 +127,10 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
       <div className="mb-4 p-3 rounded-full bg-danger-100 dark:bg-danger-900/30">
         <AlertTriangle className="w-8 h-8 text-danger-500" aria-hidden="true" />
       </div>
-      <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-2">
+      <h2 className="text-lg font-semibold text-foreground mb-2">
         문제가 발생했습니다
       </h2>
-      <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
+      <p className="text-sm text-muted-foreground mb-4">
         {error?.message || '알 수 없는 오류가 발생했습니다.'}
       </p>
       {resetError && (

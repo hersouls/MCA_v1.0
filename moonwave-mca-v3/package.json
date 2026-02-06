@@ -23,6 +23,7 @@
     "chartjs-plugin-datalabels": "^2.2.0",
     "clsx": "^2.1.1",
     "dexie": "^4.2.1",
+    "driver.js": "^1.4.0",
     "framer-motion": "^12.29.0",
     "jspdf": "^4.0.0",
     "jspdf-autotable": "^5.0.7",

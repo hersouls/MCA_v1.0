@@ -38,6 +38,6 @@ export const STOCK_BLOG_URLS: Record<string, string> = {
  * @param stockCode 종목코드 (예: '017810')
  * @returns 블로그 URL 또는 null
  */
-export function getBlogUrl(stockCode: string): string | null {
-  return STOCK_BLOG_URLS[stockCode] || null;
+export function getBlogUrl(stockCode: string): string {
+  return STOCK_BLOG_URLS[stockCode] || 'https://blog.naver.com/her_soul';
 }

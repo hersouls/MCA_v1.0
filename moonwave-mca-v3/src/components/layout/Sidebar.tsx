@@ -62,7 +62,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   return (
     <aside
       className={clsx(
-        'hidden lg:flex flex-col h-screen bg-zinc-50 dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800',
+        'hidden lg:flex flex-col h-screen bg-card border-r border-border',
         'transition-all duration-300 ease-in-out',
         isSidebarCollapsed ? 'w-16' : 'w-64'
       )}
@@ -71,7 +71,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
       aria-expanded={!isSidebarCollapsed}
     >
       {/* Logo */}
-      <div className="flex items-center h-16 px-4 border-b border-zinc-200 dark:border-zinc-800">
+      <div className="flex items-center h-16 px-4 border-b border-border">
         <a
           href="/dashboard"
           className="flex items-center gap-3 overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded-lg"
@@ -85,17 +85,17 @@ export function Sidebar({ onNavigate }: SidebarProps) {
           />
           {!isSidebarCollapsed && (
             <div className="flex flex-col min-w-0">
-              <span className="font-bold text-zinc-900 dark:text-zinc-100 truncate">
+              <span className="font-bold text-foreground truncate">
                 Moonwave MCA
               </span>
-              <span className="text-[10px] text-zinc-500 dark:text-zinc-400">v3.0</span>
+              <span className="text-[10px] text-muted-foreground">v3.0</span>
             </div>
           )}
         </a>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-4" aria-label="주 메뉴">
+      <nav className="flex-1 overflow-y-auto py-4" aria-label="주 메뉴" data-tour="sidebar-nav">
         <ul className="space-y-1 px-2" role="menubar">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -108,7 +108,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
                   'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500',
                   isActive
                     ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
-                    : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                    : 'text-muted-foreground hover:bg-surface-hover'
                 )}
                 role="menuitem"
                 aria-current={isActive ? 'page' : undefined}
@@ -139,7 +139,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
           <section className="mt-6 px-2" aria-labelledby="favorites-heading">
             <h2
               id="favorites-heading"
-              className="px-3 mb-2 text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider"
+              className="px-3 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider"
             >
               즐겨찾기
             </h2>
@@ -154,8 +154,8 @@ export function Sidebar({ onNavigate }: SidebarProps) {
                       className={clsx(
                         'w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500',
                         isActive
-                          ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100'
-                          : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'
+                          ? 'bg-surface-active text-foreground'
+                          : 'text-muted-foreground hover:bg-surface-hover'
                       )}
                       role="menuitem"
                       aria-current={isActive ? 'page' : undefined}
@@ -188,12 +188,12 @@ export function Sidebar({ onNavigate }: SidebarProps) {
       </nav>
 
       {/* Collapse Toggle */}
-      <div className="p-2 border-t border-zinc-200 dark:border-zinc-800">
+      <div className="p-2 border-t border-border">
         {isSidebarCollapsed ? (
           <Tooltip content="사이드바 펼치기" placement="right">
             <button
               onClick={toggleSidebar}
-              className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-muted-foreground hover:bg-surface-hover transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
               aria-label="사이드바 펼치기"
               aria-expanded={false}
             >
@@ -203,7 +203,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
         ) : (
           <button
             onClick={toggleSidebar}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-muted-foreground hover:bg-surface-hover transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
             aria-label="사이드바 접기"
             aria-expanded={true}
           >

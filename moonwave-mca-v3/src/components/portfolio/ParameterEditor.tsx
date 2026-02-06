@@ -22,10 +22,10 @@ function LabelWithTooltip({
       {label}
       <Tooltip content={tooltip} placement="top">
         <TooltipTriggerButton
-          className="hover:bg-zinc-200 dark:hover:bg-zinc-700 p-0.5 -m-0.5 transition-colors"
+          className="hover:bg-surface-active p-0.5 -m-0.5 transition-colors"
           aria-label={`${label} 도움말`}
         >
-          <HelpCircle className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500" />
+          <HelpCircle className="w-3.5 h-3.5 text-muted-foreground" />
         </TooltipTriggerButton>
       </Tooltip>
     </span>
@@ -221,7 +221,7 @@ function ParameterEditorContent({
                 />
               }
               value={params.startDrop.toString()}
-              onChange={(value) => handleChange('startDrop', Number.parseInt(String(value)) || 12)}
+              onChange={(value) => handleChange('startDrop', value === '' ? 0 : Number.parseFloat(String(value)) || 0)}
               unit="%"
             />
             <NumericInput
@@ -232,7 +232,7 @@ function ParameterEditorContent({
                 />
               }
               value={params.steps.toString()}
-              onChange={(value) => handleChange('steps', Number.parseInt(String(value)) || 20)}
+              onChange={(value) => handleChange('steps', value === '' ? 0 : Number.parseFloat(String(value)) || 0)}
               unit="구간"
             />
           </div>
@@ -257,7 +257,7 @@ function ParameterEditorContent({
             </div>
             <Button
               color="primary"
-                            leftIcon={<Zap className="w-4 h-4" />}
+              leftIcon={<Zap className="w-4 h-4" />}
               onClick={handleAutoFit}
               isLoading={isOptimizing}
               disabled={params.targetBudget <= 0}
@@ -267,11 +267,11 @@ function ParameterEditorContent({
           </div>
 
           {/* Budget Estimate */}
-          <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50">
+          <div className="p-4 rounded-xl bg-surface-hover border border-border">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-zinc-600 dark:text-zinc-400">예상 총 투자금</span>
+              <span className="text-sm text-muted-foreground">예상 총 투자금</span>
               <div className="flex items-center gap-2">
-                <span className="text-lg font-bold text-zinc-900 dark:text-zinc-50 tabular-nums">
+                <span className="text-lg font-bold text-foreground tabular-nums">
                   {formatKoreanUnit(estimatedBudget)}
                 </span>
                 {params.targetBudget > 0 && (
@@ -282,7 +282,7 @@ function ParameterEditorContent({
                         ? 'bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400'
                         : budgetDiff > 0
                           ? 'bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-400'
-                          : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-400'
+                          : 'bg-surface-hover text-muted-foreground'
                     )}
                   >
                     {Math.abs(budgetDiff) < 5 ? (
@@ -305,9 +305,9 @@ function ParameterEditorContent({
           </div>
 
           {/* Legacy Holdings Section */}
-          <div className="border-t border-zinc-200 dark:border-zinc-700/50 pt-4">
+          <div className="border-t border-border pt-4">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              <span className="text-sm font-medium text-muted-foreground">
                 <LabelWithTooltip
                   label="기보유 주식 설정"
                   tooltip="MCA 전략 시작 전 이미 보유 중인 주식. 평균단가 계산에 반영됩니다. 최대 3개 항목까지 추가 가능합니다."
@@ -317,7 +317,7 @@ function ParameterEditorContent({
                 <Button
                   plain
                   color="primary"
-                                    leftIcon={<Plus className="w-3.5 h-3.5" />}
+                  leftIcon={<Plus className="w-3.5 h-3.5" />}
                   onClick={addLegacyHolding}
                 >
                   항목 추가
@@ -329,13 +329,13 @@ function ParameterEditorContent({
               {legacyHoldings.map((holding, index) => (
                 <div
                   key={index}
-                  className="relative p-3 rounded-lg bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700"
+                  className="relative p-3 rounded-lg bg-surface-hover border border-border"
                 >
                   {/* 삭제 버튼 */}
                   <button
                     type="button"
                     onClick={() => removeLegacyHolding(index)}
-                    className="absolute top-2 right-2 p-1 rounded-full text-zinc-400 hover:text-danger-500 hover:bg-danger-50 dark:hover:bg-danger-900/30 transition-colors"
+                    className="absolute top-2 right-2 p-1 rounded-full text-muted-foreground hover:text-danger-500 hover:bg-danger-50 dark:hover:bg-danger-900/30 transition-colors"
                     aria-label="항목 삭제"
                   >
                     <X className="w-3.5 h-3.5" />

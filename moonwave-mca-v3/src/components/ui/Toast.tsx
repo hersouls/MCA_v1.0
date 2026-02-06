@@ -70,17 +70,17 @@ function ToastItem({ id, message, type, onDismiss }: ToastItemProps) {
         className={clsx('w-5 h-5 flex-shrink-0 mt-0.5', config.iconClassName)}
         aria-hidden="true"
       />
-      <p className="flex-1 text-sm font-medium text-zinc-900 dark:text-zinc-100">
+      <p className="flex-1 text-sm font-medium text-foreground">
         <span className="sr-only">{typeLabel}: </span>
         {message}
       </p>
       <button
         onClick={() => onDismiss(id)}
-        className="flex-shrink-0 p-1 rounded-md hover:bg-zinc-900/10 dark:hover:bg-white/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+        className="flex-shrink-0 p-1 rounded-md hover:bg-foreground/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
         aria-label={`${typeLabel} 알림 닫기`}
         type="button"
       >
-        <X className="w-4 h-4 text-zinc-500" aria-hidden="true" />
+        <X className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
       </button>
     </div>
   );

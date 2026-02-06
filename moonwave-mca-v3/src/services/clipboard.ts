@@ -378,6 +378,7 @@ export interface GemParseResult {
 function mapGlobalRevenueType(value: string): GlobalScalability {
   const mapping: Record<string, GlobalScalability> = {
     high_growth: 'high_growth',
+    global_growth: 'high_growth', // Gemini Gem API alias
     expanding: 'expanding',
     domestic: 'domestic_regulated',
     regulated: 'domestic_regulated',
@@ -392,6 +393,7 @@ function mapMarketDominanceStr(value: string): MarketDominance {
   const mapping: Record<string, MarketDominance> = {
     monopoly: 'monopoly_top',
     monopoly_top: 'monopoly_top',
+    dominant: 'monopoly_top', // Gemini Gem API alias
     oligopoly: 'oligopoly_top3',
     oligopoly_top3: 'oligopoly_top3',
     competitive: 'competitive',
@@ -439,6 +441,7 @@ function mapTsrPolicy(value: string): TotalShareholderReturn {
     high_yield: 'high_yield',
     dividend_only: 'high_yield',
     minimum: 'minimum',
+    minimal: 'minimum', // Gemini Gem API alias
     none: 'none',
   };
   return mapping[value] || 'none';

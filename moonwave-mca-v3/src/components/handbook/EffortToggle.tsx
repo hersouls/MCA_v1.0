@@ -30,7 +30,7 @@ export function EffortToggle({ className }: EffortToggleProps) {
       className={clsx('flex items-center', className)}
     >
       <RadioGroup.Label className="sr-only">정보 깊이 선택</RadioGroup.Label>
-      <div className="flex rounded-lg bg-zinc-100 dark:bg-zinc-800 p-0.5">
+      <div className="flex rounded-lg bg-surface-hover p-0.5">
         {EFFORT_LEVEL_LIST.map((level) => {
           const Icon = LEVEL_ICONS[level.id];
           return (
@@ -42,8 +42,8 @@ export function EffortToggle({ className }: EffortToggleProps) {
                   'relative flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md cursor-pointer transition-all duration-150',
                   'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-1',
                   checked
-                    ? 'bg-white dark:bg-zinc-700 text-primary-600 dark:text-primary-400 shadow-sm'
-                    : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300'
+                    ? 'bg-card text-primary-600 dark:text-primary-400 shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
                 )
               }
             >

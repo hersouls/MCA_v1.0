@@ -32,9 +32,9 @@ const tooltipStyles = clsx(
   // Base styles - z-[100] to appear above modals (z-50)
   'z-[100] px-2.5 py-1.5 text-xs font-medium rounded-lg shadow-lg',
   // Colors
-  'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900',
+  'bg-foreground text-background',
   // Border
-  'border border-zinc-700 dark:border-zinc-300',
+  'border border-foreground/30',
   // Animation
   'animate-in fade-in-0 zoom-in-95',
   'data-[exiting]:animate-out data-[exiting]:fade-out-0 data-[exiting]:zoom-out-95',
@@ -47,8 +47,8 @@ const tooltipStyles = clsx(
 
 // Arrow styling
 const arrowStyles = clsx(
-  'fill-zinc-900 dark:fill-zinc-100',
-  'stroke-zinc-700 dark:stroke-zinc-300',
+  'fill-foreground',
+  'stroke-foreground/70',
   'stroke-1'
 );
 

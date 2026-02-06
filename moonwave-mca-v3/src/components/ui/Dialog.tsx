@@ -53,8 +53,8 @@ export function Dialog({ open, onClose, children, size = 'lg' }: DialogProps) {
             transition
             className={clsx(
               // Base styles - Enhanced shadow & border for clear boundary
-              'row-start-2 w-full min-w-0 rounded-t-2xl bg-white p-6 sm:p-8 shadow-2xl ring-1 ring-zinc-200',
-              'dark:bg-zinc-900 dark:ring-zinc-700',
+              'row-start-2 w-full min-w-0 rounded-t-2xl bg-card p-6 sm:p-8 shadow-2xl ring-1 ring-border',
+              '',
               // Responsive - 12px border-radius
               'sm:mb-auto sm:rounded-xl',
               sizeStyles[size],
@@ -81,11 +81,11 @@ interface DialogHeaderProps {
 export function DialogHeader({ title, description, onClose }: DialogHeaderProps) {
   return (
     <div className="relative">
-      <DialogTitle className="text-balance text-lg/6 font-semibold text-zinc-950 dark:text-white sm:text-base/6">
+      <DialogTitle className="text-balance text-lg/6 font-semibold text-foreground sm:text-base/6">
         {title}
       </DialogTitle>
       {description && (
-        <Description className="mt-2 text-pretty text-sm/6 text-zinc-500 dark:text-zinc-400">
+        <Description className="mt-2 text-pretty text-sm/6 text-muted-foreground">
           {description}
         </Description>
       )}

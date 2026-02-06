@@ -125,18 +125,18 @@ export function FAQModal() {
 
   return (
     <Dialog open={isOpen} onClose={onClose} size="2xl">
-      <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-zinc-200 dark:border-zinc-800">
+      <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-border">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg">
             <HelpCircle className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
           </div>
-          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+          <h2 className="text-lg font-semibold text-foreground">
             사용자 메뉴얼 & FAQ
           </h2>
         </div>
         <button
           onClick={onClose}
-          className="p-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+          className="p-2 text-muted-foreground hover:text-foreground transition-colors"
         >
           <span className="sr-only">Close</span>
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -150,9 +150,9 @@ export function FAQModal() {
         </button>
       </div>
 
-      <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-200 dark:scrollbar-thumb-zinc-700">
-        <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-200 dark:border-zinc-700">
-          <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
+      <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-border">
+        <div className="p-4 bg-surface-hover rounded-xl border border-border">
+          <p className="text-sm text-muted-foreground leading-relaxed">
             Moonwave MCA는 감정을 배제한 기계적 분할 매수 시스템입니다. 아래 메뉴얼을 통해 각 기능의
             정확한 의미와 활용법을 확인하세요.
           </p>
@@ -160,7 +160,7 @@ export function FAQModal() {
 
         {FAQ_ITEMS.map((section, catIdx) => (
           <div key={catIdx}>
-            <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mb-3 px-1 flex items-center gap-2">
+            <h3 className="text-sm font-bold text-foreground mb-3 px-1 flex items-center gap-2">
               <span className="w-1 h-4 bg-indigo-500 rounded-full"></span>
               {section.category}
             </h3>
@@ -172,33 +172,33 @@ export function FAQModal() {
                 return (
                   <div
                     key={qIdx}
-                    className="border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden bg-white dark:bg-zinc-900/50 transition-all duration-200"
+                    className="border border-border rounded-lg overflow-hidden bg-card transition-all duration-200"
                   >
                     <button
                       onClick={() => toggleItem(id)}
-                      className="w-full flex items-center justify-between p-4 text-left hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors"
+                      className="w-full flex items-center justify-between p-4 text-left hover:bg-surface-hover transition-colors"
                     >
                       <div className="flex items-start gap-3">
                         <MessageCircleQuestion
                           className={clsx(
                             'w-5 h-5 flex-shrink-0 mt-0.5 transition-colors',
-                            isExpanded ? 'text-indigo-500' : 'text-zinc-400'
+                            isExpanded ? 'text-indigo-500' : 'text-muted-foreground'
                           )}
                         />
-                        <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                        <span className="font-medium text-foreground">
                           {item.q}
                         </span>
                       </div>
                       <ChevronDown
                         className={clsx(
-                          'w-4 h-4 text-zinc-400 transition-transform duration-200',
+                          'w-4 h-4 text-muted-foreground transition-transform duration-200',
                           isExpanded && 'rotate-180'
                         )}
                       />
                     </button>
                     {isExpanded && (
                       <div className="px-4 pb-4 pl-12 bg-white dark:bg-transparent">
-                        <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed bg-zinc-50 dark:bg-zinc-800/50 p-3 rounded-lg whitespace-pre-line">
+                        <p className="text-sm text-muted-foreground leading-relaxed bg-surface-hover p-3 rounded-lg whitespace-pre-line">
                           {item.a}
                         </p>
                         {item.link && (

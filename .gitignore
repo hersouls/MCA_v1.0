@@ -24,3 +24,8 @@ dist/
 # Backup files
 *.bak
 *_backup*
+
+# Temp files
+nul
+D\357\200\272temp_zinc_results.txt
+BTC_MCA_TradeList.html

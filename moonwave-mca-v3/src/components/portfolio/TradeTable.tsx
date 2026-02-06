@@ -95,19 +95,19 @@ export function TradeTable({
         <Card variant="elevated" padding="md">
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-zinc-500 dark:text-zinc-400 text-xs block">체결 수량</span>
-              <p className="font-bold text-zinc-900 dark:text-zinc-100 tabular-nums">
+              <span className="text-muted-foreground text-xs block">체결 수량</span>
+              <p className="font-bold text-foreground tabular-nums">
                 {totals.realQty.toLocaleString()}주
               </p>
             </div>
             <div>
-              <span className="text-zinc-500 dark:text-zinc-400 text-xs block">체결 금액</span>
-              <p className="font-bold text-zinc-900 dark:text-zinc-100 tabular-nums">
+              <span className="text-muted-foreground text-xs block">체결 금액</span>
+              <p className="font-bold text-foreground tabular-nums">
                 {formatKoreanUnit(totals.realAmount)}
               </p>
             </div>
             <div className="col-span-2">
-              <span className="text-zinc-500 dark:text-zinc-400 text-xs block">평균 단가</span>
+              <span className="text-muted-foreground text-xs block">평균 단가</span>
               <p className="font-bold text-primary-600 dark:text-primary-400 tabular-nums text-lg">
                 {totals.avgPrice > 0 ? formatCurrency(totals.avgPrice) : '-'}
               </p>
@@ -120,78 +120,78 @@ export function TradeTable({
 
   // Desktop: Table View
   return (
-    <div className="overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700/50">
+    <div className="overflow-hidden rounded-xl border border-border">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-zinc-50 dark:bg-zinc-800/50 border-b border-zinc-200 dark:border-zinc-700/50">
+          <thead className="bg-surface-hover border-b border-border">
             <tr>
-              <th className="px-3 py-3 text-center text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider w-16">
+              <th className="px-3 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider w-16">
                 <Tooltip content="예약 매수 주문 등록 여부" placement="bottom">
                   <span className="cursor-help">주문</span>
                 </Tooltip>
               </th>
-              <th className="px-3 py-3 text-center text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider w-16">
+              <th className="px-3 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider w-16">
                 <Tooltip content="실제 매수 체결 완료 여부" placement="bottom">
                   <span className="cursor-help">체결</span>
                 </Tooltip>
               </th>
-              <th className="px-3 py-3 text-center text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider w-14">
+              <th className="px-3 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider w-14">
                 <Tooltip content="분할 매수 구간 번호" placement="bottom">
                   <span className="cursor-help">구간</span>
                 </Tooltip>
               </th>
-              <th className="px-3 py-3 text-right text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider">
+              <th className="px-3 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 <Tooltip content="고점 대비 하락률" placement="bottom">
                   <span className="cursor-help">하락률</span>
                 </Tooltip>
               </th>
-              <th className="px-3 py-3 text-right text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider">
+              <th className="px-3 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 <Tooltip content="해당 구간 매수 단가" placement="bottom">
                   <span className="cursor-help">매수가</span>
                 </Tooltip>
               </th>
-              <th className="px-3 py-3 text-right text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider">
+              <th className="px-3 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 <Tooltip content="해당 구간 매수 수량" placement="bottom">
                   <span className="cursor-help">수량</span>
                 </Tooltip>
               </th>
-              <th className="px-3 py-3 text-right text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider">
+              <th className="px-3 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 <Tooltip content="해당 구간 매수 금액" placement="bottom">
                   <span className="cursor-help">금액</span>
                 </Tooltip>
               </th>
               {/* Accumulated columns */}
-              <th className="px-3 py-3 text-right text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider border-l border-zinc-200 dark:border-zinc-700">
+              <th className="px-3 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider border-l border-border">
                 <Tooltip content="체결 시 누적 보유 수량" placement="bottom">
                   <span className="cursor-help">실 수량</span>
                 </Tooltip>
               </th>
-              <th className="px-3 py-3 text-right text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider">
+              <th className="px-3 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 <Tooltip content="체결 시 누적 투자 금액" placement="bottom">
                   <span className="cursor-help">실 총액</span>
                 </Tooltip>
               </th>
-              <th className="px-3 py-3 text-right text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider">
+              <th className="px-3 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 <Tooltip content="현재 평균 매수 단가" placement="bottom">
                   <span className="cursor-help">평단가</span>
                 </Tooltip>
               </th>
-              <th className="px-3 py-3 text-right text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider">
+              <th className="px-3 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 <Tooltip content="이론 금액과 실제 금액의 괴리율" placement="bottom">
                   <span className="cursor-help">괴리율</span>
                 </Tooltip>
               </th>
-              <th className="px-3 py-3 text-center text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider border-l border-zinc-200 dark:border-zinc-700 w-28">
+              <th className="px-3 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider border-l border-border w-28">
                 <Tooltip content="실제 매수 체결 일자" placement="bottom">
                   <span className="cursor-help">체결일</span>
                 </Tooltip>
               </th>
-              <th className="px-3 py-3 text-left text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider min-w-[120px]">
+              <th className="px-3 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider min-w-[120px]">
                 비고
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-200 dark:divide-zinc-700/50">
+          <tbody className="divide-y divide-border">
             {trades.map((trade) => (
               <TradeRow
                 key={trade.step}
@@ -205,32 +205,32 @@ export function TradeTable({
               />
             ))}
           </tbody>
-          <tfoot className="bg-zinc-50 dark:bg-zinc-800/50 border-t-2 border-zinc-300 dark:border-zinc-600">
+          <tfoot className="bg-surface-hover border-t-2 border-border">
             <tr>
               <td
                 colSpan={5}
-                className="px-3 py-3 text-right font-semibold text-zinc-700 dark:text-zinc-200"
+                className="px-3 py-3 text-right font-semibold text-foreground"
               >
                 합계
               </td>
-              <td className="px-3 py-3 text-right font-bold text-zinc-900 dark:text-zinc-50 tabular-nums whitespace-nowrap">
+              <td className="px-3 py-3 text-right font-bold text-foreground tabular-nums whitespace-nowrap">
                 {totals.executedQty.toLocaleString()}주
               </td>
-              <td className="px-3 py-3 text-right font-bold text-zinc-900 dark:text-zinc-50 tabular-nums whitespace-nowrap">
+              <td className="px-3 py-3 text-right font-bold text-foreground tabular-nums whitespace-nowrap">
                 {formatKoreanUnit(totals.executedAmt)}
               </td>
               {/* Real totals */}
-              <td className="px-3 py-3 text-right font-bold text-zinc-900 dark:text-zinc-50 tabular-nums border-l border-zinc-200 dark:border-zinc-700 whitespace-nowrap">
+              <td className="px-3 py-3 text-right font-bold text-foreground tabular-nums border-l border-border whitespace-nowrap">
                 {totals.realQty.toLocaleString()}주
               </td>
-              <td className="px-3 py-3 text-right font-bold text-zinc-900 dark:text-zinc-50 tabular-nums whitespace-nowrap">
+              <td className="px-3 py-3 text-right font-bold text-foreground tabular-nums whitespace-nowrap">
                 {formatKoreanUnit(totals.realAmount)}
               </td>
               <td className="px-3 py-3 text-right font-bold text-primary-600 dark:text-primary-400 tabular-nums whitespace-nowrap">
                 {totals.avgPrice > 0 ? formatCurrency(totals.avgPrice) : '-'}
               </td>
               <td className="px-3 py-3"></td>
-              <td className="px-3 py-3 border-l border-zinc-200 dark:border-zinc-700"></td>
+              <td className="px-3 py-3 border-l border-border"></td>
               <td className="px-3 py-3"></td>
             </tr>
           </tfoot>
@@ -271,16 +271,16 @@ function TradeRow({
   };
 
   const getGapColor = () => {
-    if (!trade.isExecuted && !trade.isOrdered) return 'text-zinc-400 dark:text-zinc-500';
+    if (!trade.isExecuted && !trade.isOrdered) return 'text-muted-foreground';
     if (trade.gap < -5) return 'text-success-600 dark:text-success-400';
     if (trade.gap > 5) return 'text-danger-600 dark:text-danger-400';
-    return 'text-zinc-600 dark:text-zinc-300';
+    return 'text-muted-foreground';
   };
 
   return (
     <tr
       className={clsx(
-        'transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50',
+        'transition-colors hover:bg-surface-hover',
         getRowClass()
       )}
     >
@@ -292,7 +292,7 @@ function TradeRow({
             'w-6 h-6 rounded border-2 flex items-center justify-center transition-all',
             trade.isOrdered
               ? 'bg-warning-500 border-warning-500 text-white'
-              : 'border-zinc-300 dark:border-zinc-500 hover:border-warning-400 dark:hover:border-warning-500'
+              : 'border-border hover:border-warning-400 dark:hover:border-warning-500'
           )}
           aria-label={`${trade.step}구간 주문 ${trade.isOrdered ? '취소' : '등록'}`}
         >
@@ -310,8 +310,8 @@ function TradeRow({
             trade.isExecuted
               ? 'bg-success-500 border-success-500 text-white'
               : trade.isOrdered
-                ? 'border-zinc-300 dark:border-zinc-500 hover:border-success-400 dark:hover:border-success-500'
-                : 'border-zinc-200 dark:border-zinc-700 opacity-30 cursor-not-allowed'
+                ? 'border-border hover:border-success-400 dark:hover:border-success-500'
+                : 'border-border opacity-30 cursor-not-allowed'
           )}
           aria-label={`${trade.step}구간 체결 ${trade.isExecuted ? '취소' : '등록'}`}
         >
@@ -328,7 +328,7 @@ function TradeRow({
               ? 'bg-success-100 text-success-700 dark:bg-success-900/50 dark:text-success-300'
               : trade.isOrdered
                 ? 'bg-warning-100 text-warning-700 dark:bg-warning-900/50 dark:text-warning-300'
-                : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'
+                : 'bg-surface-hover text-muted-foreground'
           )}
         >
           {trade.step}
@@ -336,44 +336,44 @@ function TradeRow({
       </td>
 
       {/* Drop Rate */}
-      <td className="px-3 py-2.5 text-right tabular-nums text-zinc-600 dark:text-zinc-300 whitespace-nowrap">
+      <td className="px-3 py-2.5 text-right tabular-nums text-muted-foreground whitespace-nowrap">
         -{trade.dropRate}%
       </td>
 
       {/* Buy Price */}
-      <td className="px-3 py-2.5 text-right tabular-nums font-medium text-zinc-900 dark:text-zinc-50 whitespace-nowrap">
+      <td className="px-3 py-2.5 text-right tabular-nums font-medium text-foreground whitespace-nowrap">
         {formatCurrency(trade.buyPrice)}
       </td>
 
       {/* Quantity */}
-      <td className="px-3 py-2.5 text-right tabular-nums text-zinc-700 dark:text-zinc-200 whitespace-nowrap">
+      <td className="px-3 py-2.5 text-right tabular-nums text-foreground whitespace-nowrap">
         {trade.quantity.toLocaleString()}주
       </td>
 
       {/* Amount */}
-      <td className="px-3 py-2.5 text-right tabular-nums text-zinc-700 dark:text-zinc-200 whitespace-nowrap">
+      <td className="px-3 py-2.5 text-right tabular-nums text-foreground whitespace-nowrap">
         {formatKoreanUnit(trade.amount)}
       </td>
 
       {/* Real Quantity (new) */}
-      <td className="px-3 py-2.5 text-right tabular-nums border-l border-zinc-200 dark:border-zinc-700 whitespace-nowrap">
+      <td className="px-3 py-2.5 text-right tabular-nums border-l border-border whitespace-nowrap">
         {trade.isExecuted ? (
-          <span className="font-bold text-zinc-900 dark:text-zinc-50">
+          <span className="font-bold text-foreground">
             {trade.realQty.toLocaleString()}주
           </span>
         ) : (
-          <span className="text-zinc-400 dark:text-zinc-500">-</span>
+          <span className="text-muted-foreground">-</span>
         )}
       </td>
 
       {/* Real Amount (new) */}
       <td className="px-3 py-2.5 text-right tabular-nums whitespace-nowrap">
         {trade.isExecuted ? (
-          <span className="font-bold text-zinc-900 dark:text-zinc-50">
+          <span className="font-bold text-foreground">
             {formatKoreanUnit(trade.realAmount)}
           </span>
         ) : (
-          <span className="text-zinc-400 dark:text-zinc-500">-</span>
+          <span className="text-muted-foreground">-</span>
         )}
       </td>
 
@@ -384,7 +384,7 @@ function TradeRow({
             {formatCurrency(trade.avgPrice)}
           </span>
         ) : (
-          <span className="text-zinc-400 dark:text-zinc-500">-</span>
+          <span className="text-muted-foreground">-</span>
         )}
       </td>
 
@@ -406,7 +406,7 @@ function TradeRow({
       </td>
 
       {/* Execution Date (new) */}
-      <td className="px-3 py-2.5 text-center border-l border-zinc-200 dark:border-zinc-700">
+      <td className="px-3 py-2.5 text-center border-l border-border">
         <input
           type="date"
           value={executionDate}
@@ -416,8 +416,8 @@ function TradeRow({
             'w-full bg-transparent text-xs text-center tabular-nums',
             'border-0 focus:outline-none focus:ring-1 focus:ring-primary-500 rounded',
             trade.isExecuted
-              ? 'text-zinc-700 dark:text-zinc-200'
-              : 'text-zinc-300 dark:text-zinc-600 cursor-not-allowed'
+              ? 'text-foreground'
+              : 'text-muted-foreground/50 cursor-not-allowed'
           )}
         />
       </td>
@@ -432,7 +432,7 @@ function TradeRow({
           className={clsx(
             'w-full min-w-[100px] bg-transparent text-xs',
             'border-0 focus:outline-none focus:ring-1 focus:ring-primary-500 rounded px-1',
-            'text-zinc-700 dark:text-zinc-200 placeholder-zinc-400 dark:placeholder-zinc-500'
+            'text-foreground placeholder-muted-foreground'
           )}
         />
       </td>

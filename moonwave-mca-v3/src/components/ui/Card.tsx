@@ -15,21 +15,21 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 const variantStyles = {
-  default: clsx('bg-white dark:bg-zinc-900', 'ring-1 ring-zinc-950/5 dark:ring-white/10'),
+  default: clsx('bg-card', 'ring-1 ring-foreground/5 dark:ring-foreground/10'),
   elevated: clsx(
-    'bg-white dark:bg-zinc-900',
-    'shadow-lg shadow-zinc-950/5 dark:shadow-none',
-    'ring-1 ring-zinc-950/5 dark:ring-white/10'
+    'bg-card',
+    'shadow-lg shadow-foreground/5 dark:shadow-none',
+    'ring-1 ring-foreground/5 dark:ring-foreground/10'
   ),
-  bordered: clsx('bg-transparent', 'border-2 border-zinc-200 dark:border-zinc-700'),
-  outline: clsx('bg-white/50 dark:bg-zinc-900/50', 'ring-1 ring-zinc-950/10 dark:ring-white/15'),
+  bordered: clsx('bg-transparent', 'border-2 border-border'),
+  outline: clsx('bg-card/50', 'ring-1 ring-foreground/10 dark:ring-foreground/15'),
   interactive: clsx(
-    'bg-white dark:bg-zinc-900',
-    'ring-1 ring-zinc-950/5 dark:ring-white/10',
-    'hover:ring-zinc-950/10 dark:hover:ring-white/20',
-    'hover:shadow-md hover:shadow-zinc-950/5 dark:hover:shadow-none',
+    'bg-card',
+    'ring-1 ring-foreground/5 dark:ring-foreground/10',
+    'hover:ring-foreground/10 dark:hover:ring-foreground/20',
+    'hover:shadow-md hover:shadow-foreground/5 dark:hover:shadow-none',
     'transition-all duration-200 cursor-pointer',
-    'active:ring-zinc-950/15 dark:active:ring-white/25'
+    'active:ring-foreground/15 dark:active:ring-foreground/25'
   ),
 };
 
@@ -107,9 +107,9 @@ export function CardHeader({
           </div>
         )}
         <div className="min-w-0">
-          <h3 className="text-base/7 font-semibold text-zinc-950 dark:text-white">{title}</h3>
+          <h3 className="text-base/7 font-semibold text-foreground">{title}</h3>
           {description && (
-            <p className="mt-0.5 text-sm/6 text-zinc-500 dark:text-zinc-400">{description}</p>
+            <p className="mt-0.5 text-sm/6 text-muted-foreground">{description}</p>
           )}
         </div>
       </div>
@@ -156,7 +156,7 @@ interface StatsCardProps {
 }
 
 const valueColorStyles = {
-  default: 'text-zinc-950 dark:text-white',
+  default: 'text-foreground',
   primary: 'text-primary-600 dark:text-primary-400',
   success: 'text-success-600 dark:text-success-400',
   warning: 'text-warning-600 dark:text-warning-400',
@@ -184,12 +184,12 @@ export function StatsCard({
     <Card padding="md" className={className}>
       <div className="flex items-start justify-between">
         <div className="min-w-0 flex-1">
-          <p className="text-xs/5 font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider inline-flex items-center gap-1">
+          <p className="text-xs/5 font-medium text-muted-foreground uppercase tracking-wider inline-flex items-center gap-1">
             {label}
             {tooltip && (
               <Tooltip content={tooltip} placement="top">
-                <AriaButton className="inline-flex items-center justify-center rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-700 p-0.5 -m-0.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500">
-                  <Info className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500" />
+                <AriaButton className="inline-flex items-center justify-center rounded-full hover:bg-surface-active p-0.5 -m-0.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500">
+                  <Info className="w-3.5 h-3.5 text-muted-foreground" />
                 </AriaButton>
               </Tooltip>
             )}
@@ -206,7 +206,7 @@ export function StatsCard({
           {subValue && (
             <p
               className={clsx(
-                'mt-1 text-sm/6 text-zinc-500 dark:text-zinc-400 tabular-nums',
+                'mt-1 text-sm/6 text-muted-foreground tabular-nums',
                 alignStyles[align]
               )}
             >
@@ -215,14 +215,14 @@ export function StatsCard({
           )}
           {progress && (
             <div className="mt-2">
-              <div className="h-2 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
+              <div className="h-2 bg-surface-active rounded-full overflow-hidden">
                 <div
                   className="h-full bg-primary-500 rounded-full transition-all duration-500"
                   style={{ width: `${Math.min(progress.value, 100)}%` }}
                 />
               </div>
               {progress.label && (
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">{progress.label}</p>
+                <p className="text-xs text-muted-foreground mt-1">{progress.label}</p>
               )}
             </div>
           )}
@@ -249,7 +249,7 @@ export function StatsCard({
         </div>
         {icon && (
           <div
-            className="flex-shrink-0 size-10 rounded-lg bg-zinc-100 dark:bg-zinc-800 ring-1 ring-zinc-950/5 dark:ring-white/10 flex items-center justify-center text-zinc-500 dark:text-zinc-400"
+            className="flex-shrink-0 size-10 rounded-lg bg-surface-hover ring-1 ring-foreground/5 dark:ring-foreground/10 flex items-center justify-center text-muted-foreground"
             aria-hidden="true"
           >
             {icon}
@@ -277,8 +277,8 @@ interface StatItemProps {
 export function StatItem({ label, value, className }: StatItemProps) {
   return (
     <div className={clsx('min-w-0', className)}>
-      <span className="block text-xs text-zinc-500 dark:text-zinc-400 truncate">{label}</span>
-      <p className="font-semibold text-zinc-900 dark:text-zinc-50 text-right tabular-nums whitespace-nowrap">
+      <span className="block text-xs text-muted-foreground truncate">{label}</span>
+      <p className="font-semibold text-foreground text-right tabular-nums whitespace-nowrap">
         {value}
       </p>
     </div>
@@ -332,7 +332,7 @@ export function StatGrid({
         responsive
           ? 'gap-4'
           : [
-              divided && 'divide-x divide-zinc-200 dark:divide-zinc-700',
+              divided && 'divide-x divide-border',
               '[&>*]:px-6 [&>*:first-child]:pl-0 [&>*:last-child]:pr-0',
             ],
         className

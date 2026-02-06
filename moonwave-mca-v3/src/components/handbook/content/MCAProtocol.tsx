@@ -67,7 +67,7 @@ export const MCAProtocol = () => {
         <img
           src="/images/handbook/mca_structure_diagram.png"
           alt="MCA Structure"
-          className="w-full h-auto rounded-xl shadow-lg mt-8 border border-zinc-200 dark:border-zinc-800"
+          className="w-full h-auto rounded-xl shadow-lg mt-8 border border-border"
         />
       </EffortSection>
 

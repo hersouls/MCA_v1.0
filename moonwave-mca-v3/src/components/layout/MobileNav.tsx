@@ -6,7 +6,7 @@ import { usePortfolioStore, useSortedPortfolios } from '@/stores/portfolioStore'
 import { useUIStore } from '@/stores/uiStore';
 import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react';
 import { clsx } from 'clsx';
-import { BookOpen, Briefcase, LayoutDashboard, Plus, Settings, Star, X } from 'lucide-react';
+import { BookOpen, Briefcase, HelpCircle, LayoutDashboard, Plus, Settings, Star, X } from 'lucide-react';
 import { Fragment } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -57,7 +57,7 @@ export function MobileNav({ onAddPortfolio: _onAddPortfolio }: MobileNavProps) {
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-zinc-900/50 backdrop-blur-sm" aria-hidden="true" />
+          <div className="fixed inset-0 bg-foreground/50 backdrop-blur-sm" aria-hidden="true" />
         </TransitionChild>
 
         {/* Drawer */}
@@ -71,29 +71,29 @@ export function MobileNav({ onAddPortfolio: _onAddPortfolio }: MobileNavProps) {
           leaveTo="-translate-x-full"
         >
           <DialogPanel
-            className="fixed inset-y-0 left-0 w-full max-w-xs bg-white dark:bg-zinc-950 shadow-xl flex flex-col"
+            className="fixed inset-y-0 left-0 w-full max-w-xs bg-background shadow-xl flex flex-col"
             aria-labelledby="mobile-nav-title"
           >
             {/* Header */}
-            <div className="flex items-center justify-between h-16 px-4 border-b border-zinc-200 dark:border-zinc-800 flex-shrink-0">
+            <div className="flex items-center justify-between h-16 px-4 border-b border-border flex-shrink-0">
               <div className="flex items-center gap-3">
                 <img src="/logo.png" alt="" className="w-8 h-8 object-contain" aria-hidden="true" />
                 <div className="flex flex-col">
                   <span
                     id="mobile-nav-title"
-                    className="font-bold text-zinc-900 dark:text-zinc-100"
+                    className="font-bold text-foreground"
                   >
                     Moonwave MCA
                   </span>
-                  <span className="text-[10px] text-zinc-500 dark:text-zinc-400">v3.0</span>
+                  <span className="text-[10px] text-muted-foreground">v3.0</span>
                 </div>
               </div>
               <button
                 onClick={closeMobileMenu}
-                className="p-2 -mr-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 min-w-[44px] min-h-[44px] flex items-center justify-center"
+                className="p-2 -mr-2 rounded-lg hover:bg-surface-hover transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 min-w-[44px] min-h-[44px] flex items-center justify-center"
                 aria-label="메뉴 닫기"
               >
-                <X className="w-5 h-5 text-zinc-600 dark:text-zinc-400" aria-hidden="true" />
+                <X className="w-5 h-5 text-muted-foreground" aria-hidden="true" />
               </button>
             </div>
 
@@ -106,7 +106,7 @@ export function MobileNav({ onAddPortfolio: _onAddPortfolio }: MobileNavProps) {
                     <Link
                       to="/dashboard"
                       onClick={closeMobileMenu}
-                      className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-primary-500 min-h-[44px]"
+                      className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-muted-foreground hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-primary-500 min-h-[44px]"
                       role="menuitem"
                     >
                       <LayoutDashboard className="w-5 h-5" aria-hidden="true" />
@@ -116,7 +116,7 @@ export function MobileNav({ onAddPortfolio: _onAddPortfolio }: MobileNavProps) {
                   <li role="none">
                     <button
                       onClick={handleOpenSettings}
-                      className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 min-h-[44px]"
+                      className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-muted-foreground hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 min-h-[44px]"
                       role="menuitem"
                     >
                       <Settings className="w-5 h-5" aria-hidden="true" />
@@ -143,7 +143,7 @@ export function MobileNav({ onAddPortfolio: _onAddPortfolio }: MobileNavProps) {
                 <section className="mt-6 px-2" aria-labelledby="mobile-favorites-heading">
                   <h2
                     id="mobile-favorites-heading"
-                    className="px-4 mb-2 text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider"
+                    className="px-4 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider"
                   >
                     즐겨찾기
                   </h2>
@@ -158,8 +158,8 @@ export function MobileNav({ onAddPortfolio: _onAddPortfolio }: MobileNavProps) {
                             className={clsx(
                               'w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 min-h-[44px]',
                               isActive
-                                ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100'
-                                : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'
+                                ? 'bg-surface-active text-foreground'
+                                : 'text-muted-foreground hover:bg-surface-hover/50'
                             )}
                             role="menuitem"
                             aria-current={isActive ? 'page' : undefined}
@@ -182,7 +182,7 @@ export function MobileNav({ onAddPortfolio: _onAddPortfolio }: MobileNavProps) {
                 <section className="mt-6 px-2" aria-labelledby="mobile-recent-heading">
                   <h2
                     id="mobile-recent-heading"
-                    className="px-4 mb-2 text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider"
+                    className="px-4 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider"
                   >
                     최근 종목
                   </h2>
@@ -197,8 +197,8 @@ export function MobileNav({ onAddPortfolio: _onAddPortfolio }: MobileNavProps) {
                             className={clsx(
                               'w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 min-h-[44px]',
                               isActive
-                                ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100'
-                                : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'
+                                ? 'bg-surface-active text-foreground'
+                                : 'text-muted-foreground hover:bg-surface-hover/50'
                             )}
                             role="menuitem"
                             aria-current={isActive ? 'page' : undefined}
@@ -226,15 +226,20 @@ export function BottomNav() {
   const currentView = useUIStore((state) => state.currentView);
   const openSettingsModal = useUIStore((state) => state.openSettingsModal);
   const openHandbook = useUIStore((state) => state.openHandbook);
+  const openFAQModal = useUIStore((state) => state.openFAQModal);
   const toggleMobileMenu = useUIStore((state) => state.toggleMobileMenu);
 
-  const handleNavigate = (target: 'dashboard' | 'detail' | 'settings' | 'handbook') => {
+  const handleNavigate = (target: 'dashboard' | 'detail' | 'settings' | 'handbook' | 'faq') => {
     if (target === 'settings') {
       openSettingsModal();
       return;
     }
     if (target === 'handbook') {
       openHandbook();
+      return;
+    }
+    if (target === 'faq') {
+      openFAQModal();
       return;
     }
     if (target === 'dashboard') {
@@ -251,13 +256,15 @@ export function BottomNav() {
     { id: 'dashboard' as const, label: '대시보드', icon: LayoutDashboard },
     { id: 'detail' as const, label: '종목 목록', icon: Briefcase },
     { id: 'handbook' as const, label: '핸드북', icon: BookOpen },
+    { id: 'faq' as const, label: 'FAQ', icon: HelpCircle },
     { id: 'settings' as const, label: '설정', icon: Settings },
   ];
 
   return (
     <nav
-      className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-lg border-t border-zinc-200 dark:border-zinc-800 safe-area-inset-bottom"
+      className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-card/80 backdrop-blur-lg border-t border-border safe-area-inset-bottom"
       aria-label="하단 메인 네비게이션"
+      data-tour="bottom-nav"
     >
       <ul className="flex items-center justify-around h-16" role="menubar">
         {navItems.map((item) => {
@@ -272,7 +279,7 @@ export function BottomNav() {
                   'w-full flex flex-col items-center justify-center gap-1 py-2 transition-colors min-h-[44px] focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-500',
                   isActive
                     ? 'text-primary-600 dark:text-primary-400'
-                    : 'text-zinc-400 dark:text-zinc-500 hover:text-primary-600 dark:hover:text-primary-400'
+                    : 'text-muted-foreground hover:text-primary-600 dark:hover:text-primary-400'
                 )}
                 role="menuitem"
                 aria-current={isActive ? 'page' : undefined}

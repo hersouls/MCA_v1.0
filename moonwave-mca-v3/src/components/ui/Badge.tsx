@@ -27,10 +27,10 @@ interface BadgeProps {
 const colorStyles: Record<BadgeColor, { solid: string; outline: string; dot: string }> = {
   zinc: {
     solid:
-      'bg-zinc-100 text-zinc-700 ring-zinc-500/10 dark:bg-zinc-700 dark:text-zinc-300 dark:ring-zinc-500/20',
+      'bg-surface-hover text-muted-foreground ring-foreground/10 dark:ring-foreground/20',
     outline:
-      'bg-transparent text-zinc-600 ring-zinc-500/20 dark:text-zinc-400 dark:ring-zinc-500/30',
-    dot: 'bg-zinc-500',
+      'bg-transparent text-muted-foreground ring-foreground/20 dark:ring-foreground/30',
+    dot: 'bg-muted-foreground',
   },
   primary: {
     solid:

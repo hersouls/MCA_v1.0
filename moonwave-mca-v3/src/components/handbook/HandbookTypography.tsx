@@ -82,11 +82,11 @@ export const Td = ({ children, className }: TypographyProps) => (
 
 // Special Components
 export const MermaidPlaceholder = ({ title, code }: { title: string; code: string }) => (
-  <div className="my-6 p-4 border border-zinc-200 dark:border-zinc-800 rounded-lg bg-zinc-50 dark:bg-zinc-900/30">
-    <div className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
+  <div className="my-6 p-4 border border-border rounded-lg bg-surface-hover">
+    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
       {title} (Diagram)
     </div>
-    <pre className="text-xs font-mono text-zinc-600 dark:text-zinc-400 overflow-x-auto whitespace-pre">
+    <pre className="text-xs font-mono text-muted-foreground overflow-x-auto whitespace-pre">
       {code}
     </pre>
   </div>

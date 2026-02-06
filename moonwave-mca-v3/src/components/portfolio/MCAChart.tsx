@@ -6,7 +6,7 @@
 import { calculateTrades } from '@/services/calculation';
 import { useSettingsStore } from '@/stores/settingsStore';
 import type { PortfolioParams } from '@/types';
-import { CHART_COLORS, CHART_CONFIG } from '@/utils/constants';
+import { CHART_COLORS, CHART_CONFIG, getCSSVar, hexToRgba } from '@/utils/constants';
 import { formatKoreanUnit } from '@/utils/format';
 import { TEXTS } from '@/utils/texts';
 import {
@@ -78,7 +78,9 @@ export function MCAChart({
   const colors = useMemo(
     () => ({
       ...themeColors,
-      textMuted: isDark ? '#a1a1aa' : '#64748b',
+      text: getCSSVar('--foreground'),
+      grid: getCSSVar('--border'),
+      textMuted: getCSSVar('--muted-foreground'),
       background: isDark
         ? `rgba(46, 255, 180, ${CHART_CONFIG.BACKGROUND_ALPHA.DARK})`
         : `rgba(0, 168, 107, ${CHART_CONFIG.BACKGROUND_ALPHA.LIGHT})`,
@@ -154,7 +156,7 @@ export function MCAChart({
             },
             formatter: (value: number) => `${value.toFixed(1)}%`,
             color: colors.text,
-            backgroundColor: isDark ? 'rgba(3,3,3,0.7)' : 'rgba(237,236,232,0.9)',
+            backgroundColor: hexToRgba(getCSSVar('--background'), isDark ? 0.7 : 0.9),
             borderRadius: CHART_CONFIG.DATA_LABEL.BORDER_RADIUS,
             padding: CHART_CONFIG.DATA_LABEL.PADDING,
             font: {
@@ -195,7 +197,7 @@ export function MCAChart({
           },
         },
         tooltip: {
-          backgroundColor: isDark ? '#0f0f0f' : '#EDECE8',
+          backgroundColor: getCSSVar('--card'),
           titleColor: colors.text,
           bodyColor: colors.textMuted,
           borderColor: colors.grid,
@@ -298,10 +300,10 @@ export function MCAChart({
   if (chartTrades.length === 0) {
     return (
       <div
-        className="flex items-center justify-center rounded-xl border border-dashed border-zinc-300 dark:border-zinc-600 bg-zinc-50 dark:bg-zinc-800/30"
+        className="flex items-center justify-center rounded-xl border border-dashed border-border bg-surface-hover"
         style={{ height }}
       >
-        <div className="text-center text-zinc-500 dark:text-zinc-400">
+        <div className="text-center text-muted-foreground">
           <p className="text-sm">{TEXTS.CHART.EMPTY_TITLE}</p>
           <p className="text-xs mt-1">{TEXTS.CHART.EMPTY_DESC}</p>
         </div>
@@ -311,7 +313,7 @@ export function MCAChart({
 
   return (
     <div
-      className="relative rounded-xl border border-zinc-200 dark:border-zinc-700/50 bg-white dark:bg-zinc-900/50 p-4"
+      className="relative rounded-xl border border-border bg-card p-4"
       style={{ height }}
     >
       <Line ref={chartRef} data={data} options={options} />

@@ -50,11 +50,11 @@ const solidStyles = {
     '[--btn-icon:theme(colors.white/80%)] data-[hover]:[--btn-icon:theme(colors.white)]'
   ),
   secondary: clsx(
-    'border-zinc-950/10 bg-white text-zinc-950',
-    'data-[hover]:bg-zinc-950/[2.5%] data-[active]:bg-zinc-950/5',
-    'dark:border-white/15 dark:bg-white/5 dark:text-white',
-    'dark:data-[hover]:bg-white/10 dark:data-[active]:bg-white/15',
-    '[--btn-icon:theme(colors.zinc.500)] data-[hover]:[--btn-icon:theme(colors.zinc.700)] dark:[--btn-icon:theme(colors.zinc.400)] dark:data-[hover]:[--btn-icon:theme(colors.zinc.300)]'
+    'border-foreground/10 bg-card text-foreground',
+    'data-[hover]:bg-foreground/[2.5%] data-[active]:bg-foreground/5',
+    'dark:border-foreground/15 dark:bg-foreground/5 dark:text-foreground',
+    'dark:data-[hover]:bg-foreground/10 dark:data-[active]:bg-foreground/15',
+    '[--btn-icon:theme(colors.muted-foreground)] data-[hover]:[--btn-icon:theme(colors.foreground)]'
   ),
   danger: clsx(
     'border-transparent bg-danger-600 text-white',
@@ -87,12 +87,12 @@ const outlineStyles = {
     '[--btn-icon:theme(colors.primary.500)]'
   ),
   secondary: clsx(
-    'border-zinc-300 text-zinc-700',
-    'data-[hover]:border-zinc-400 data-[hover]:bg-zinc-50',
-    'data-[active]:bg-zinc-100',
-    'dark:text-zinc-300 dark:border-zinc-700',
-    'dark:data-[hover]:border-zinc-600 dark:data-[hover]:bg-zinc-800/50',
-    '[--btn-icon:theme(colors.zinc.500)]'
+    'border-border text-muted-foreground',
+    'data-[hover]:border-foreground/20 data-[hover]:bg-surface-hover',
+    'data-[active]:bg-surface-active',
+    'dark:text-muted-foreground dark:border-border',
+    'dark:data-[hover]:border-foreground/15 dark:data-[hover]:bg-surface-hover',
+    '[--btn-icon:theme(colors.muted-foreground)]'
   ),
   danger: clsx(
     'border-danger-500/50 text-danger-600',
@@ -129,12 +129,12 @@ const plainStyles = {
     '[--btn-icon:theme(colors.primary.500)]'
   ),
   secondary: clsx(
-    'border-transparent text-zinc-700',
-    'data-[hover]:bg-zinc-100',
-    'data-[active]:bg-zinc-200',
-    'dark:text-zinc-300',
-    'dark:data-[hover]:bg-zinc-800',
-    '[--btn-icon:theme(colors.zinc.500)] dark:[--btn-icon:theme(colors.zinc.400)]'
+    'border-transparent text-muted-foreground',
+    'data-[hover]:bg-surface-hover',
+    'data-[active]:bg-surface-active',
+    'dark:text-muted-foreground',
+    'dark:data-[hover]:bg-surface-hover',
+    '[--btn-icon:theme(colors.muted-foreground)]'
   ),
   danger: clsx(
     'border-transparent text-danger-600',

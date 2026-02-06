@@ -122,7 +122,7 @@ export const MoonyouDefinition = () => (
       loop
       muted
       playsInline
-      className="w-full h-auto rounded-xl shadow-lg my-8 border border-zinc-200 dark:border-zinc-800"
+      className="w-full h-auto rounded-xl shadow-lg my-8 border border-border"
     />
 
     <RelatedLinks currentSection="moonyou" />

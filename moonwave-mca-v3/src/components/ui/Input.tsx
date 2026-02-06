@@ -55,7 +55,7 @@ export function Label({ className, ...props }: React.ComponentPropsWithoutRef<'l
       {...props}
       className={clsx(
         className,
-        'select-none text-sm/6 font-medium text-zinc-700 dark:text-zinc-300'
+        'select-none text-sm/6 font-medium text-muted-foreground'
       )}
     />
   );
@@ -67,7 +67,7 @@ function Description({ className, ...props }: React.ComponentPropsWithoutRef<'p'
     <p
       data-slot="description"
       {...props}
-      className={clsx(className, 'text-sm/6 text-zinc-500 dark:text-zinc-400')}
+      className={clsx(className, 'text-sm/6 text-muted-foreground')}
     />
   );
 }
@@ -132,9 +132,9 @@ const inputBaseStyles = clsx(
   // Basic layout
   'relative block w-full appearance-none rounded-lg px-[calc(--spacing(3.5)-1px)] py-[calc(--spacing(2.5)-1px)] sm:px-[calc(--spacing(3)-1px)] sm:py-[calc(--spacing(1.5)-1px)]',
   // Typography
-  'text-base/6 text-zinc-950 placeholder:text-zinc-500 sm:text-sm/6 dark:text-white',
+  'text-base/6 text-foreground placeholder:text-muted-foreground sm:text-sm/6',
   // Border
-  'border border-zinc-950/10 data-[hover]:border-zinc-950/20 dark:border-white/10 dark:data-[hover]:border-white/20',
+  'border border-foreground/10 data-[hover]:border-foreground/20 dark:border-foreground/10 dark:data-[hover]:border-foreground/20',
   // Background
   'bg-transparent dark:bg-white/5',
   // Focus
@@ -142,7 +142,7 @@ const inputBaseStyles = clsx(
   // Invalid
   'data-[invalid]:border-danger-500 data-[invalid]:data-[hover]:border-danger-500 data-[invalid]:data-[focus]:outline-danger-500',
   // Disabled
-  'data-[disabled]:opacity-50 data-[disabled]:border-zinc-950/20 dark:data-[disabled]:border-white/15',
+  'data-[disabled]:opacity-50 data-[disabled]:border-foreground/20 dark:data-[disabled]:border-foreground/15',
   // Hide default appearance
   '[&::-webkit-search-cancel-button]:appearance-none'
 );
@@ -259,7 +259,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           >
             {leftIcon && (
               <span
-                className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-500 dark:text-zinc-400"
+                className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground"
                 aria-hidden="true"
               >
                 {leftIcon}
@@ -289,7 +289,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
                 className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 gap-2"
                 aria-hidden="true"
               >
-                {rightIcon && <span className="text-zinc-500 dark:text-zinc-400">{rightIcon}</span>}
+                {rightIcon && <span className="text-muted-foreground">{rightIcon}</span>}
                 {StateIcon && (
                   <StateIcon
                     className={clsx(
@@ -382,7 +382,7 @@ export const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(
     <Input
       ref={ref}
       isNumeric
-      rightIcon={<span className="text-sm font-medium text-zinc-400">{unit}</span>}
+      rightIcon={<span className="text-sm font-medium text-muted-foreground">{unit}</span>}
       {...props}
     />
   )

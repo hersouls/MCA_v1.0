@@ -86,23 +86,23 @@ export function SummaryCard({
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{title}</h3>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-0.5">{definition}</p>
+          <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+          <p className="text-sm text-muted-foreground mt-0.5">{definition}</p>
         </div>
       </div>
 
       {/* Key Points */}
       <div className="space-y-1.5 mb-3">
-        <h4 className="text-xs font-medium text-zinc-500 dark:text-zinc-500 uppercase tracking-wide">
+        <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
           핵심 포인트
         </h4>
         <ul className="space-y-1">
           {keyPoints.map((point, index) => (
             <li
               key={index}
-              className="flex items-start gap-2 text-sm text-zinc-700 dark:text-zinc-300"
+              className="flex items-start gap-2 text-sm text-muted-foreground"
             >
-              <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-zinc-400 dark:bg-zinc-500 mt-1.5" />
+              <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-muted-foreground mt-1.5" />
               {point}
             </li>
           ))}
@@ -111,15 +111,15 @@ export function SummaryCard({
 
       {/* Action Items */}
       {actionItems && actionItems.length > 0 && (
-        <div className="space-y-1.5 mb-3 pt-3 border-t border-zinc-200 dark:border-zinc-700">
-          <h4 className="text-xs font-medium text-zinc-500 dark:text-zinc-500 uppercase tracking-wide">
+        <div className="space-y-1.5 mb-3 pt-3 border-t border-border">
+          <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
             실행 체크리스트
           </h4>
           <ul className="space-y-1">
             {actionItems.map((item, index) => (
               <li
                 key={index}
-                className="flex items-start gap-2 text-sm text-zinc-700 dark:text-zinc-300"
+                className="flex items-start gap-2 text-sm text-muted-foreground"
               >
                 <CheckCircle className="flex-shrink-0 w-4 h-4 text-success-500 mt-0.5" />
                 {item}

@@ -30,19 +30,19 @@ export function NativeSelect({
   return (
     <div className={clsx('w-full', className)}>
       {label && (
-        <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1.5">
+        <label className="block text-xs font-medium text-muted-foreground mb-1.5">
           {label}
         </label>
       )}
       <select
         className={clsx(
-          'w-full rounded-lg border bg-white dark:bg-zinc-900',
-          'py-2.5 px-3 text-sm text-zinc-900 dark:text-zinc-100',
+          'w-full rounded-lg border bg-card',
+          'py-2.5 px-3 text-sm text-foreground',
           'transition-all duration-200',
           'focus:outline-none focus:ring-2 focus:ring-primary-500/20',
           error
             ? 'border-danger-500 focus:border-danger-500'
-            : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600 focus:border-primary-500',
+            : 'border-border hover:border-foreground/20 focus:border-primary-500',
           'disabled:opacity-50 disabled:cursor-not-allowed'
         )}
         onChange={(e) => onChange?.(e.target.value)}
@@ -90,7 +90,7 @@ export function ButtonSelect({
 }: ButtonSelectProps) {
   return (
     <div className={clsx('space-y-1', className)}>
-      <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400">
+      <label className="block text-xs font-medium text-muted-foreground">
         {label}
       </label>
       <div className="grid gap-2 sm:grid-cols-1">
@@ -103,17 +103,17 @@ export function ButtonSelect({
               'flex items-center justify-between rounded-lg border p-3 text-left text-sm transition-all',
               value === option.value
                 ? 'border-primary-500 bg-primary-500/10 ring-1 ring-primary-500'
-                : 'border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800/50'
+                : 'border-border hover:bg-surface-hover'
             )}
           >
             <div>
-              <div className="font-medium text-zinc-900 dark:text-zinc-100">{option.label}</div>
+              <div className="font-medium text-foreground">{option.label}</div>
             </div>
             {value === option.value && <Check className="w-4 h-4 text-primary-500" />}
           </button>
         ))}
       </div>
-      {description && <p className="text-xs text-zinc-500 dark:text-zinc-400">{description}</p>}
+      {description && <p className="text-xs text-muted-foreground">{description}</p>}
     </div>
   );
 }

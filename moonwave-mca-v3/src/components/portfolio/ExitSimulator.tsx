@@ -69,7 +69,7 @@ export function ExitSimulator({
         {/* MA120 and Multiple */}
         <div className="grid grid-cols-2 gap-4">
           <NumericInput
-            label="120일 이동평균"
+            label="120월 이동평균"
             value={ma120Price > 0 ? formatNumber(ma120Price) : ''}
             onChange={(value) => {
               setMa120Price(Number(value));
@@ -80,9 +80,9 @@ export function ExitSimulator({
           />
           <NumericInput
             label="목표 배수"
-            value={targetMultiple > 0 ? targetMultiple.toString() : ''}
+            value={targetMultiple.toString()}
             onChange={(value) => {
-              setTargetMultiple(Number.parseFloat(String(value)) || 0);
+              setTargetMultiple(value === '' ? 0 : Number.parseFloat(String(value)) || 0);
             }}
             onBlur={handleUpdateParams}
             placeholder="2.5"
@@ -92,12 +92,12 @@ export function ExitSimulator({
 
         {/* Auto Target Price Display */}
         {autoTargetPrice && autoTargetPrice > 0 && (
-          <div className="flex items-center justify-between p-3 rounded-lg bg-zinc-50 dark:bg-zinc-800/50">
-            <span className="text-sm text-zinc-600 dark:text-zinc-400 flex items-center gap-1.5">
+          <div className="flex items-center justify-between p-3 rounded-lg bg-surface-hover">
+            <span className="text-sm text-muted-foreground flex items-center gap-1.5">
               <Calculator className="w-4 h-4" />
               자동 계산 목표가
             </span>
-            <span className="font-semibold text-zinc-900 dark:text-zinc-50">
+            <span className="font-semibold text-foreground">
               {formatCurrency(autoTargetPrice)}
             </span>
           </div>
@@ -118,10 +118,10 @@ export function ExitSimulator({
 
         {/* Simulation Results */}
         {effectiveTargetPrice > 0 && currentQty > 0 && (
-          <div className="mt-6 pt-4 border-t border-zinc-200 dark:border-zinc-700/50">
+          <div className="mt-6 pt-4 border-t border-border">
             <div className="flex items-center gap-2 mb-4">
               <TrendingUp className="w-4 h-4 text-success-500" />
-              <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              <span className="text-sm font-medium text-muted-foreground">
                 시뮬레이션 결과
               </span>
             </div>
@@ -184,7 +184,7 @@ export function ExitSimulator({
               )}
             >
               <div className="flex items-center justify-between">
-                <span className="text-sm text-zinc-600 dark:text-zinc-400">예상 수익금</span>
+                <span className="text-sm text-muted-foreground">예상 수익금</span>
                 <span
                   className={clsx(
                     'text-xl font-bold tabular-nums',
@@ -197,7 +197,7 @@ export function ExitSimulator({
                   {formatKoreanUnit(simulation.expectedProfit)}
                 </span>
               </div>
-              <div className="mt-2 flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
+              <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
                 <span className="tabular-nums">투입금액: {formatKoreanUnit(currentAmount)}</span>
                 <span>보유수량: {currentQty.toLocaleString()}주</span>
               </div>
@@ -207,8 +207,8 @@ export function ExitSimulator({
 
         {/* Empty State */}
         {(effectiveTargetPrice === 0 || currentQty === 0) && (
-          <div className="mt-4 p-6 text-center rounded-xl bg-zinc-50 dark:bg-zinc-800/30 border border-dashed border-zinc-300 dark:border-zinc-700">
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          <div className="mt-4 p-6 text-center rounded-xl bg-surface-hover border border-dashed border-border">
+            <p className="text-sm text-muted-foreground">
               {currentQty === 0
                 ? '체결된 구간이 없습니다'
                 : '목표가를 입력하면 시뮬레이션 결과가 표시됩니다'}

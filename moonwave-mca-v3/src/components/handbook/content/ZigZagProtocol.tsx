@@ -55,7 +55,7 @@ export const ZigZagProtocol = () => (
       <img
         src="/images/handbook/zone_diagram.png"
         alt="ZigZag Zone Diagram"
-        className="w-full rounded-lg shadow-md mb-6 border border-zinc-200 dark:border-zinc-700"
+        className="w-full rounded-lg shadow-md mb-6 border border-border"
       />
     </EffortSection>
 

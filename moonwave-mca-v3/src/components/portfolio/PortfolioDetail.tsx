@@ -235,11 +235,11 @@ export function PortfolioDetail() {
                 />
               )}
               <div>
-                <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
                   {portfolio.name}
                 </h1>
                 {portfolio.stockCode && (
-                  <span className="text-xs font-medium text-zinc-500 font-mono tracking-wide">
+                  <span className="text-xs font-medium text-muted-foreground font-mono tracking-wide">
                     {portfolio.stockCode} • {portfolio.market || 'KRX'}
                   </span>
                 )}
@@ -251,24 +251,24 @@ export function PortfolioDetail() {
             >
               <button
                 onClick={handleToggleFavorite}
-                className="p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors"
+                className="p-1 hover:bg-surface-hover rounded transition-colors"
                 aria-label={portfolio.isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}
               >
                 <Star
                   className={`w-5 h-5 ${portfolio.isFavorite
-                      ? 'text-warning-500 fill-warning-500'
-                      : 'text-zinc-400 dark:text-zinc-500'
+                    ? 'text-warning-500 fill-warning-500'
+                    : 'text-muted-foreground'
                     }`}
                 />
               </button>
             </Tooltip>
-            {portfolio.stockCode && getBlogUrl(portfolio.stockCode) && (
+            {portfolio.stockCode && (
               <Tooltip content="블로그 포스팅" placement="bottom">
                 <a
                   href={getBlogUrl(portfolio.stockCode)!}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors"
+                  className="p-1 hover:bg-surface-hover rounded transition-colors"
                   aria-label="블로그 포스팅 보기"
                 >
                   <BookOpen className="w-5 h-5 text-primary-500" />
@@ -344,8 +344,8 @@ export function PortfolioDetail() {
             <StatItem label="예상 총 투자" value={formatKoreanUnit(totalBudget)} />
           </StatGrid>
           {(portfolio.params.legacyQty > 0 || portfolio.params.legacyAvg > 0) && (
-            <div className="mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-700/50">
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-2">기보유</p>
+            <div className="mt-4 pt-4 border-t border-border">
+              <p className="text-xs text-muted-foreground mb-2">기보유</p>
               <StatGrid columns={2} divided>
                 <StatItem label="수량" value={`${portfolio.params.legacyQty.toLocaleString()}주`} />
                 <StatItem label="평단가" value={formatCurrency(portfolio.params.legacyAvg)} />
@@ -394,6 +394,7 @@ export function PortfolioDetail() {
       {/* Fundamental Grade */}
       <Section title="Fundamental Grade">
         <FundamentalGradeInput
+          key={portfolio.id}
           initialData={portfolio.fundamentalData}
           stockData={stockFundamentalData}
           onSave={handleSaveFundamental}
@@ -404,13 +405,13 @@ export function PortfolioDetail() {
       <Section title="메모">
         <Card>
           <div className="flex items-start gap-3">
-            <FileText className="w-5 h-5 text-zinc-400 dark:text-zinc-500 flex-shrink-0 mt-0.5" />
+            <FileText className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
             <textarea
               value={displayMemo}
               onChange={(e) => setPortfolioMemo(e.target.value)}
               onBlur={handleMemoBlur}
               placeholder="이 종목에 대한 메모를 입력하세요..."
-              className="flex-1 min-h-[100px] bg-transparent border-none resize-none text-zinc-900 dark:text-zinc-50 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none"
+              className="flex-1 min-h-[100px] bg-transparent border-none resize-none text-foreground placeholder:text-muted-foreground focus:outline-none"
             />
           </div>
         </Card>

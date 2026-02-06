@@ -36,10 +36,10 @@ export function TradeCard({
   };
 
   const getGapColor = () => {
-    if (!trade.isExecuted && !trade.isOrdered) return 'text-zinc-400 dark:text-zinc-500';
+    if (!trade.isExecuted && !trade.isOrdered) return 'text-muted-foreground';
     if (trade.gap < -5) return 'text-success-600 dark:text-success-400';
     if (trade.gap > 5) return 'text-danger-600 dark:text-danger-400';
-    return 'text-zinc-600 dark:text-zinc-300';
+    return 'text-muted-foreground';
   };
 
   return (
@@ -55,31 +55,31 @@ export function TradeCard({
                 ? 'bg-success-100 text-success-700 dark:bg-success-900/50 dark:text-success-300'
                 : trade.isOrdered
                   ? 'bg-warning-100 text-warning-700 dark:bg-warning-900/50 dark:text-warning-300'
-                  : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'
+                  : 'bg-surface-hover text-muted-foreground'
             )}
           >
             {trade.step}
           </span>
           {/* Price Info */}
           <div>
-            <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 tabular-nums">
+            <p className="text-sm font-semibold text-foreground tabular-nums">
               {formatCurrency(trade.buyPrice)}
             </p>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">-{trade.dropRate}%</p>
+            <p className="text-xs text-muted-foreground">-{trade.dropRate}%</p>
           </div>
         </div>
 
         {/* Status Buttons */}
         <div className="flex items-center gap-2">
           <div className="flex flex-col items-center gap-1">
-            <span className="text-xs text-zinc-500 dark:text-zinc-400">주문</span>
+            <span className="text-xs text-muted-foreground">주문</span>
             <button
               onClick={onToggleOrdered}
               className={clsx(
                 'w-8 h-8 rounded-lg border-2 flex items-center justify-center transition-all',
                 trade.isOrdered
                   ? 'bg-warning-500 border-warning-500 text-white'
-                  : 'border-zinc-300 dark:border-zinc-500 hover:border-warning-400'
+                  : 'border-border hover:border-warning-400'
               )}
               aria-label={`${trade.step}구간 주문 ${trade.isOrdered ? '취소' : '등록'}`}
             >
@@ -87,7 +87,7 @@ export function TradeCard({
             </button>
           </div>
           <div className="flex flex-col items-center gap-1">
-            <span className="text-xs text-zinc-500 dark:text-zinc-400">체결</span>
+            <span className="text-xs text-muted-foreground">체결</span>
             <button
               onClick={onToggleExecuted}
               disabled={!trade.isOrdered}
@@ -96,8 +96,8 @@ export function TradeCard({
                 trade.isExecuted
                   ? 'bg-success-500 border-success-500 text-white'
                   : trade.isOrdered
-                    ? 'border-zinc-300 dark:border-zinc-500 hover:border-success-400'
-                    : 'opacity-30 cursor-not-allowed border-zinc-200 dark:border-zinc-700'
+                    ? 'border-border hover:border-success-400'
+                    : 'opacity-30 cursor-not-allowed border-border'
               )}
               aria-label={`${trade.step}구간 체결 ${trade.isExecuted ? '취소' : '등록'}`}
             >
@@ -110,19 +110,19 @@ export function TradeCard({
       {/* Body: Key Stats Grid */}
       <div className="grid grid-cols-3 gap-3 text-sm">
         <div>
-          <span className="text-zinc-500 dark:text-zinc-400 text-xs block">수량</span>
-          <p className="font-medium tabular-nums text-zinc-900 dark:text-zinc-100">
+          <span className="text-muted-foreground text-xs block">수량</span>
+          <p className="font-medium tabular-nums text-foreground">
             {trade.quantity.toLocaleString()}주
           </p>
         </div>
         <div>
-          <span className="text-zinc-500 dark:text-zinc-400 text-xs block">금액</span>
-          <p className="font-medium tabular-nums text-zinc-900 dark:text-zinc-100">
+          <span className="text-muted-foreground text-xs block">금액</span>
+          <p className="font-medium tabular-nums text-foreground">
             {formatKoreanUnit(trade.amount)}
           </p>
         </div>
         <div>
-          <span className="text-zinc-500 dark:text-zinc-400 text-xs block">괴리율</span>
+          <span className="text-muted-foreground text-xs block">괴리율</span>
           <p className={clsx('font-medium tabular-nums flex items-center gap-1', getGapColor())}>
             {trade.isExecuted || trade.isOrdered ? (
               <>
@@ -138,17 +138,17 @@ export function TradeCard({
 
       {/* Execution Info (체결 시에만 표시) */}
       {trade.isExecuted && (
-        <div className="mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-700">
+        <div className="mt-3 pt-3 border-t border-border">
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <span className="text-zinc-500 dark:text-zinc-400 text-xs block">평단가</span>
+              <span className="text-muted-foreground text-xs block">평단가</span>
               <p className="font-bold text-primary-600 dark:text-primary-400 tabular-nums">
                 {formatCurrency(trade.avgPrice)}
               </p>
             </div>
             <div>
-              <span className="text-zinc-500 dark:text-zinc-400 text-xs block">실 수량</span>
-              <p className="font-bold text-zinc-900 dark:text-zinc-100 tabular-nums">
+              <span className="text-muted-foreground text-xs block">실 수량</span>
+              <p className="font-bold text-foreground tabular-nums">
                 {trade.realQty.toLocaleString()}주
               </p>
             </div>
@@ -160,7 +160,7 @@ export function TradeCard({
               type="date"
               value={executionDate}
               onChange={(e) => onDateChange?.(e.target.value)}
-              className="flex-shrink-0 w-32 bg-transparent text-xs text-zinc-700 dark:text-zinc-200 tabular-nums border border-zinc-200 dark:border-zinc-600 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className="flex-shrink-0 w-32 bg-transparent text-xs text-foreground tabular-nums border border-border rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary-500"
               aria-label="체결일"
             />
             <input
@@ -168,7 +168,7 @@ export function TradeCard({
               value={memo}
               onChange={(e) => onMemoChange?.(e.target.value)}
               placeholder="메모"
-              className="flex-1 min-w-0 bg-transparent text-xs text-zinc-700 dark:text-zinc-200 placeholder-zinc-400 border border-zinc-200 dark:border-zinc-600 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className="flex-1 min-w-0 bg-transparent text-xs text-foreground placeholder-muted-foreground border border-border rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary-500"
               aria-label="메모"
             />
           </div>

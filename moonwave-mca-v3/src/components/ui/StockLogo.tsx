@@ -20,12 +20,12 @@ export const StockLogo = ({ code, name, size = 40, className }: StockLogoProps) 
     return (
       <div
         className={clsx(
-          'flex items-center justify-center bg-zinc-100 dark:bg-zinc-800 rounded-full flex-shrink-0',
+          'flex items-center justify-center bg-surface-hover rounded-full flex-shrink-0',
           className
         )}
         style={{ width: size, height: size }}
       >
-        <Building2 className="text-zinc-400" size={size * 0.6} />
+        <Building2 className="text-muted-foreground" size={size * 0.6} />
       </div>
     );
   }
@@ -35,7 +35,7 @@ export const StockLogo = ({ code, name, size = 40, className }: StockLogoProps) 
       src={logoUrl}
       alt={`${name} 로고`}
       className={clsx(
-        'rounded-full object-cover border border-zinc-200 dark:border-zinc-700 bg-white',
+        'rounded-full object-cover border border-border bg-card',
         className
       )}
       style={{ width: size, height: size }}

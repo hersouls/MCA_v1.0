@@ -79,7 +79,11 @@
       "Bash(git rev-list:*)",
       "Bash(git cat-file:*)",
       "Bash(sort:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(xargs:*)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__query-docs",
+      "Bash(powershell:*)"
     ]
   }
 }

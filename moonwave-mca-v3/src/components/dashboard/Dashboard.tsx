@@ -91,39 +91,41 @@ export function Dashboard() {
       />
 
       {/* Fund Summary */}
-      <Section title={TEXTS.DASHBOARD.FUND_STATUS} icon={<Wallet className="w-5 h-5" />}>
-        <Grid cols={4} gap="md">
-          <StatsCard
-            label={TEXTS.DASHBOARD.INITIAL_CASH}
-            value={formatKoreanCurrency(dashboardStats.initialCash)}
-            icon={<Wallet className="w-5 h-5" />}
-            tooltip={TEXTS.DASHBOARD.INITIAL_CASH_TOOLTIP}
-            align="left"
-          />
-          <StatsCard
-            label={TEXTS.DASHBOARD.REMAINING_CASH}
-            value={formatKoreanCurrency(dashboardStats.remainingCash)}
-            subValue={`${TEXTS.DASHBOARD.INVESTMENT_RATE} ${formatPercent(dashboardStats.investmentRate)}`}
-            icon={<PiggyBank className="w-5 h-5" />}
-            tooltip={TEXTS.DASHBOARD.REMAINING_CASH_TOOLTIP}
-            align="left"
-          />
-          <StatsCard
-            label={TEXTS.DASHBOARD.TOTAL_EXECUTED}
-            value={formatKoreanCurrency(dashboardStats.totalExecuted)}
-            icon={<TrendingUp className="w-5 h-5" />}
-            tooltip={TEXTS.DASHBOARD.TOTAL_EXECUTED_TOOLTIP}
-            align="left"
-          />
-          <StatsCard
-            label={TEXTS.DASHBOARD.TOTAL_ORDERED}
-            value={formatKoreanCurrency(dashboardStats.totalOrdered)}
-            icon={<ClipboardList className="w-5 h-5" />}
-            tooltip={TEXTS.DASHBOARD.TOTAL_ORDERED_TOOLTIP}
-            align="left"
-          />
-        </Grid>
-      </Section>
+      <div data-tour="stats-section">
+        <Section title={TEXTS.DASHBOARD.FUND_STATUS} icon={<Wallet className="w-5 h-5" />}>
+          <Grid cols={4} gap="md">
+            <StatsCard
+              label={TEXTS.DASHBOARD.INITIAL_CASH}
+              value={formatKoreanCurrency(dashboardStats.initialCash)}
+              icon={<Wallet className="w-5 h-5" />}
+              tooltip={TEXTS.DASHBOARD.INITIAL_CASH_TOOLTIP}
+              align="left"
+            />
+            <StatsCard
+              label={TEXTS.DASHBOARD.REMAINING_CASH}
+              value={formatKoreanCurrency(dashboardStats.remainingCash)}
+              subValue={`${TEXTS.DASHBOARD.INVESTMENT_RATE} ${formatPercent(dashboardStats.investmentRate)}`}
+              icon={<PiggyBank className="w-5 h-5" />}
+              tooltip={TEXTS.DASHBOARD.REMAINING_CASH_TOOLTIP}
+              align="left"
+            />
+            <StatsCard
+              label={TEXTS.DASHBOARD.TOTAL_EXECUTED}
+              value={formatKoreanCurrency(dashboardStats.totalExecuted)}
+              icon={<TrendingUp className="w-5 h-5" />}
+              tooltip={TEXTS.DASHBOARD.TOTAL_EXECUTED_TOOLTIP}
+              align="left"
+            />
+            <StatsCard
+              label={TEXTS.DASHBOARD.TOTAL_ORDERED}
+              value={formatKoreanCurrency(dashboardStats.totalOrdered)}
+              icon={<ClipboardList className="w-5 h-5" />}
+              tooltip={TEXTS.DASHBOARD.TOTAL_ORDERED_TOOLTIP}
+              align="left"
+            />
+          </Grid>
+        </Section>
+      </div>
 
       {/* Alerts */}
       {dashboardStats.alertCount > 0 && (
@@ -222,13 +224,13 @@ function PortfolioCard({ portfolio, stats, onClick }: PortfolioCardProps) {
               className="shadow-sm"
             />
           ) : (
-            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-400">
+            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-surface-hover text-muted-foreground">
               <Briefcase className="w-5 h-5" />
             </div>
           )}
           <div>
             <div className="flex items-center gap-1">
-              <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+              <h3 className="font-semibold text-foreground group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                 {portfolio.name}
               </h3>
               {portfolio.isFavorite && (
@@ -236,7 +238,7 @@ function PortfolioCard({ portfolio, stats, onClick }: PortfolioCardProps) {
               )}
             </div>
             {portfolio.stockCode && (
-              <p className="text-xs text-zinc-500 font-mono">{portfolio.stockCode}</p>
+              <p className="text-xs text-muted-foreground font-mono">{portfolio.stockCode}</p>
             )}
           </div>
         </div>
@@ -250,13 +252,13 @@ function PortfolioCard({ portfolio, stats, onClick }: PortfolioCardProps) {
 
       {/* Progress Bar */}
       <div className="mb-3">
-        <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400 mb-1">
+        <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
           <span>
             {stats?.executedStepsCount ?? 0}/{portfolio.params.steps} 구간
           </span>
           <span>{formatPercent(progress)}</span>
         </div>
-        <div className="h-2 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
+        <div className="h-2 bg-surface-active rounded-full overflow-hidden">
           <div
             className="h-full bg-primary-500 rounded-full transition-all duration-300"
             style={{ width: `${progress}%` }}
@@ -268,14 +270,14 @@ function PortfolioCard({ portfolio, stats, onClick }: PortfolioCardProps) {
       {stats && (
         <div className="grid grid-cols-2 gap-2 text-sm">
           <div>
-            <span className="text-zinc-500 dark:text-zinc-400">투입금액</span>
-            <p className="font-medium text-zinc-900 dark:text-zinc-100 text-right tabular-nums">
+            <span className="text-muted-foreground">투입금액</span>
+            <p className="font-medium text-foreground text-right tabular-nums">
               {formatKoreanUnit(stats.totalInvestment)}
             </p>
           </div>
           <div>
-            <span className="text-zinc-500 dark:text-zinc-400">평균단가</span>
-            <p className="font-medium text-zinc-900 dark:text-zinc-100 text-right tabular-nums">
+            <span className="text-muted-foreground">평균단가</span>
+            <p className="font-medium text-foreground text-right tabular-nums">
               {stats.averagePrice ? formatCurrency(stats.averagePrice) : '-'}
             </p>
           </div>

@@ -13,12 +13,12 @@ export function Footer() {
 
   return (
     <footer
-      className="flex flex-col lg:flex-row gap-4 lg:gap-0 mt-auto py-4 px-6 border-t border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-950/50 justify-between items-center mb-16 lg:mb-0"
+      className="flex flex-col lg:flex-row gap-4 lg:gap-0 mt-auto py-4 px-6 border-t border-border bg-card/50 justify-between items-center mb-16 lg:mb-0"
       role="contentinfo"
     >
       <div className="hidden lg:block flex-1" /> {/* Spacer */}
       <nav
-        className="flex items-center justify-center gap-4 text-xs text-zinc-500 dark:text-zinc-400 order-2 lg:order-none"
+        className="flex items-center justify-center gap-4 text-xs text-muted-foreground order-2 lg:order-none"
         aria-label="푸터 링크"
       >
         <span>Copyright© Moonwave All rights reserved.</span>

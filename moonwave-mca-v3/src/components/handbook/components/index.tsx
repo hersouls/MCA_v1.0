@@ -63,7 +63,7 @@ export function ProtocolLink({
     >
       {showIcon && <span className="text-sm">{info.iconName}</span>}
       <span>{info.name}</span>
-      {showVersion && <span className="text-xs text-zinc-500">({info.version})</span>}
+      {showVersion && <span className="text-xs text-muted-foreground">({info.version})</span>}
     </button>
   );
 }
@@ -340,12 +340,12 @@ export function RelatedLinks({ currentSection }: RelatedLinksProps) {
   if (!hasContent) return null;
 
   return (
-    <div className="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-700">
+    <div className="mt-8 pt-6 border-t border-border">
       <IconH3 icon="Link">관련 문서</IconH3>
 
       {relationship.prerequisites.length > 0 && (
         <div className="mb-4">
-          <span className="text-sm text-zinc-500 dark:text-zinc-400 block mb-2">선행 학습:</span>
+          <span className="text-sm text-muted-foreground block mb-2">선행 학습:</span>
           <div className="flex flex-wrap gap-2">
             {relationship.prerequisites.map((id) => {
               const protocolKey = Object.keys(PROTOCOLS).find(
@@ -361,7 +361,7 @@ export function RelatedLinks({ currentSection }: RelatedLinksProps) {
 
       {relationship.relatedSections.length > 0 && (
         <div className="mb-4">
-          <span className="text-sm text-zinc-500 dark:text-zinc-400 block mb-2">함께 보기:</span>
+          <span className="text-sm text-muted-foreground block mb-2">함께 보기:</span>
           <div className="flex flex-wrap gap-2">
             {relationship.relatedSections.map((id) => {
               const protocolKey = Object.keys(PROTOCOLS).find(
@@ -377,7 +377,7 @@ export function RelatedLinks({ currentSection }: RelatedLinksProps) {
 
       {relationship.nextSteps.length > 0 && (
         <div>
-          <span className="text-sm text-zinc-500 dark:text-zinc-400 block mb-2">다음 단계:</span>
+          <span className="text-sm text-muted-foreground block mb-2">다음 단계:</span>
           <div className="flex flex-wrap gap-2">
             {relationship.nextSteps.map((id) => {
               const protocolKey = Object.keys(PROTOCOLS).find(
