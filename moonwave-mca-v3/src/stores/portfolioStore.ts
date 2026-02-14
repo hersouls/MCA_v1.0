@@ -27,6 +27,7 @@ interface PortfolioState {
   activePortfolioId: number | null;
   trades: Map<number, Trade[]>;
   isLoading: boolean;
+  isInitialized: boolean;
   error: string | null;
 
   // Computed (cached)
@@ -64,6 +65,7 @@ export const usePortfolioStore = create<PortfolioState>()(
       activePortfolioId: null,
       trades: new Map(),
       isLoading: false,
+      isInitialized: false,
       error: null,
       portfolioStats: new Map(),
 
@@ -78,6 +80,8 @@ export const usePortfolioStore = create<PortfolioState>()(
           if (portfolios.length > 0 && !get().activePortfolioId) {
             set({ activePortfolioId: portfolios[0].id });
           }
+
+          set({ isInitialized: true });
         } catch (error) {
           set({
             error: error instanceof Error ? error.message : 'Failed to load portfolios',

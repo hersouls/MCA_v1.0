@@ -9,8 +9,8 @@ import { autoFitParams, calculateTotalBudget } from '@/services/calculation';
 import type { Portfolio, PortfolioParams } from '@/types';
 import { formatKoreanUnit, formatNumber } from '@/utils/format';
 import { clsx } from 'clsx';
-import { AlertTriangle, CheckCircle2, HelpCircle, Plus, X, Zap } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { AlertTriangle, CheckCircle2, HelpCircle, Info, Plus, X, Zap } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 // 파라미터 라벨 with 툴팁 헬퍼 컴포넌트
 function LabelWithTooltip({
@@ -43,6 +43,7 @@ export function ParameterEditor({ portfolio, isOpen, onClose, onSave }: Paramete
   // 모달이 열릴 때 params를 portfolio에서 가져오지만,
   // 모달이 닫혀있을 때는 상태 업데이트하지 않음
   // key prop을 사용하여 모달 열릴 때 폼 상태를 리셋
+  // Dialog의 onClose(배경 클릭 등)는 ParameterEditorContent 내부에서 dirty 체크 후 처리
   return (
     <Dialog open={isOpen} onClose={onClose} size="lg">
       <ParameterEditorContent
@@ -74,6 +75,37 @@ function ParameterEditorContent({
 }: Omit<ParameterEditorProps, 'isOpen'>) {
   const [params, setParams] = useState<PortfolioParams>(() => ({ ...portfolio.params }));
   const [isOptimizing, setIsOptimizing] = useState(false);
+
+  // 6-5: Track dirty state by comparing current params with original
+  const isDirty = useMemo(() => {
+    const original = portfolio.params;
+    return (
+      params.peakPrice !== original.peakPrice ||
+      params.targetBudget !== original.targetBudget ||
+      params.strength !== original.strength ||
+      params.startDrop !== original.startDrop ||
+      params.steps !== original.steps
+    );
+  }, [params, portfolio.params]);
+
+  // 6-5: Warn on browser close/refresh when dirty
+  useEffect(() => {
+    if (!isDirty) return;
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty]);
+
+  // 6-5: Confirm dialog when closing with unsaved changes
+  const handleClose = useCallback(() => {
+    if (isDirty) {
+      const confirmed = window.confirm('저장하지 않은 변경사항이 있습니다. 정말 닫으시겠습니까?');
+      if (!confirmed) return;
+    }
+    onClose();
+  }, [isDirty, onClose]);
 
   // 기보유 항목 상태 (최대 3개)
   const [legacyHoldings, setLegacyHoldings] = useState<{ qty: number; avg: number; memo?: string }[]>(() => {
@@ -172,7 +204,7 @@ function ParameterEditorContent({
 
   return (
     <>
-      <DialogHeader title="매매 파라미터 설정" onClose={onClose} />
+      <DialogHeader title="매매 파라미터 설정" onClose={handleClose} />
       <DialogBody>
         <div className="space-y-5">
           {/* Main Parameters */}
@@ -252,7 +284,7 @@ function ParameterEditorContent({
                 </Tooltip>
               </p>
               <p className="text-sm text-primary-700 dark:text-primary-300 mt-0.5">
-                목표 예산에 맞게 강도/구간을 자동 조정합니다
+                목표 예산에 맞춰 매수 강도를 자동 조정합니다
               </p>
             </div>
             <Button
@@ -302,6 +334,17 @@ function ParameterEditorContent({
                 )}
               </div>
             </div>
+            {/* 6-7: Budget difference guide */}
+            {params.targetBudget > 0 && Math.abs(budgetDiff) >= 5 && (
+              <div className="mt-3 flex items-start gap-2 text-xs">
+                <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-muted-foreground" />
+                <span className="text-muted-foreground">
+                  {budgetDiff > 0
+                    ? `현재 예산이 ${Math.round(Math.abs(budgetDiff))}% 초과합니다. 강도를 낮추거나 분할 구간을 줄이면 예산에 맞출 수 있습니다.`
+                    : `현재 예산이 ${Math.round(Math.abs(budgetDiff))}% 미만입니다. 강도를 높이거나 분할 구간을 늘리면 예산을 더 활용할 수 있습니다.`}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Legacy Holdings Section */}
@@ -393,7 +436,7 @@ function ParameterEditorContent({
         </div>
       </DialogBody>
       <DialogFooter>
-        <Button plain color="secondary" onClick={onClose}>
+        <Button plain color="secondary" onClick={handleClose}>
           취소
         </Button>
         <Button color="primary" onClick={handleSave}>

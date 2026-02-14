@@ -12,7 +12,7 @@ interface SkeletonProps {
 export function Skeleton({ className }: SkeletonProps) {
   return (
     <div
-      className={clsx('animate-pulse rounded-md bg-surface-active', className)}
+      className={clsx('animate-shimmer rounded-md', className)}
       aria-hidden="true"
     />
   );

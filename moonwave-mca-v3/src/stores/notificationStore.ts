@@ -43,8 +43,18 @@ function getNotificationPreferences(): NotificationPreferences {
 
 const MAX_NOTIFICATIONS = 50;
 const BACKUP_REMINDER_DAYS = 7;
-const NOTIFICATION_COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 hours
 const NOTIFICATION_EXPIRY_DAYS = 7;
+
+const NOTIFICATION_COOLDOWN_MAP: Record<string, number> = {
+  'gap-warning': 4 * 60 * 60 * 1000,      // 4 hours
+  'grade-change': 4 * 60 * 60 * 1000,      // 4 hours
+  'backup-reminder': 24 * 60 * 60 * 1000,  // 24 hours
+  'price-alert': 12 * 60 * 60 * 1000,      // 12 hours
+};
+
+function getNotificationCooldown(type: string): number {
+  return NOTIFICATION_COOLDOWN_MAP[type] || 12 * 60 * 60 * 1000;
+}
 
 interface NotificationState {
   notifications: AppNotification[];
@@ -88,7 +98,7 @@ export const useNotificationStore = create<NotificationState>()(
 
           // Check cooldown - skip if triggered within cooldown period
           const lastTrigger = get().lastTriggered[key];
-          if (lastTrigger && now - lastTrigger < NOTIFICATION_COOLDOWN_MS) {
+          if (lastTrigger && now - lastTrigger < getNotificationCooldown(notification.type)) {
             return;
           }
 

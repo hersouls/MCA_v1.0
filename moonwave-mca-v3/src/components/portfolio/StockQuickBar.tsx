@@ -29,7 +29,7 @@ export function StockQuickBar({ onSelect, savedTickers = new Set() }: StockQuick
   if (results.length === 0) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 p-4 pb-6 bg-card/90 backdrop-blur-md border-t border-border shadow-2xl animate-in slide-in-from-bottom-4 duration-300">
+    <div className="fixed bottom-0 left-0 right-0 z-50 p-4 pb-safe bg-card/90 backdrop-blur-md border-t border-border shadow-2xl animate-in slide-in-from-bottom-4 duration-300">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-3 px-1">
           <h3 className="text-sm font-semibold text-muted-foreground">

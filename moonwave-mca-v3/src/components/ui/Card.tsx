@@ -6,6 +6,7 @@ import { clsx } from 'clsx';
 import { Info } from 'lucide-react';
 import { type HTMLAttributes, type ReactNode, forwardRef } from 'react';
 import { Button as AriaButton } from 'react-aria-components';
+import { Skeleton } from './Skeleton';
 import { Tooltip } from './Tooltip';
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
@@ -152,6 +153,8 @@ interface StatsCardProps {
   valueColor?: 'default' | 'primary' | 'success' | 'warning' | 'danger';
   /** Value text alignment */
   align?: 'left' | 'right';
+  /** Show skeleton loading state */
+  loading?: boolean;
   className?: string;
 }
 
@@ -178,8 +181,24 @@ export function StatsCard({
   progress,
   valueColor = 'default',
   align = 'right',
+  loading = false,
   className,
 }: StatsCardProps) {
+  if (loading) {
+    return (
+      <Card padding="md" className={className}>
+        <div className="flex items-start justify-between">
+          <div className="min-w-0 flex-1 space-y-2">
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-7 w-32" />
+            {subValue !== undefined && <Skeleton className="h-4 w-24" />}
+          </div>
+          {icon && <Skeleton className="flex-shrink-0 size-10 rounded-lg" />}
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <Card padding="md" className={className}>
       <div className="flex items-start justify-between">

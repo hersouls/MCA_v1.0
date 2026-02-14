@@ -1163,7 +1163,56 @@ button {
   color: var(--foreground);
 }
 
+/* ============================================
+   Shimmer Animation
+   ============================================ */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--surface-active) 0%,
+    var(--surface-hover) 50%,
+    var(--surface-active) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+/* ============================================
+   View Transition for Theme Changes
+   ============================================ */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.4s;
+  animation-timing-function: ease-out;
+}
+
 @layer utilities {
+  /* Safe Area Utilities */
+  .pb-safe {
+    padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+  }
+
+  .pt-safe {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+
+  .pl-safe {
+    padding-left: max(1rem, env(safe-area-inset-left));
+  }
+
+  .pr-safe {
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+
   .p-golden-xs { padding: 6px; }
   .p-golden-sm { padding: 10px; }
   .p-golden-md { padding: 16px; }

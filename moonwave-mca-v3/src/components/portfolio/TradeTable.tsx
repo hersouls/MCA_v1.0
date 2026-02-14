@@ -3,7 +3,7 @@
 // Interactive table with order/execute toggles
 // ============================================
 
-import { Card, Tooltip } from '@/components/ui';
+import { Card, DateInput, Tooltip } from '@/components/ui';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { calculateTrades } from '@/services/calculation';
 import type { CalculatedTrade, PortfolioParams } from '@/types';
@@ -407,18 +407,11 @@ function TradeRow({
 
       {/* Execution Date (new) */}
       <td className="px-3 py-2.5 text-center border-l border-border">
-        <input
-          type="date"
+        <DateInput
           value={executionDate}
-          onChange={(e) => onDateChange(e.target.value)}
+          onChange={(val) => onDateChange(val)}
           disabled={!trade.isExecuted}
-          className={clsx(
-            'w-full bg-transparent text-xs text-center tabular-nums',
-            'border-0 focus:outline-none focus:ring-1 focus:ring-primary-500 rounded',
-            trade.isExecuted
-              ? 'text-foreground'
-              : 'text-muted-foreground/50 cursor-not-allowed'
-          )}
+          aria-label={`${trade.step}구간 체결일`}
         />
       </td>
 

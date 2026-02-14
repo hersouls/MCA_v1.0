@@ -213,6 +213,7 @@ export function LoadingState({ message = '불러오는 중...' }: LoadingStatePr
       className="flex flex-col items-center justify-center py-12"
       role="status"
       aria-live="polite"
+      aria-busy="true"
     >
       <div
         className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"

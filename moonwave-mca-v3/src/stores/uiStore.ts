@@ -7,11 +7,17 @@ import { devtools } from 'zustand/middleware';
 
 type ToastType = 'success' | 'error' | 'info' | 'warning';
 
+export interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
+
 interface Toast {
   id: string;
   message: string;
   type: ToastType;
   duration?: number;
+  action?: ToastAction;
 }
 
 interface UIState {
@@ -61,9 +67,11 @@ interface UIState {
   setView: (view: 'dashboard' | 'detail' | 'settings') => void;
 
   // Toast Actions
-  showToast: (message: string, type?: ToastType, duration?: number) => void;
+  showToast: (message: string, type?: ToastType, duration?: number, action?: ToastAction) => void;
   dismissToast: (id: string) => void;
   clearAllToasts: () => void;
+  pauseToast: (id: string) => void;
+  resumeToast: (id: string) => void;
 
   // Modal Actions
   openModal: (content: React.ReactNode) => void;
@@ -136,20 +144,13 @@ export const useUIStore = create<UIState>()(
       },
 
       // Toast
-      showToast: (message, type = 'info', duration = 3000) => {
+      showToast: (message, type = 'info', duration = 3000, action?) => {
         const id = `toast-${++toastIdCounter}`;
-        const toast: Toast = { id, message, type, duration };
+        const toast: Toast = { id, message, type, duration, action };
 
         set((state) => ({
           toasts: [...state.toasts, toast],
         }));
-
-        // Auto dismiss
-        if (duration > 0) {
-          setTimeout(() => {
-            get().dismissToast(id);
-          }, duration);
-        }
       },
 
       dismissToast: (id) => {
@@ -161,6 +162,9 @@ export const useUIStore = create<UIState>()(
       clearAllToasts: () => {
         set({ toasts: [] });
       },
+
+      pauseToast: (_id: string) => {},
+      resumeToast: (_id: string) => {},
 
       // Modal
       openModal: (content) => {

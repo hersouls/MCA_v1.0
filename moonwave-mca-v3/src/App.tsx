@@ -21,6 +21,7 @@ import {
 import { StockQuickBar } from '@/components/portfolio/StockQuickBar';
 import { ToastContainer } from '@/components/ui';
 
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { migrateFromV2 } from '@/services/migration';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { usePortfolioStore } from '@/stores/portfolioStore';
@@ -34,6 +35,9 @@ export function App() {
   const [isMigrating, setIsMigrating] = useState(false);
   const initRef = useRef(false);
   const navigate = useNavigate();
+
+  // Global keyboard shortcuts
+  useKeyboardShortcuts();
 
   const addPortfolio = usePortfolioStore((state) => state.addPortfolio);
 

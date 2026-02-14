@@ -6,6 +6,7 @@ import { Tooltip } from '@/components/ui';
 import { usePortfolioStore, useSortedPortfolios } from '@/stores/portfolioStore';
 import { useUIStore } from '@/stores/uiStore';
 import { clsx } from 'clsx';
+import { motion } from 'framer-motion';
 import { BookOpen, ChevronLeft, ChevronRight, HelpCircle, LayoutDashboard, Settings, Star } from 'lucide-react';
 
 type View = 'dashboard' | 'detail' | 'settings';
@@ -160,10 +161,17 @@ export function Sidebar({ onNavigate }: SidebarProps) {
                       role="menuitem"
                       aria-current={isActive ? 'page' : undefined}
                     >
-                      <Star
-                        className="w-3.5 h-3.5 flex-shrink-0 text-warning-500 fill-warning-500"
-                        aria-hidden="true"
-                      />
+                      <motion.span
+                        whileTap={{ scale: 0.8 }}
+                        animate={{ scale: [1, 1.3, 1] }}
+                        transition={{ duration: 0.3 }}
+                        className="flex-shrink-0 inline-flex"
+                      >
+                        <Star
+                          className="w-3.5 h-3.5 text-warning-500 fill-warning-500"
+                          aria-hidden="true"
+                        />
+                      </motion.span>
                       <span className="text-sm truncate">{portfolio.name}</span>
                     </button>
                   </li>

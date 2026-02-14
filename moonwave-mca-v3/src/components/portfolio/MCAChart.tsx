@@ -3,6 +3,7 @@
 // Dual-axis chart: Average Price + Gap %
 // ============================================
 
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import { calculateTrades } from '@/services/calculation';
 import { useSettingsStore } from '@/stores/settingsStore';
 import type { PortfolioParams } from '@/types';
@@ -23,7 +24,8 @@ import {
   Tooltip,
 } from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
-import { useEffect, useMemo, useRef } from 'react';
+import { Loader2 } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { Line } from 'react-chartjs-2';
 
 // Register Chart.js components
@@ -54,6 +56,8 @@ export function MCAChart({
 }: MCAChartProps) {
   const chartRef = useRef<ChartJS<'line'>>(null);
   const theme = useSettingsStore((state) => state.settings.theme);
+  const isMobile = useIsMobile();
+  const [isPending, startTransition] = useTransition();
 
   // Determine if dark mode
   const isDark = useMemo(() => {
@@ -63,10 +67,18 @@ export function MCAChart({
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
   }, [theme]);
 
-  const trades = useMemo(
+  const rawTrades = useMemo(
     () => calculateTrades(params, orderedSteps, executedSteps),
     [params, orderedSteps, executedSteps]
   );
+
+  // Wrap trades in a transition so recalculation doesn't block UI
+  const [trades, setTrades] = useState(rawTrades);
+  useEffect(() => {
+    startTransition(() => {
+      setTrades(rawTrades);
+    });
+  }, [rawTrades, startTransition]);
 
   // Filter trades that have data to show
   const chartTrades = useMemo(() => {
@@ -111,6 +123,10 @@ export function MCAChart({
     return { minGapIdx: minIdx, maxGapIdx: maxIdx };
   }, [chartTrades]);
 
+  // Font sizes based on viewport
+  const axisFontSize = isMobile ? 9 : 11;
+  const legendFontSize = isMobile ? 10 : 12;
+
   // Chart data
   const data: ChartData<'line'> = useMemo(() => {
     const labels = chartTrades.map((t) => TEXTS.CHART.STEP_LABEL(t.step));
@@ -152,15 +168,16 @@ export function MCAChart({
           datalabels: {
             display: (context) => {
               const idx = context.dataIndex;
+              // On mobile, only show min/max labels
               return idx === minGapIdx || idx === maxGapIdx;
             },
             formatter: (value: number) => `${value.toFixed(1)}%`,
             color: colors.text,
             backgroundColor: hexToRgba(getCSSVar('--background'), isDark ? 0.7 : 0.9),
             borderRadius: CHART_CONFIG.DATA_LABEL.BORDER_RADIUS,
-            padding: CHART_CONFIG.DATA_LABEL.PADDING,
+            padding: isMobile ? 2 : CHART_CONFIG.DATA_LABEL.PADDING,
             font: {
-              size: CHART_CONFIG.DATA_LABEL.FONT_SIZE,
+              size: isMobile ? 9 : CHART_CONFIG.DATA_LABEL.FONT_SIZE,
               weight: CHART_CONFIG.DATA_LABEL.FONT_WEIGHT,
             },
             anchor: 'end',
@@ -170,7 +187,7 @@ export function MCAChart({
         },
       ],
     };
-  }, [chartTrades, colors, minGapIdx, maxGapIdx, isDark]);
+  }, [chartTrades, colors, minGapIdx, maxGapIdx, isDark, isMobile]);
 
   // Chart options
   const options: ChartOptions<'line'> = useMemo(
@@ -190,9 +207,9 @@ export function MCAChart({
             color: colors.textMuted,
             usePointStyle: true,
             pointStyle: 'circle',
-            padding: CHART_CONFIG.LEGEND_PADDING,
+            padding: isMobile ? 8 : CHART_CONFIG.LEGEND_PADDING,
             font: {
-              size: 12,
+              size: legendFontSize,
             },
           },
         },
@@ -225,12 +242,15 @@ export function MCAChart({
           ticks: {
             color: colors.textMuted,
             font: {
-              size: 11,
+              size: axisFontSize,
             },
             maxRotation: CHART_CONFIG.X_AXIS_MAX_ROTATION,
             callback: (_value, index) => {
-              // Show every 2nd label on small screens
               const step = chartTrades[index]?.step;
+              // On mobile, skip more labels for readability
+              if (isMobile) {
+                return index % 3 === 0 ? step : '';
+              }
               if (chartTrades.length > CHART_CONFIG.LABEL_SKIP_THRESHOLD) {
                 return index % 2 === 0 ? step : '';
               }
@@ -243,11 +263,11 @@ export function MCAChart({
           display: true,
           position: 'left',
           title: {
-            display: true,
+            display: !isMobile,
             text: TEXTS.CHART.Y_AXIS_AVG_PRICE,
             color: colors.textMuted,
             font: {
-              size: 11,
+              size: axisFontSize,
             },
           },
           grid: {
@@ -256,7 +276,7 @@ export function MCAChart({
           ticks: {
             color: colors.textMuted,
             font: {
-              size: 11,
+              size: axisFontSize,
             },
             // 한국식 단위 사용 (만, 억)
             callback: (value) => formatKoreanUnit(Number(value)),
@@ -267,11 +287,11 @@ export function MCAChart({
           display: true,
           position: 'right',
           title: {
-            display: true,
+            display: !isMobile,
             text: TEXTS.CHART.Y_AXIS_GAP_RATE,
             color: colors.textMuted,
             font: {
-              size: 11,
+              size: axisFontSize,
             },
           },
           grid: {
@@ -280,14 +300,14 @@ export function MCAChart({
           ticks: {
             color: colors.textMuted,
             font: {
-              size: 11,
+              size: axisFontSize,
             },
             callback: (value) => `${Number(value).toFixed(0)}%`,
           },
         },
       },
     }),
-    [colors, isDark, chartTrades]
+    [colors, isDark, chartTrades, isMobile, axisFontSize, legendFontSize]
   );
 
   // Update chart on theme change
@@ -311,12 +331,59 @@ export function MCAChart({
     );
   }
 
+  // Chart summary for screen readers
+  const chartSummary = useMemo(() => {
+    if (chartTrades.length === 0) return '';
+    const lastTrade = chartTrades[chartTrades.length - 1];
+    const gaps = chartTrades.map((t) => t.gap);
+    const minGap = Math.min(...gaps);
+    const maxGap = Math.max(...gaps);
+    return `${chartTrades.length}개 구간 MCA 차트: 최저 괴리율 ${minGap.toFixed(1)}%, 최고 괴리율 ${maxGap.toFixed(1)}%, 최종 평균단가 ${formatKoreanUnit(lastTrade.avgPrice)}`;
+  }, [chartTrades]);
+
   return (
     <div
       className="relative rounded-xl border border-border bg-card p-4"
       style={{ height }}
     >
-      <Line ref={chartRef} data={data} options={options} />
+      <Line
+        ref={chartRef}
+        data={data}
+        options={options}
+        aria-label={chartSummary}
+      />
+
+      {/* Recalculation loading overlay */}
+      {isPending && (
+        <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-card/60 backdrop-blur-[1px] z-10">
+          <Loader2 className="w-6 h-6 text-primary-500 animate-spin" />
+        </div>
+      )}
+
+      {/* Accessible Data Table (visually hidden for screen readers) */}
+      <table className="sr-only" role="table" aria-label="MCA 차트 데이터">
+        <caption>매수 구간별 평균단가 및 괴리율 데이터</caption>
+        <thead>
+          <tr>
+            <th scope="col">구간</th>
+            <th scope="col">평균단가</th>
+            <th scope="col">괴리율</th>
+            <th scope="col">상태</th>
+          </tr>
+        </thead>
+        <tbody>
+          {chartTrades.map((trade) => (
+            <tr key={trade.step}>
+              <td>{trade.step}구간</td>
+              <td>{formatKoreanUnit(trade.avgPrice)}</td>
+              <td>{trade.gap.toFixed(2)}%</td>
+              <td>
+                {trade.isExecuted ? '체결됨' : trade.isOrdered ? '주문됨' : '미주문'}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

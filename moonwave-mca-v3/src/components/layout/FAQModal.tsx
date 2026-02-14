@@ -117,7 +117,7 @@ const FAQ_ITEMS = [
 export function FAQModal() {
   const isOpen = useUIStore((state) => state.isFAQModalOpen);
   const onClose = useUIStore((state) => state.closeFAQModal);
-  const [openIndex, setOpenIndex] = useState<string | null>('0-0');
+  const [openIndex, setOpenIndex] = useState<string | null>(null);
 
   const toggleItem = (id: string) => {
     setOpenIndex(openIndex === id ? null : id);

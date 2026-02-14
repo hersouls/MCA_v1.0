@@ -157,4 +157,87 @@ export const TEXTS = {
     INTERVALS: '구간',
     POINTS: '점',
   },
+  // 온보딩
+  ONBOARDING: {
+    CHOICE_TITLE: '시작 안내 투어',
+    CHOICE_DESC: 'MCA 사용법을 단계별로 안내해드립니다. 지금 시작하시겠습니까?',
+    START_TOUR: '시작 안내 투어',
+    SKIP_TOUR: '나중에 하기',
+  },
+
+  // 404
+  NOT_FOUND: {
+    TITLE: '페이지를 찾을 수 없습니다',
+    DESC: '요청하신 페이지가 존재하지 않거나 이동되었습니다.',
+    GO_HOME: '대시보드로 돌아가기',
+  },
+
+  // 핸드북 계층
+  HANDBOOK: {
+    TIER_1: '시작하기',
+    TIER_2: '심화학습',
+    TIER_3: '전략가이드',
+    RECOMMENDED: '추천',
+    BACK_TO_TOP: '맨 위로',
+  },
+
+  // 로딩 상태
+  LOADING_STATES: {
+    PORTFOLIO_LOADING: '포트폴리오 불러오는 중...',
+    CALCULATING: '계산 중...',
+    CHART_RECALCULATING: '차트 재계산 중...',
+    SEARCHING: '검색 중...',
+    SAVING: '저장 중...',
+    SAVED: '저장됨',
+  },
+
+  // 에러
+  ERROR: {
+    PAGE_ERROR: '페이지 오류',
+    PAGE_NOT_FOUND: '페이지를 찾을 수 없습니다',
+    SERVER_ERROR: '서버 오류',
+    UNKNOWN_ERROR: '알 수 없는 오류가 발생했습니다.',
+    ERROR_DETAILS: '오류 상세 정보',
+    REFRESH_PAGE: '페이지 새로고침',
+    GO_BACK: '이전 페이지로',
+    GO_DASHBOARD: '대시보드로 이동',
+    TOGGLE_FAILED: '상태 변경에 실패했습니다. 다시 시도해주세요.',
+    SEARCH_NO_RESULT: '해당 종목을 찾을 수 없습니다',
+    SEARCH_HINT: '종목명 또는 6자리 코드를 정확히 입력해주세요',
+  },
+
+  // 설정
+  SETTINGS: {
+    TAB_APPEARANCE: '외관',
+    TAB_DATA: '데이터',
+    TAB_NOTIFICATIONS: '알림',
+  },
+
+  // 포트폴리오 삭제
+  DELETE_DIALOG: {
+    TITLE: '포트폴리오 삭제',
+    DESCRIPTION: (name: string) =>
+      `"${name}" 종목을 영구적으로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`,
+    CONFIRM: '삭제',
+    CANCEL: '취소',
+  },
+
+  // 미저장 경고
+  UNSAVED: {
+    WARNING: '저장되지 않은 변경사항이 있습니다. 페이지를 떠나시겠습니까?',
+  },
+
+  // 자동 최적화 설명
+  AUTO_FIT: {
+    TOOLTIP: '목표 예산에 맞춰 매수 강도(Strength)와 분할 구간(Steps)을 자동으로 조정합니다. 현재 설정된 고점가와 시작 하락률을 기준으로 최적의 파라미터를 계산합니다.',
+    SHORT_DESC: '목표 예산에 맞춰 Strength와 구간 수를 자동 조정합니다',
+  },
+
+  // 키보드 단축키
+  SHORTCUTS: {
+    SEARCH: '종목 검색',
+    NEW_PORTFOLIO: '새 포트폴리오',
+    CLOSE_MODAL: '모달 닫기',
+    SETTINGS: '설정',
+  },
 } as const;

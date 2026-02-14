@@ -2,6 +2,7 @@
 // Dashboard Page Component
 // ============================================
 
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   AlertTriangle,
   Briefcase,
@@ -33,6 +34,7 @@ export function Dashboard() {
   const addPortfolio = usePortfolioStore((state) => state.addPortfolio);
   const setActivePortfolio = usePortfolioStore((state) => state.setActivePortfolio);
   const portfolioStats = usePortfolioStore((state) => state.portfolioStats);
+  const isInitialized = usePortfolioStore((state) => state.isInitialized);
   const initialCash = useSettingsStore((state) => state.settings.initialCash);
 
   // Calculate dashboard stats
@@ -100,6 +102,7 @@ export function Dashboard() {
               icon={<Wallet className="w-5 h-5" />}
               tooltip={TEXTS.DASHBOARD.INITIAL_CASH_TOOLTIP}
               align="left"
+              loading={!isInitialized}
             />
             <StatsCard
               label={TEXTS.DASHBOARD.REMAINING_CASH}
@@ -108,6 +111,7 @@ export function Dashboard() {
               icon={<PiggyBank className="w-5 h-5" />}
               tooltip={TEXTS.DASHBOARD.REMAINING_CASH_TOOLTIP}
               align="left"
+              loading={!isInitialized}
             />
             <StatsCard
               label={TEXTS.DASHBOARD.TOTAL_EXECUTED}
@@ -115,6 +119,7 @@ export function Dashboard() {
               icon={<TrendingUp className="w-5 h-5" />}
               tooltip={TEXTS.DASHBOARD.TOTAL_EXECUTED_TOOLTIP}
               align="left"
+              loading={!isInitialized}
             />
             <StatsCard
               label={TEXTS.DASHBOARD.TOTAL_ORDERED}
@@ -122,6 +127,7 @@ export function Dashboard() {
               icon={<ClipboardList className="w-5 h-5" />}
               tooltip={TEXTS.DASHBOARD.TOTAL_ORDERED_TOOLTIP}
               align="left"
+              loading={!isInitialized}
             />
           </Grid>
         </Section>
@@ -164,14 +170,24 @@ export function Dashboard() {
           {favoritePortfolios.length > 0 && (
             <Section title={TEXTS.DASHBOARD.FAVORITES} icon={<Star className="w-5 h-5" />}>
               <Grid cols={3} gap="md">
-                {favoritePortfolios.map((portfolio) => (
-                  <PortfolioCard
-                    key={portfolio.id}
-                    portfolio={portfolio}
-                    stats={portfolioStats.get(portfolio.id!)}
-                    onClick={() => handlePortfolioClick(portfolio.id!)}
-                  />
-                ))}
+                <AnimatePresence>
+                  {favoritePortfolios.map((portfolio) => (
+                    <motion.div
+                      key={portfolio.id}
+                      layout
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <PortfolioCard
+                        portfolio={portfolio}
+                        stats={portfolioStats.get(portfolio.id!)}
+                        onClick={() => handlePortfolioClick(portfolio.id!)}
+                      />
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
               </Grid>
             </Section>
           )}
@@ -183,14 +199,24 @@ export function Dashboard() {
               icon={<TrendingUp className="w-5 h-5" />}
             >
               <Grid cols={3} gap="md">
-                {otherPortfolios.map((portfolio) => (
-                  <PortfolioCard
-                    key={portfolio.id}
-                    portfolio={portfolio}
-                    stats={portfolioStats.get(portfolio.id!)}
-                    onClick={() => handlePortfolioClick(portfolio.id!)}
-                  />
-                ))}
+                <AnimatePresence>
+                  {otherPortfolios.map((portfolio) => (
+                    <motion.div
+                      key={portfolio.id}
+                      layout
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <PortfolioCard
+                        portfolio={portfolio}
+                        stats={portfolioStats.get(portfolio.id!)}
+                        onClick={() => handlePortfolioClick(portfolio.id!)}
+                      />
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
               </Grid>
             </Section>
           )}

@@ -92,19 +92,7 @@ export function MusicPlayer() {
     }
   }, [currentTrackIndex]); // Only re-run on track change
 
-  // Initial Autoplay (User requested default Off for MusicPlayer, but logic here for 'auto start' if enabled?)
-  // Actually, 'default Off' was for the Toggle UI visibility.
-  // The player state itself defaults to `false`.
-  // The mount timer attempts to play:
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      // Only autoplay if nothing else is playing
-      if (!currentAudioId) {
-        setIsPlaying(true);
-      }
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, []);
+  // Autoplay removed — player starts paused, user must click to play
 
   const togglePlay = () => {
     setIsPlaying(!isPlaying);

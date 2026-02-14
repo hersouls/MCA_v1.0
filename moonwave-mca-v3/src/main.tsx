@@ -9,6 +9,8 @@ import { createRoot } from 'react-dom/client';
 import { Navigate, RouterProvider, createBrowserRouter } from 'react-router-dom';
 
 import { LoadingState } from '@/components/layout';
+import { NotFound } from '@/components/NotFound';
+import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 import { App } from './App';
 import './index.css';
 
@@ -46,6 +48,7 @@ const router = createBrowserRouter(
     {
       path: '/',
       element: <App />,
+      errorElement: <RouteErrorBoundary />,
       children: [
         {
           index: true,
@@ -53,6 +56,7 @@ const router = createBrowserRouter(
         },
         {
           path: 'dashboard',
+          errorElement: <RouteErrorBoundary />,
           element: (
             <Suspense fallback={<PageLoader />}>
               <Dashboard />
@@ -61,6 +65,7 @@ const router = createBrowserRouter(
         },
         {
           path: 'portfolio/:id',
+          errorElement: <RouteErrorBoundary />,
           element: (
             <Suspense fallback={<PageLoader />}>
               <PortfolioDetail />
@@ -69,6 +74,7 @@ const router = createBrowserRouter(
         },
         {
           path: 'settings',
+          errorElement: <RouteErrorBoundary />,
           element: (
             <Suspense fallback={<PageLoader />}>
               <Settings />
@@ -77,7 +83,7 @@ const router = createBrowserRouter(
         },
         {
           path: '*',
-          element: <Navigate to="/dashboard" replace />,
+          element: <NotFound />,
         },
       ],
     },

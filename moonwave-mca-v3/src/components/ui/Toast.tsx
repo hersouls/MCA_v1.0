@@ -3,10 +3,10 @@
 // ============================================
 /* eslint-disable react-refresh/only-export-components */
 
-import { useToasts, useUIStore } from '@/stores/uiStore';
+import { type ToastAction, useToasts, useUIStore } from '@/stores/uiStore';
 import { clsx } from 'clsx';
 import { AlertCircle, AlertTriangle, CheckCircle, Info, X } from 'lucide-react';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 type ToastType = 'success' | 'error' | 'warning' | 'info';
 
@@ -14,6 +14,8 @@ interface ToastItemProps {
   id: string;
   message: string;
   type: ToastType;
+  duration?: number;
+  action?: ToastAction;
   onDismiss: (id: string) => void;
 }
 
@@ -51,10 +53,53 @@ const typeLabels: Record<ToastType, string> = {
   info: '알림',
 };
 
-function ToastItem({ id, message, type, onDismiss }: ToastItemProps) {
+function ToastItem({ id, message, type, duration = 3000, action, onDismiss }: ToastItemProps) {
   const config = typeConfig[type];
   const Icon = config.icon;
   const typeLabel = typeLabels[type];
+
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const remainingRef = useRef(duration);
+  const startTimeRef = useRef(Date.now());
+
+  const clearTimer = useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }, []);
+
+  const startTimer = useCallback(
+    (timeLeft: number) => {
+      if (timeLeft <= 0) return;
+      clearTimer();
+      startTimeRef.current = Date.now();
+      remainingRef.current = timeLeft;
+      timerRef.current = setTimeout(() => {
+        onDismiss(id);
+      }, timeLeft);
+    },
+    [clearTimer, id, onDismiss]
+  );
+
+  const handlePause = useCallback(() => {
+    if (timerRef.current) {
+      const elapsed = Date.now() - startTimeRef.current;
+      remainingRef.current = Math.max(0, remainingRef.current - elapsed);
+      clearTimer();
+    }
+  }, [clearTimer]);
+
+  const handleResume = useCallback(() => {
+    startTimer(remainingRef.current);
+  }, [startTimer]);
+
+  useEffect(() => {
+    if (duration > 0) {
+      startTimer(duration);
+    }
+    return clearTimer;
+  }, [duration, startTimer, clearTimer]);
 
   return (
     <div
@@ -65,15 +110,30 @@ function ToastItem({ id, message, type, onDismiss }: ToastItemProps) {
       )}
       role="alert"
       aria-atomic="true"
+      onMouseEnter={handlePause}
+      onMouseLeave={handleResume}
+      onFocus={handlePause}
+      onBlur={handleResume}
     >
       <Icon
         className={clsx('w-5 h-5 flex-shrink-0 mt-0.5', config.iconClassName)}
         aria-hidden="true"
       />
-      <p className="flex-1 text-sm font-medium text-foreground">
-        <span className="sr-only">{typeLabel}: </span>
-        {message}
-      </p>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-foreground">
+          <span className="sr-only">{typeLabel}: </span>
+          {message}
+        </p>
+        {action && (
+          <button
+            onClick={action.onClick}
+            className="mt-1 text-xs font-semibold text-primary-600 dark:text-primary-400 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
+            type="button"
+          >
+            {action.label}
+          </button>
+        )}
+      </div>
       <button
         onClick={() => onDismiss(id)}
         className="flex-shrink-0 p-1 rounded-md hover:bg-foreground/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
@@ -112,6 +172,8 @@ export function ToastContainer() {
             id={toast.id}
             message={toast.message}
             type={toast.type}
+            duration={toast.duration}
+            action={toast.action}
             onDismiss={dismissToast}
           />
         </div>
@@ -127,18 +189,18 @@ export function useToast() {
   const clearAllToasts = useUIStore((state) => state.clearAllToasts);
 
   const toast = useCallback(
-    (message: string, type: ToastType = 'info', duration?: number) => {
-      showToast(message, type, duration);
+    (message: string, type: ToastType = 'info', duration?: number, action?: ToastAction) => {
+      showToast(message, type, duration, action);
     },
     [showToast]
   );
 
   return {
     toast,
-    success: (message: string, duration?: number) => toast(message, 'success', duration),
-    error: (message: string, duration?: number) => toast(message, 'error', duration),
-    warning: (message: string, duration?: number) => toast(message, 'warning', duration),
-    info: (message: string, duration?: number) => toast(message, 'info', duration),
+    success: (message: string, duration?: number, action?: ToastAction) => toast(message, 'success', duration, action),
+    error: (message: string, duration?: number, action?: ToastAction) => toast(message, 'error', duration, action),
+    warning: (message: string, duration?: number, action?: ToastAction) => toast(message, 'warning', duration, action),
+    info: (message: string, duration?: number, action?: ToastAction) => toast(message, 'info', duration, action),
     dismiss: dismissToast,
     clearAll: clearAllToasts,
   };

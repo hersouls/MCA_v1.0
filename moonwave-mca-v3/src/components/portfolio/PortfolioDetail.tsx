@@ -2,6 +2,7 @@
 // Portfolio Detail Page Component
 // ============================================
 
+import { motion } from 'framer-motion';
 import { ArrowLeft, BookOpen, FileText, Settings2, Star, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -10,7 +11,9 @@ import { ErrorState, PageContainer, Section } from '@/components/layout';
 import {
   Button,
   Card,
+  ConfirmDialog,
   IconButton,
+  Skeleton,
   StatGrid,
   StatItem,
   StatsCard,
@@ -51,6 +54,9 @@ export function PortfolioDetail() {
   const [isParamEditorOpen, setIsParamEditorOpen] = useState(false);
   const [portfolioMemo, setPortfolioMemo] = useState('');
   const [stockFundamentalData] = useState<StockFundamentalData | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(true);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [memoSaveStatus, setMemoSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
   // Store
   const portfolios = usePortfolioStore((state) => state.portfolios);
@@ -72,9 +78,12 @@ export function PortfolioDetail() {
   // Load portfolio data
   useEffect(() => {
     if (id) {
+      setIsTransitioning(true);
       const portfolioId = Number(id);
       setActivePortfolio(portfolioId);
-      loadTradesForPortfolio(portfolioId);
+      loadTradesForPortfolio(portfolioId).finally(() => {
+        setIsTransitioning(false);
+      });
     }
   }, [id, setActivePortfolio, loadTradesForPortfolio]);
 
@@ -119,11 +128,8 @@ export function PortfolioDetail() {
     }
   };
 
-  const handleDelete = async () => {
-    if (portfolio && window.confirm(`"${portfolio.name}" 종목을 삭제하시겠습니까?`)) {
-      await deletePortfolio(portfolio.id!);
-      navigate('/dashboard');
-    }
+  const handleDelete = () => {
+    setShowDeleteConfirm(true);
   };
 
   // portfolio.id를 미리 추출하여 안정적인 의존성 제공
@@ -173,7 +179,10 @@ export function PortfolioDetail() {
 
   const handleMemoBlur = async () => {
     if (portfolio?.id && portfolioMemo !== portfolio.memo) {
+      setMemoSaveStatus('saving');
       await updatePortfolio(portfolio.id, { memo: portfolioMemo });
+      setMemoSaveStatus('saved');
+      setTimeout(() => setMemoSaveStatus('idle'), 2000);
     }
   };
 
@@ -198,6 +207,34 @@ export function PortfolioDetail() {
       });
     }
   };
+
+  // Transition loading skeleton
+  if (isTransitioning && !portfolio) {
+    return (
+      <PageContainer>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <Skeleton className="w-10 h-10 rounded-full" />
+            <div className="space-y-2">
+              <Skeleton className="h-6 w-40" />
+              <Skeleton className="h-4 w-24" />
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Skeleton className="w-10 h-10 rounded-lg" />
+            <Skeleton className="w-10 h-10 rounded-lg" />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-28 rounded-xl" />
+          ))}
+        </div>
+        <Skeleton className="h-64 rounded-xl mb-6" />
+        <Skeleton className="h-96 rounded-xl" />
+      </PageContainer>
+    );
+  }
 
   // Error state
   if (!portfolio) {
@@ -249,10 +286,13 @@ export function PortfolioDetail() {
               content={portfolio.isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}
               placement="bottom"
             >
-              <button
+              <motion.button
                 onClick={handleToggleFavorite}
                 className="p-1 hover:bg-surface-hover rounded transition-colors"
                 aria-label={portfolio.isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+                whileTap={{ scale: 0.8 }}
+                animate={portfolio.isFavorite ? { scale: [1, 1.3, 1] } : {}}
+                transition={{ duration: 0.3 }}
               >
                 <Star
                   className={`w-5 h-5 ${portfolio.isFavorite
@@ -260,7 +300,7 @@ export function PortfolioDetail() {
                     : 'text-muted-foreground'
                     }`}
                 />
-              </button>
+              </motion.button>
             </Tooltip>
             {portfolio.stockCode && (
               <Tooltip content="블로그 포스팅" placement="bottom">
@@ -406,13 +446,23 @@ export function PortfolioDetail() {
         <Card>
           <div className="flex items-start gap-3">
             <FileText className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
-            <textarea
-              value={displayMemo}
-              onChange={(e) => setPortfolioMemo(e.target.value)}
-              onBlur={handleMemoBlur}
-              placeholder="이 종목에 대한 메모를 입력하세요..."
-              className="flex-1 min-h-[100px] bg-transparent border-none resize-none text-foreground placeholder:text-muted-foreground focus:outline-none"
-            />
+            <div className="flex-1">
+              <textarea
+                value={displayMemo}
+                onChange={(e) => setPortfolioMemo(e.target.value)}
+                onBlur={handleMemoBlur}
+                placeholder="이 종목에 대한 메모를 입력하세요..."
+                className="w-full min-h-[100px] bg-transparent border-none resize-none text-foreground placeholder:text-muted-foreground focus:outline-none"
+              />
+              <div className="h-5 flex items-center">
+                {memoSaveStatus === 'saving' && (
+                  <span className="text-xs text-muted-foreground">저장 중...</span>
+                )}
+                {memoSaveStatus === 'saved' && (
+                  <span className="text-xs text-success-600 dark:text-success-400">저장됨</span>
+                )}
+              </div>
+            </div>
           </div>
         </Card>
       </Section>
@@ -423,6 +473,24 @@ export function PortfolioDetail() {
         isOpen={isParamEditorOpen}
         onClose={() => setIsParamEditorOpen(false)}
         onSave={handleSaveParams}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={async () => {
+          if (portfolio) {
+            await deletePortfolio(portfolio.id!);
+            navigate('/dashboard');
+          }
+          setShowDeleteConfirm(false);
+        }}
+        title="포트폴리오 삭제"
+        description={`"${portfolio?.name}" 종목을 영구적으로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`}
+        confirmText="삭제"
+        cancelText="취소"
+        variant="danger"
       />
     </PageContainer>
   );

@@ -206,6 +206,16 @@ export function StockSearchInput({
         )}
       </div>
 
+      {/* 검색 중 인디케이터 */}
+      {showDropdown && isSearching && searchResults.length === 0 && (
+        <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-lg border border-border bg-card p-4 shadow-lg">
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>검색 중...</span>
+          </div>
+        </div>
+      )}
+
       {/* 검색 결과 드롭다운 */}
       {showDropdown && searchResults.length > 0 && (
         <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-60 overflow-auto rounded-lg border border-border bg-card shadow-lg">
@@ -229,8 +239,13 @@ export function StockSearchInput({
 
       {/* 검색 결과 없음 */}
       {showDropdown && !isSearching && searchResults.length === 0 && searchQuery.length >= 2 && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-lg border border-border bg-card p-3 text-center text-sm text-muted-foreground shadow-lg">
-          검색 결과가 없습니다
+        <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-lg border border-border bg-card p-4 shadow-lg">
+          <p className="text-center text-sm font-medium text-muted-foreground">
+            해당 종목을 찾을 수 없습니다
+          </p>
+          <p className="mt-1 text-center text-xs text-muted-foreground/70">
+            종목명 또는 6자리 코드를 정확히 입력해주세요
+          </p>
         </div>
       )}
 

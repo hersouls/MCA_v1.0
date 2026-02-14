@@ -11,3 +11,4 @@ export * from './StockLogo';
 export * from './Toast';
 export * from './StockSearchInput';
 export * from './Skeleton';
+export * from './DateInput';

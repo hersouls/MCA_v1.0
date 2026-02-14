@@ -2,11 +2,13 @@
 // Onboarding Tour Component
 // ============================================
 
+import { ConfirmDialog } from '@/components/ui/Dialog';
 import { useUIStore } from '@/stores/uiStore';
 import { STORAGE_KEYS } from '@/utils/constants';
+import { TEXTS } from '@/utils/texts';
 import { driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { desktopSteps, mobileSteps } from './tourSteps';
 
 function isDarkMode(): boolean {
@@ -22,19 +24,30 @@ export function OnboardingTour() {
   const startTour = useUIStore((state) => state.startTour);
   const endTour = useUIStore((state) => state.endTour);
   const driverRef = useRef<ReturnType<typeof driver> | null>(null);
+  const [showChoiceModal, setShowChoiceModal] = useState(false);
 
-  // Auto-start tour for first-time visitors
+  // Show choice modal for first-time visitors (instead of auto-starting)
   useEffect(() => {
     const completed = localStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETED);
-    if (completed) return;
+    const declined = localStorage.getItem(STORAGE_KEYS.ONBOARDING_DECLINED);
+    if (completed || declined) return;
 
-    // Wait for DOM to be fully rendered
     const timer = setTimeout(() => {
-      startTour();
+      setShowChoiceModal(true);
     }, 800);
 
     return () => clearTimeout(timer);
-  }, [startTour]);
+  }, []);
+
+  const handleStartTour = () => {
+    setShowChoiceModal(false);
+    startTour();
+  };
+
+  const handleDeclineTour = () => {
+    setShowChoiceModal(false);
+    localStorage.setItem(STORAGE_KEYS.ONBOARDING_DECLINED, 'true');
+  };
 
   // Run tour when isTourActive becomes true
   useEffect(() => {
@@ -75,5 +88,16 @@ export function OnboardingTour() {
     };
   }, [isTourActive, endTour]);
 
-  return null;
+  return (
+    <ConfirmDialog
+      open={showChoiceModal}
+      onClose={handleDeclineTour}
+      onConfirm={handleStartTour}
+      title={TEXTS.ONBOARDING.CHOICE_TITLE}
+      description={TEXTS.ONBOARDING.CHOICE_DESC}
+      confirmText={TEXTS.ONBOARDING.START_TOUR}
+      cancelText={TEXTS.ONBOARDING.SKIP_TOUR}
+      variant="primary"
+    />
+  );
 }

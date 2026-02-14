@@ -6,6 +6,7 @@ import { usePortfolioStore, useSortedPortfolios } from '@/stores/portfolioStore'
 import { useUIStore } from '@/stores/uiStore';
 import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react';
 import { clsx } from 'clsx';
+import { motion } from 'framer-motion';
 import { BookOpen, Briefcase, HelpCircle, LayoutDashboard, Plus, Settings, Star, X } from 'lucide-react';
 import { Fragment } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -71,6 +72,15 @@ export function MobileNav({ onAddPortfolio: _onAddPortfolio }: MobileNavProps) {
           leaveTo="-translate-x-full"
         >
           <DialogPanel
+            as={motion.div}
+            drag="x"
+            dragConstraints={{ right: 0, left: -300 }}
+            dragElastic={0.1}
+            onDragEnd={(_: unknown, info: { offset: { x: number } }) => {
+              if (info.offset.x < -150) {
+                closeMobileMenu();
+              }
+            }}
             className="fixed inset-y-0 left-0 w-full max-w-xs bg-background shadow-xl flex flex-col"
             aria-labelledby="mobile-nav-title"
           >
@@ -262,7 +272,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-card/80 backdrop-blur-lg border-t border-border safe-area-inset-bottom"
+      className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-card/80 backdrop-blur-lg border-t border-border pb-safe"
       aria-label="하단 메인 네비게이션"
       data-tour="bottom-nav"
     >

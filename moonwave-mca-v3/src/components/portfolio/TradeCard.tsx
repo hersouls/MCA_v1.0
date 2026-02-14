@@ -2,11 +2,12 @@
 // Trade Card Component (Mobile View)
 // ============================================
 
-import { Card } from '@/components/ui';
+import { Card, DateInput } from '@/components/ui';
 import type { CalculatedTrade } from '@/types';
 import { formatCurrency, formatKoreanUnit, formatPercent } from '@/utils/format';
 import { clsx } from 'clsx';
 import { AlertTriangle, Check, Clock } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface TradeCardProps {
   trade: CalculatedTrade;
@@ -27,6 +28,26 @@ export function TradeCard({
   onDateChange,
   onMemoChange,
 }: TradeCardProps) {
+  const [savedField, setSavedField] = useState<string | null>(null);
+
+  // Clear savedField after 2 seconds
+  useEffect(() => {
+    if (savedField) {
+      const timer = setTimeout(() => setSavedField(null), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [savedField]);
+
+  const handleDateChange = (date: string) => {
+    onDateChange?.(date);
+    setSavedField('date');
+  };
+
+  const handleMemoChange = (value: string) => {
+    onMemoChange?.(value);
+    setSavedField('memo');
+  };
+
   const getCardVariant = () => {
     if (trade.isExecuted)
       return 'border-success-300 dark:border-success-700 bg-success-50/50 dark:bg-success-900/20';
@@ -70,13 +91,13 @@ export function TradeCard({
         </div>
 
         {/* Status Buttons */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <div className="flex flex-col items-center gap-1">
             <span className="text-xs text-muted-foreground">주문</span>
             <button
               onClick={onToggleOrdered}
               className={clsx(
-                'w-8 h-8 rounded-lg border-2 flex items-center justify-center transition-all',
+                'min-w-[44px] min-h-[44px] rounded-lg border-2 flex items-center justify-center transition-all',
                 trade.isOrdered
                   ? 'bg-warning-500 border-warning-500 text-white'
                   : 'border-border hover:border-warning-400'
@@ -92,7 +113,7 @@ export function TradeCard({
               onClick={onToggleExecuted}
               disabled={!trade.isOrdered}
               className={clsx(
-                'w-8 h-8 rounded-lg border-2 flex items-center justify-center transition-all',
+                'min-w-[44px] min-h-[44px] rounded-lg border-2 flex items-center justify-center transition-all',
                 trade.isExecuted
                   ? 'bg-success-500 border-success-500 text-white'
                   : trade.isOrdered
@@ -156,19 +177,24 @@ export function TradeCard({
 
           {/* Date & Memo Inputs */}
           <div className="mt-3 flex gap-2">
-            <input
-              type="date"
+            <DateInput
               value={executionDate}
-              onChange={(e) => onDateChange?.(e.target.value)}
-              className="flex-shrink-0 w-32 bg-transparent text-xs text-foreground tabular-nums border border-border rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              onChange={handleDateChange}
+              className={clsx(
+                'flex-shrink-0 w-32',
+                savedField === 'date' && '[&_input]:ring-2 [&_input]:ring-success-500'
+              )}
               aria-label="체결일"
             />
             <input
               type="text"
               value={memo}
-              onChange={(e) => onMemoChange?.(e.target.value)}
+              onChange={(e) => handleMemoChange(e.target.value)}
               placeholder="메모"
-              className="flex-1 min-w-0 bg-transparent text-xs text-foreground placeholder-muted-foreground border border-border rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className={clsx(
+                'flex-1 min-w-0 bg-transparent text-xs text-foreground placeholder-muted-foreground border border-border rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary-500 transition-all',
+                savedField === 'memo' && 'ring-2 ring-success-500'
+              )}
               aria-label="메모"
             />
           </div>

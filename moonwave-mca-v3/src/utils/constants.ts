@@ -22,6 +22,7 @@ export const STORAGE_KEYS = {
   SESSION_START: 'mca-session-start',
   // Onboarding
   ONBOARDING_COMPLETED: 'mca-onboarding-completed',
+  ONBOARDING_DECLINED: 'mca-onboarding-declined',
   // v2 호환용
   DARK_MODE: 'darkMode',
 } as const;
