@@ -50,6 +50,9 @@ interface UIState {
   searchQuery: string;
   isHeaderSearchOpen: boolean; // Managed globally for trigger consistency
 
+  // Stock Search Modal
+  isStockSearchOpen: boolean;
+
   // Loading States
   isGlobalLoading: boolean;
   loadingMessage: string | null;
@@ -101,6 +104,10 @@ interface UIState {
   setHeaderSearchOpen: (isOpen: boolean) => void;
   clearSearch: () => void;
 
+  // Stock Search Modal Actions
+  openStockSearch: () => void;
+  closeStockSearch: () => void;
+
   // Loading Actions
   setGlobalLoading: (isLoading: boolean, message?: string) => void;
 
@@ -131,6 +138,7 @@ export const useUIStore = create<UIState>()(
       isTermsModalOpen: false,
       searchQuery: '',
       isHeaderSearchOpen: false,
+      isStockSearchOpen: false,
       isGlobalLoading: false,
       loadingMessage: null,
       isSidebarCollapsed: false,
@@ -239,6 +247,14 @@ export const useUIStore = create<UIState>()(
 
       clearSearch: () => {
         set({ searchQuery: '' });
+      },
+
+      // Stock Search Modal
+      openStockSearch: () => {
+        set({ isStockSearchOpen: true });
+      },
+      closeStockSearch: () => {
+        set({ isStockSearchOpen: false });
       },
 
       // Loading

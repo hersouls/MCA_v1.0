@@ -7,32 +7,16 @@ import { NotificationDropdown } from '@/components/ui/NotificationDropdown';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useUIStore } from '@/stores/uiStore';
 import type { ThemeMode } from '@/types';
-import { BookOpen, Menu, Monitor, Moon, Plus, Search, Sun, X } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { BookOpen, Menu, Monitor, Moon, Plus, Sun } from 'lucide-react';
 
-interface HeaderProps {
-  onAddPortfolio?: () => void;
-}
-
-export function Header({ onAddPortfolio: _onAddPortfolio }: HeaderProps) {
+export function Header() {
   const isMobileMenuOpen = useUIStore((state) => state.isMobileMenuOpen);
   const toggleMobileMenu = useUIStore((state) => state.toggleMobileMenu);
   const openHandbook = useUIStore((state) => state.openHandbook);
+  const openStockSearch = useUIStore((state) => state.openStockSearch);
 
   const theme = useSettingsStore((state) => state.settings.theme);
   const setTheme = useSettingsStore((state) => state.setTheme);
-  const searchQuery = useUIStore((state) => state.searchQuery);
-  const setSearchQuery = useUIStore((state) => state.setSearchQuery);
-  const isSearchOpen = useUIStore((state) => state.isHeaderSearchOpen);
-  const setIsSearchOpen = useUIStore((state) => state.setHeaderSearchOpen);
-
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (isSearchOpen && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [isSearchOpen]);
 
   const cycleTheme = () => {
     const themeOrder: ThemeMode[] = ['light', 'dark', 'system'];
@@ -75,43 +59,8 @@ export function Header({ onAddPortfolio: _onAddPortfolio }: HeaderProps) {
         className="flex items-center justify-between h-16 px-4 lg:px-6 relative"
         aria-label="헤더 네비게이션"
       >
-        {/* Mobile Search Overlay - Only Visible in Mobile when Open */}
-        {isSearchOpen && (
-          <div className="absolute inset-0 z-50 flex items-center bg-background px-4 md:hidden animate-fade-in">
-            <div className="relative w-full group mr-2">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <input
-                ref={inputRef}
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="종목 검색 및 추가..."
-                className="block w-full rounded-full border-0 py-2 pl-10 pr-2 text-foreground ring-1 ring-inset ring-border placeholder:text-muted-foreground focus:ring-1 focus:ring-inset focus:ring-primary-500 sm:text-sm sm:leading-6 dark:bg-card dark:focus:ring-primary-400"
-                onKeyDown={(e) => {
-                  if (e.key === 'Escape') {
-                    setIsSearchOpen(false);
-                    setSearchQuery('');
-                  }
-                }}
-              />
-            </div>
-            <IconButton
-              onClick={() => {
-                setIsSearchOpen(false);
-                setSearchQuery('');
-              }}
-              color="secondary"
-              aria-label="검색 닫기"
-            >
-              <X className="w-5 h-5" />
-            </IconButton>
-          </div>
-        )}
-
-        {/* Left: Mobile menu button + Logo (Hidden when mobile search is open) */}
-        <div className={`flex items-center gap-3 ${isSearchOpen ? 'hidden md:flex' : ''}`}>
+        {/* Left: Mobile menu button + Logo */}
+        <div className="flex items-center gap-3">
           <button
             onClick={toggleMobileMenu}
             className="lg:hidden p-2 -ml-2 rounded-lg hover:bg-surface-hover transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
@@ -138,7 +87,7 @@ export function Header({ onAddPortfolio: _onAddPortfolio }: HeaderProps) {
 
         {/* Right: Actions */}
         <div
-          className={`flex items-center gap-1 ${isSearchOpen ? 'hidden md:flex' : ''}`}
+          className="flex items-center gap-1"
           role="group"
           aria-label="헤더 액션"
         >
@@ -166,62 +115,15 @@ export function Header({ onAddPortfolio: _onAddPortfolio }: HeaderProps) {
             </IconButton>
           </Tooltip>
 
-          {/* Desktop Search Slide-out (Visible on MD+, handles its own state) */}
-          <div className="hidden md:flex items-center ml-2 relative">
-            <div
-              className={`flex items-center transition-all duration-300 ease-in-out overflow-hidden ${isSearchOpen ? 'w-64 opacity-100 mr-2' : 'w-0 opacity-0'
-                }`}
-            >
-              <div className="relative w-full group">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search className="h-4 w-4 text-muted-foreground group-hover:text-primary-500 transition-colors" />
-                </div>
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="종목 검색 및 추가..."
-                  className="block w-full rounded-full border-0 py-1.5 pl-10 pr-8 text-foreground ring-1 ring-inset ring-border placeholder:text-muted-foreground focus:ring-1 focus:ring-inset focus:ring-primary-500 sm:text-sm sm:leading-6 dark:bg-card/50 dark:focus:ring-primary-400"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Escape') {
-                      setIsSearchOpen(false);
-                      setSearchQuery('');
-                    }
-                  }}
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className="absolute inset-y-0 right-0 pr-2 flex items-center text-muted-foreground hover:text-foreground"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Trigger Button (Everywhere) */}
+          {/* Add Stock Button */}
           <div data-tour="header-search">
-            <Tooltip content={isSearchOpen ? '닫기' : '새 종목 추가 (검색)'} placement="bottom">
+            <Tooltip content="새 종목 추가" placement="bottom">
               <IconButton
-                color={isSearchOpen ? 'secondary' : 'primary'}
-                onClick={() => {
-                  if (isSearchOpen) {
-                    setIsSearchOpen(false);
-                    setSearchQuery('');
-                  } else {
-                    setIsSearchOpen(true);
-                  }
-                }}
-                aria-label={isSearchOpen ? '검색 닫기' : '새 종목 추가'}
-                className="transition-transform duration-300"
+                color="primary"
+                onClick={openStockSearch}
+                aria-label="새 종목 추가"
               >
-                <Plus
-                  className={`w-5 h-5 transition-transform duration-300 ${isSearchOpen ? 'rotate-45' : 'rotate-0'
-                    }`}
-                  aria-hidden="true"
-                />
+                <Plus className="w-5 h-5" aria-hidden="true" />
               </IconButton>
             </Tooltip>
           </div>

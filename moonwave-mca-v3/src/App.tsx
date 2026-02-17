@@ -3,7 +3,7 @@
 // ============================================
 
 import { useEffect, useRef, useState } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 
 import { HandbookPanel } from '@/components/handbook/HandbookPanel';
 import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
@@ -18,7 +18,7 @@ import {
   TermsModal,
   FAQModal,
 } from '@/components/layout';
-import { StockQuickBar } from '@/components/portfolio/StockQuickBar';
+import { StockSearchModal } from '@/components/portfolio/StockSearchModal';
 import { ToastContainer } from '@/components/ui';
 
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
@@ -35,12 +35,10 @@ export function App() {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isMigrating, setIsMigrating] = useState(false);
   const initRef = useRef(false);
-  const navigate = useNavigate();
 
   // Global keyboard shortcuts
   useKeyboardShortcuts();
 
-  const addPortfolio = usePortfolioStore((state) => state.addPortfolio);
 
   // Initialize app - run only once
   useEffect(() => {
@@ -137,14 +135,8 @@ export function App() {
       {/* Terms Modal */}
       <TermsModal />
 
-      {/* Stock Quick Bar - Global Search Result */}
-      <StockQuickBar
-        onSelect={async (stock) => {
-          const id = await addPortfolio(stock);
-          navigate(`/portfolio/${id}`);
-          useUIStore.getState().setSearchQuery(''); // Close bar
-        }}
-      />
+      {/* Global Stock Search Modal */}
+      <GlobalStockSearch />
 
       {/* Handbook Modal */}
       <HandbookPanel />
@@ -156,4 +148,12 @@ export function App() {
       <OnboardingTour />
     </div>
   );
+}
+
+// Global Stock Search Modal wrapper
+function GlobalStockSearch() {
+  const isOpen = useUIStore((state) => state.isStockSearchOpen);
+  const closeStockSearch = useUIStore((state) => state.closeStockSearch);
+
+  return <StockSearchModal open={isOpen} onClose={closeStockSearch} />;
 }
