@@ -1,7 +1,9 @@
 // ============================================
 // Stock API Client Service
-// KRX 데이터 API 클라이언트
+// KRX + US 데이터 API 클라이언트
 // ============================================
+
+import { searchIntegratedStocks } from '@/data/integratedStocks';
 
 export interface StockFundamentalData {
   ticker: string;
@@ -123,9 +125,10 @@ export async function fetchStockFundamental(
 }
 
 /**
- * 종목 검색
+ * 종목 검색 — 클라이언트 integratedStocks 로컬 검색 우선, KR는 네이버 API 폴백
  * @param query 검색어 (종목명 또는 종목코드)
  * @param limit 최대 결과 수 (기본값: 10)
+ * @param market 검색 시장 ('kr' | 'us', 기본값: 'kr')
  */
 export async function searchStocks(
   query: string,
@@ -136,17 +139,50 @@ export async function searchStocks(
     return [];
   }
 
-  const response = await fetch(
-    `${API_BASE_URL}/stock/search?q=${encodeURIComponent(query)}&limit=${limit}&market=${market}`
-  );
+  // 1) 로컬 integratedStocks 검색 (즉시, 네트워크 불필요)
+  const localResults = searchIntegratedStocks(query);
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Unknown error' }));
-    throw new Error(error.error || `Failed to search stocks: ${response.status}`);
+  // 시장 필터링
+  const filtered = market === 'us'
+    ? localResults.filter((s) => s.type === 'DJI' || s.type === 'NAS')
+    : localResults.filter((s) => s.type === 'KR');
+
+  const mapped: StockSearchResult[] = filtered.slice(0, limit).map((s) => ({
+    ticker: s.code,
+    name: s.name,
+    market: s.market as StockSearchResult['market'],
+  }));
+
+  // US 검색은 로컬 결과만으로 충분
+  if (market === 'us' || mapped.length >= limit) {
+    return mapped;
   }
 
-  const data: StockSearchResponse = await response.json();
-  return data.results;
+  // 2) KR 로컬 결과가 부족하면 네이버 API 폴백
+  if (mapped.length < 3) {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/stock/search?q=${encodeURIComponent(query)}&limit=${limit}&market=kr`
+      );
+      if (response.ok) {
+        const data: StockSearchResponse = await response.json();
+        if (data.results.length > 0) {
+          // 서버 결과와 로컬 결과 병합 (중복 제거)
+          const seen = new Set(mapped.map((r) => r.ticker));
+          for (const result of data.results) {
+            if (!seen.has(result.ticker)) {
+              mapped.push(result);
+              seen.add(result.ticker);
+            }
+          }
+        }
+      }
+    } catch {
+      // 네이버 API 실패 시 로컬 결과만 반환
+    }
+  }
+
+  return mapped.slice(0, limit);
 }
 
 /**

@@ -8,3 +8,4 @@ export { MCAChart } from './MCAChart';
 export { ParameterEditor } from './ParameterEditor';
 export { ExitSimulator } from './ExitSimulator';
 export { FundamentalGradeInput } from './FundamentalGradeInput';
+export { StockSearchModal } from './StockSearchModal';

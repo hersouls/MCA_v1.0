@@ -112,23 +112,25 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
+        manualChunks(id) {
+          // Stock data (large JSON)
+          if (id.includes('stockUniverse.json') || id.includes('integratedStocks')) return 'stock-data';
           // React core
-          'react-vendor': ['react', 'react-dom'],
+          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) return 'react-vendor';
           // Router
-          'router': ['react-router-dom'],
-          // Chart (lazy loaded when needed)
-          'chart': ['chart.js', 'react-chartjs-2', 'chartjs-plugin-datalabels'],
+          if (id.includes('react-router-dom') || id.includes('react-router') || id.includes('@remix-run')) return 'router';
+          // Chart
+          if (id.includes('chart.js') || id.includes('react-chartjs-2') || id.includes('chartjs-plugin')) return 'chart';
           // Animation
-          'motion': ['framer-motion'],
-          // UI libraries (separated)
-          'headless': ['@headlessui/react'],
-          'icons': ['lucide-react'],
-          'aria': ['react-aria-components'],
+          if (id.includes('framer-motion')) return 'motion';
+          // UI libraries
+          if (id.includes('@headlessui')) return 'headless';
+          if (id.includes('lucide-react')) return 'icons';
+          if (id.includes('react-aria')) return 'aria';
           // Database
-          'db': ['dexie'],
+          if (id.includes('dexie')) return 'db';
           // State management
-          'state': ['zustand'],
+          if (id.includes('zustand')) return 'state';
         },
       },
     },

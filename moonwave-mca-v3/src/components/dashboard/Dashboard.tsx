@@ -13,10 +13,11 @@ import {
   TrendingUp,
   Wallet,
 } from 'lucide-react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { EmptyState, Grid, PageContainer, PageHeader, Section } from '@/components/layout';
+import { StockSearchModal } from '@/components/portfolio/StockSearchModal';
 import { Button, Card, PortfolioStatusBadge, StatsCard, StockLogo } from '@/components/ui';
 import { useExchangeRateStore } from '@/stores/exchangeRateStore';
 import { usePortfolioStore, useSortedPortfolios } from '@/stores/portfolioStore';
@@ -33,7 +34,6 @@ import { TEXTS } from '@/utils/texts';
 export function Dashboard() {
   const navigate = useNavigate();
   const portfolios = useSortedPortfolios();
-  const addPortfolio = usePortfolioStore((state) => state.addPortfolio);
   const setActivePortfolio = usePortfolioStore((state) => state.setActivePortfolio);
   const portfolioStats = usePortfolioStore((state) => state.portfolioStats);
   const isInitialized = usePortfolioStore((state) => state.isInitialized);
@@ -41,6 +41,7 @@ export function Dashboard() {
   const exchangeRate = useExchangeRateStore((state) => state.rate);
   const exchangeLastFetched = useExchangeRateStore((state) => state.lastFetched);
   const isManualRate = useExchangeRateStore((state) => state.isManual);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   // Check if any US portfolios exist
   const hasUSPortfolios = portfolios.some((p) => isUSMarket(p.market));
@@ -77,9 +78,8 @@ export function Dashboard() {
     };
   }, [portfolios, portfolioStats, initialCash, exchangeRate]);
 
-  const handleAddPortfolio = async () => {
-    const id = await addPortfolio();
-    navigate(`/portfolio/${id}`);
+  const handleAddPortfolio = () => {
+    setIsSearchOpen(true);
   };
 
   const handlePortfolioClick = (id: number) => {
@@ -92,6 +92,7 @@ export function Dashboard() {
   const otherPortfolios = portfolios.filter((p) => !p.isFavorite);
 
   return (
+    <>
     <PageContainer>
       <PageHeader
         title={TEXTS.DASHBOARD.TITLE}
@@ -245,6 +246,11 @@ export function Dashboard() {
         </>
       )}
     </PageContainer>
+    <StockSearchModal
+      open={isSearchOpen}
+      onClose={() => setIsSearchOpen(false)}
+    />
+    </>
   );
 }
 
