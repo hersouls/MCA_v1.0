@@ -187,15 +187,16 @@ export default async function handler(
     return;
   }
 
-  // 미국 종목 감지: 알파벳으로만 구성 (1-5자)
-  const isUSTicker = /^[A-Za-z.]{1,6}$/.test(ticker.trim());
+  // 미국 종목 감지: 숫자로만 구성되지 않은 경우 US로 판단
+  const trimmedTicker = ticker.trim();
+  const isKRTicker = /^\d+$/.test(trimmedTicker);
 
-  if (isUSTicker) {
+  if (!isKRTicker && trimmedTicker.length >= 1) {
     // --- US Stock: Yahoo Finance ---
     try {
-      const usData = await fetchYahooStock(ticker.toUpperCase());
+      const usData = await fetchYahooStock(trimmedTicker.toUpperCase());
       if (!usData) {
-        res.status(404).json({ error: 'US stock not found', ticker: ticker.toUpperCase() });
+        res.status(404).json({ error: 'US stock not found', ticker: trimmedTicker.toUpperCase() });
         return;
       }
       res.status(200).json(usData);
