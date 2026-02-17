@@ -1,6 +1,7 @@
 // ============================================
 // MCA Chart Component
 // Dual-axis chart: Average Price + Gap %
+// With gap zone visualization
 // ============================================
 
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -19,6 +20,7 @@ import {
   Legend,
   LineElement,
   LinearScale,
+  type Plugin,
   PointElement,
   Title,
   Tooltip,
@@ -40,6 +42,120 @@ ChartJS.register(
   Filler,
   ChartDataLabels
 );
+
+// Gap Zone Visualization Plugin
+const gapZonePlugin: Plugin<'line'> = {
+  id: 'mca-gap-zones',
+  beforeDraw(chart) {
+    const { ctx, chartArea, scales } = chart;
+    if (!chartArea || !scales.y1) return;
+
+    const y1Scale = scales.y1;
+    const { left, right, top, bottom } = chartArea;
+
+    // Determine dark mode from chart options metadata
+    const isDark =
+      (chart.options as ChartOptions<'line'> & { _isDark?: boolean })?._isDark ?? false;
+    const alpha = isDark ? 0.08 : 0.04;
+
+    ctx.save();
+
+    // Gap < -5%: green zone (buy opportunity)
+    const negFiveY = y1Scale.getPixelForValue(-5);
+    if (negFiveY < bottom) {
+      ctx.fillStyle = `rgba(34, 197, 94, ${alpha})`;
+      ctx.fillRect(left, negFiveY, right - left, bottom - negFiveY);
+    }
+
+    // Gap > 5%: red zone (warning)
+    const posFiveY = y1Scale.getPixelForValue(5);
+    if (posFiveY > top) {
+      ctx.fillStyle = `rgba(239, 68, 68, ${alpha})`;
+      ctx.fillRect(left, top, right - left, posFiveY - top);
+    }
+
+    ctx.restore();
+  },
+  afterDraw(chart) {
+    const { ctx, chartArea, scales } = chart;
+    if (!chartArea || !scales.x) return;
+
+    const isDark =
+      (chart.options as ChartOptions<'line'> & { _isDark?: boolean })?._isDark ?? false;
+    const isMobile =
+      (chart.options as ChartOptions<'line'> & { _isMobile?: boolean })?._isMobile ?? false;
+
+    // Skip markers on mobile for readability
+    if (isMobile) return;
+
+    const meta = chart.getDatasetMeta(0); // avgPrice dataset
+    if (!meta || !meta.data || meta.data.length === 0) return;
+
+    // Get trades data from chart metadata
+    const trades = (
+      chart.options as ChartOptions<'line'> & {
+        _trades?: Array<{ isExecuted: boolean; isOrdered: boolean; step: number }>;
+      }
+    )?._trades;
+    if (!trades || trades.length === 0) return;
+
+    ctx.save();
+
+    // 1. Current position marker: vertical dashed line at last executed step
+    let lastExecutedIdx = -1;
+    for (let i = trades.length - 1; i >= 0; i--) {
+      if (trades[i].isExecuted) {
+        lastExecutedIdx = i;
+        break;
+      }
+    }
+
+    if (lastExecutedIdx >= 0 && lastExecutedIdx < meta.data.length) {
+      const point = meta.data[lastExecutedIdx];
+      const primaryColor = isDark ? '#2EFFB4' : '#00A86B';
+
+      ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = primaryColor;
+      ctx.lineWidth = 1.5;
+      ctx.globalAlpha = 0.6;
+      ctx.beginPath();
+      ctx.moveTo(point.x, chartArea.top);
+      ctx.lineTo(point.x, chartArea.bottom);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+    }
+
+    // 2. Next buy trigger: dashed circle at next unordered step
+    let nextUnorderedIdx = -1;
+    for (let i = 0; i < trades.length; i++) {
+      if (!trades[i].isOrdered && !trades[i].isExecuted) {
+        nextUnorderedIdx = i;
+        break;
+      }
+    }
+
+    if (nextUnorderedIdx >= 0 && nextUnorderedIdx < meta.data.length) {
+      const point = meta.data[nextUnorderedIdx];
+      const warningColor = isDark ? '#fbbf24' : '#f59e0b';
+
+      ctx.setLineDash([3, 3]);
+      ctx.strokeStyle = warningColor;
+      ctx.lineWidth = 2;
+      ctx.globalAlpha = 0.7;
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, 10, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+    }
+
+    ctx.restore();
+  },
+};
+
+// Register the plugin globally
+ChartJS.register(gapZonePlugin);
 
 interface MCAChartProps {
   params: PortfolioParams;
@@ -191,11 +307,19 @@ export function MCAChart({
     };
   }, [chartTrades, colors, minGapIdx, maxGapIdx, isDark, isMobile]);
 
-  // Chart options
-  const options: ChartOptions<'line'> = useMemo(
+  // Chart options - includes _isDark, _isMobile, _trades for plugin access
+  const options: ChartOptions<'line'> & {
+    _isDark?: boolean;
+    _isMobile?: boolean;
+    _trades?: typeof chartTrades;
+  } = useMemo(
     () => ({
       responsive: true,
       maintainAspectRatio: false,
+      // Custom metadata for gap zone plugin
+      _isDark: isDark,
+      _isMobile: isMobile,
+      _trades: chartTrades,
       interaction: {
         mode: 'index',
         intersect: false,
@@ -317,6 +441,16 @@ export function MCAChart({
     }
   }, [isDark]);
 
+  // Chart summary for screen readers
+  const chartSummary = useMemo(() => {
+    if (chartTrades.length === 0) return '';
+    const lastTrade = chartTrades[chartTrades.length - 1];
+    const gaps = chartTrades.map((t) => t.gap);
+    const minGap = Math.min(...gaps);
+    const maxGap = Math.max(...gaps);
+    return `${chartTrades.length}개 구간 MCA 차트: 최저 괴리율 ${minGap.toFixed(1)}%, 최고 괴리율 ${maxGap.toFixed(1)}%, 최종 평균단가 ${formatAmountCompact(lastTrade.avgPrice, market)}`;
+  }, [chartTrades]);
+
   if (chartTrades.length === 0) {
     return (
       <div
@@ -331,27 +465,9 @@ export function MCAChart({
     );
   }
 
-  // Chart summary for screen readers
-  const chartSummary = useMemo(() => {
-    if (chartTrades.length === 0) return '';
-    const lastTrade = chartTrades[chartTrades.length - 1];
-    const gaps = chartTrades.map((t) => t.gap);
-    const minGap = Math.min(...gaps);
-    const maxGap = Math.max(...gaps);
-    return `${chartTrades.length}개 구간 MCA 차트: 최저 괴리율 ${minGap.toFixed(1)}%, 최고 괴리율 ${maxGap.toFixed(1)}%, 최종 평균단가 ${formatAmountCompact(lastTrade.avgPrice, market)}`;
-  }, [chartTrades]);
-
   return (
-    <div
-      className="relative rounded-xl border border-border bg-card p-4"
-      style={{ height }}
-    >
-      <Line
-        ref={chartRef}
-        data={data}
-        options={options}
-        aria-label={chartSummary}
-      />
+    <div className="relative rounded-xl border border-border bg-card p-4" style={{ height }}>
+      <Line ref={chartRef} data={data} options={options} aria-label={chartSummary} />
 
       {/* Recalculation loading overlay */}
       {isPending && (
@@ -377,9 +493,7 @@ export function MCAChart({
               <td>{trade.step}구간</td>
               <td>{formatAmountCompact(trade.avgPrice, market)}</td>
               <td>{trade.gap.toFixed(2)}%</td>
-              <td>
-                {trade.isExecuted ? '체결됨' : trade.isOrdered ? '주문됨' : '미주문'}
-              </td>
+              <td>{trade.isExecuted ? '체결됨' : trade.isOrdered ? '주문됨' : '미주문'}</td>
             </tr>
           ))}
         </tbody>

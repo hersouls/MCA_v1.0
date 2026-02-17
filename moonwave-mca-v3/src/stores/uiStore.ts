@@ -66,6 +66,10 @@ interface UIState {
   // Onboarding Tour
   isTourActive: boolean;
 
+  // Dashboard Filters
+  dashboardFilter: 'all' | 'kr' | 'us' | 'gap' | 'grade-a';
+  dashboardSort: 'name' | 'progress' | 'investment' | 'updated';
+
   // Actions
   setView: (view: 'dashboard' | 'detail' | 'settings') => void;
 
@@ -122,6 +126,10 @@ interface UIState {
   // Onboarding Tour Actions
   startTour: () => void;
   endTour: () => void;
+
+  // Dashboard Filter Actions
+  setDashboardFilter: (filter: UIState['dashboardFilter']) => void;
+  setDashboardSort: (sort: UIState['dashboardSort']) => void;
 }
 
 let toastIdCounter = 0;
@@ -144,6 +152,8 @@ export const useUIStore = create<UIState>()(
       isSidebarCollapsed: false,
       isMobileMenuOpen: false,
       isTourActive: false,
+      dashboardFilter: 'all',
+      dashboardSort: 'name',
 
       // Navigation
       setView: (view) => {
@@ -287,6 +297,14 @@ export const useUIStore = create<UIState>()(
 
       endTour: () => {
         set({ isTourActive: false });
+      },
+
+      // Dashboard Filters
+      setDashboardFilter: (filter) => {
+        set({ dashboardFilter: filter });
+      },
+      setDashboardSort: (sort) => {
+        set({ dashboardSort: sort });
       },
     }),
     { name: 'ui-store' }

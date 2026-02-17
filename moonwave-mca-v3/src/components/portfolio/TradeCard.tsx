@@ -17,6 +17,7 @@ interface TradeCardProps {
   onToggleExecuted: () => void;
   onDateChange?: (date: string) => void;
   onMemoChange?: (memo: string) => void;
+  isHighlighted?: boolean;
 }
 
 export function TradeCard({
@@ -27,6 +28,7 @@ export function TradeCard({
   onToggleExecuted,
   onDateChange,
   onMemoChange,
+  isHighlighted,
 }: TradeCardProps) {
   const [savedField, setSavedField] = useState<string | null>(null);
 
@@ -49,11 +51,12 @@ export function TradeCard({
   };
 
   const getCardVariant = () => {
+    const highlight = isHighlighted ? ' ring-2 ring-primary-500/30' : '';
     if (trade.isExecuted)
-      return 'border-success-300 dark:border-success-700 bg-success-50/50 dark:bg-success-900/20';
+      return `border-success-300 dark:border-success-700 bg-success-50/50 dark:bg-success-900/20${highlight}`;
     if (trade.isOrdered)
-      return 'border-warning-300 dark:border-warning-700 bg-warning-50/50 dark:bg-warning-900/20';
-    return '';
+      return `border-warning-300 dark:border-warning-700 bg-warning-50/50 dark:bg-warning-900/20${highlight}`;
+    return highlight;
   };
 
   const getGapColor = () => {

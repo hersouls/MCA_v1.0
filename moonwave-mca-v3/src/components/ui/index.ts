@@ -12,3 +12,4 @@ export * from './Toast';
 export * from './StockSearchInput';
 export * from './Skeleton';
 export * from './DateInput';
+export * from './PortfolioHealthBadge';

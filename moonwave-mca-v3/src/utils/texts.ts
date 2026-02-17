@@ -110,6 +110,20 @@ export const TEXTS = {
     EMPTY_DESC: '새 종목을 추가하여 MCA 전략을 시작하세요',
     ALERT_TITLE: (count: number) => `주의가 필요한 종목 (${count}개)`,
     ALERT_DESC: '주문/체결 구간에 갭이 발생한 종목이 있습니다. 추가 주문을 고려해주세요.',
+
+    // Phase 2: Filters & Charts
+    FILTER_ALL: '전체',
+    FILTER_KR: '한국',
+    FILTER_US: '미국',
+    FILTER_GAP: '갭 주의',
+    FILTER_GRADE: '등급 A+',
+    SORT_NAME: '이름순',
+    SORT_PROGRESS: '진행률순',
+    SORT_INVESTMENT: '투입금액순',
+    SORT_UPDATED: '최근 수정순',
+    ALLOCATION_TITLE: '포트폴리오 분배',
+    PROGRESS_COMPARISON: '진행률 비교',
+    NEXT_BUY: '다음',
   },
 
   // 포트폴리오 상세
@@ -129,6 +143,34 @@ export const TEXTS = {
     HOLDINGS: '보유',
     INTERVALS: '구간',
     DELETE_CONFIRM: (name: string) => `"${name}" 종목을 삭제하시겠습니까?`,
+
+    // Phase 1: Position Summary
+    POSITION_SUMMARY: '포지션 현황',
+    BREAK_EVEN: '손익분기가',
+    BREAK_EVEN_TOOLTIP: '현재 평균 매수 단가 = 손익분기점',
+    NEXT_BUY_PRICE: '다음 매수가',
+    NEXT_BUY_PRICE_TOOLTIP: '아직 주문되지 않은 다음 구간의 예상 매수가',
+    VS_PEAK: '고점 대비',
+    VS_PEAK_TOOLTIP: '고점 가격 대비 현재 평균 단가의 위치',
+    VS_TARGET: '목표가 대비',
+    VS_TARGET_TOOLTIP: '목표 매도가까지의 상승 여력',
+    TARGET_NOT_SET: '미설정',
+
+    // Phase 1: Budget Gauge
+    BUDGET_STATUS: '예산 현황',
+    BUDGET_EXECUTED: '체결',
+    BUDGET_PENDING: '주문대기',
+    BUDGET_REMAINING: '잔여',
+    BUDGET_OVER: '예산 초과',
+    BUDGET_UTILIZATION: '예산 소진율',
+    BUDGET_TARGET: '목표예산',
+    BUDGET_EXPECTED: '예상총투자',
+
+    // Phase 1: Next Action Banner
+    NEXT_ACTION: '다음 매수 구간',
+    PENDING_EXECUTION: '체결 대기',
+    ALL_ORDERED: '모든 구간 주문 등록됨',
+    STEP_LABEL: (step: number) => `${step}구간`,
   },
 
   // 매매 파라미터

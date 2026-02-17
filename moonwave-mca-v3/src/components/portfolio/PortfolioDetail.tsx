@@ -20,10 +20,14 @@ import {
   StockLogo,
   Tooltip,
 } from '@/components/ui';
+import { getBlogUrl } from '@/data/stockBlogUrls';
 import {
+  calculateBudgetUtilization,
   calculateTotalBudget,
   calculateTrades,
   getCurrentInvestment,
+  getNextActionStep,
+  getPendingExecutionSteps,
 } from '@/services/calculation';
 import { selectPortfolioStats, usePortfolioStore } from '@/stores/portfolioStore';
 import type {
@@ -37,11 +41,14 @@ import type {
 import { formatAmountCompact, formatPercent, formatPrice } from '@/utils/format';
 import { isUSMarket } from '@/utils/market';
 import { TEXTS } from '@/utils/texts';
-import { getBlogUrl } from '@/data/stockBlogUrls';
+import { BudgetGauge } from './BudgetGauge';
+import { ExecutionTimeline } from './ExecutionTimeline';
 import { ExitSimulator } from './ExitSimulator';
 import { FundamentalGradeInput } from './FundamentalGradeInput';
 import { MCAChart } from './MCAChart';
+import { NextActionBanner } from './NextActionBanner';
 import { ParameterEditor } from './ParameterEditor';
+import { PositionSummary } from './PositionSummary';
 import { TradeTable } from './TradeTable';
 
 // Stable empty array to avoid creating new reference on each render
@@ -105,12 +112,30 @@ export function PortfolioDetail() {
     [trades]
   );
 
-  // Calculate current investment from trades (includes legacy holdings)
-  const currentInvestment = useMemo(() => {
-    if (!portfolio) return { amount: 0, quantity: 0, avgPrice: 0 };
-    const calculatedTrades = calculateTrades(portfolio.params, orderedSteps, executedSteps, portfolio.market);
-    return getCurrentInvestment(calculatedTrades, portfolio.params);
+  // Shared calculated trades (used by multiple components)
+  const calculatedTrades = useMemo(() => {
+    if (!portfolio) return [];
+    return calculateTrades(portfolio.params, orderedSteps, executedSteps, portfolio.market);
   }, [portfolio, orderedSteps, executedSteps]);
+
+  // Calculate current investment from trades (includes legacy holdings)
+  const currentInvestment = useMemo(
+    () => getCurrentInvestment(calculatedTrades, portfolio?.params),
+    [calculatedTrades, portfolio?.params]
+  );
+
+  // Next action step & pending execution steps
+  const nextActionStep = useMemo(() => getNextActionStep(calculatedTrades), [calculatedTrades]);
+  const pendingSteps = useMemo(
+    () => getPendingExecutionSteps(calculatedTrades),
+    [calculatedTrades]
+  );
+
+  // Budget utilization
+  const budgetUtilization = useMemo(() => {
+    if (!portfolio || !stats) return null;
+    return calculateBudgetUtilization(portfolio.params, stats);
+  }, [portfolio, stats]);
 
   // Total budget
   const totalBudget = useMemo(() => {
@@ -297,10 +322,11 @@ export function PortfolioDetail() {
                 transition={{ duration: 0.3 }}
               >
                 <Star
-                  className={`w-5 h-5 ${portfolio.isFavorite
-                    ? 'text-warning-500 fill-warning-500'
-                    : 'text-muted-foreground'
-                    }`}
+                  className={`w-5 h-5 ${
+                    portfolio.isFavorite
+                      ? 'text-warning-500 fill-warning-500'
+                      : 'text-muted-foreground'
+                  }`}
                 />
               </motion.button>
             </Tooltip>
@@ -359,7 +385,11 @@ export function PortfolioDetail() {
           />
           <StatsCard
             label={TEXTS.PORTFOLIO.AVG_PRICE}
-            value={currentInvestment.avgPrice ? formatPrice(currentInvestment.avgPrice, portfolio.market) : '-'}
+            value={
+              currentInvestment.avgPrice
+                ? formatPrice(currentInvestment.avgPrice, portfolio.market)
+                : '-'
+            }
             subValue={`보유: ${currentInvestment.quantity.toLocaleString()}주`}
             tooltip={TEXTS.PORTFOLIO.AVG_PRICE_TOOLTIP}
             valueColor="primary"
@@ -372,25 +402,90 @@ export function PortfolioDetail() {
             valueColor="warning"
           />
         </div>
+        {/* Extended Stats Row */}
+        <div className="grid grid-cols-2 gap-4 mt-3">
+          <StatsCard
+            label={TEXTS.PORTFOLIO.NEXT_BUY_PRICE}
+            value={nextActionStep ? formatPrice(nextActionStep.buyPrice, portfolio.market) : '-'}
+            subValue={
+              nextActionStep
+                ? `${nextActionStep.step}구간 • -${nextActionStep.dropRate}%`
+                : undefined
+            }
+            tooltip={TEXTS.PORTFOLIO.NEXT_BUY_PRICE_TOOLTIP}
+            valueColor="warning"
+          />
+          <StatsCard
+            label={TEXTS.PORTFOLIO.BUDGET_UTILIZATION}
+            value={
+              budgetUtilization
+                ? formatPercent(budgetUtilization.executedPct + budgetUtilization.orderedPct)
+                : '-'
+            }
+            subValue={
+              budgetUtilization
+                ? `${formatAmountCompact(budgetUtilization.executedAmount + budgetUtilization.orderedPendingAmount, portfolio.market)} / ${formatAmountCompact(budgetUtilization.totalBudget, portfolio.market)}`
+                : undefined
+            }
+            valueColor={
+              budgetUtilization
+                ? budgetUtilization.isOverBudget
+                  ? 'danger'
+                  : budgetUtilization.executedPct + budgetUtilization.orderedPct > 80
+                    ? 'warning'
+                    : 'success'
+                : 'default'
+            }
+          />
+        </div>
       </Section>
+
+      {/* Position Summary */}
+      <Section title={TEXTS.PORTFOLIO.POSITION_SUMMARY}>
+        <PositionSummary
+          avgPrice={currentInvestment.avgPrice}
+          params={portfolio.params}
+          trades={calculatedTrades}
+          market={portfolio.market}
+        />
+      </Section>
+
+      {/* Budget Gauge */}
+      {budgetUtilization && (
+        <Section>
+          <BudgetGauge utilization={budgetUtilization} market={portfolio.market} />
+        </Section>
+      )}
 
       {/* Parameter Panel */}
       <Section title="매매 파라미터" tooltip="상단의 설정 아이콘을 클릭하면 설정할 수 있습니다">
         <Card>
           <StatGrid columns={6} responsive>
-            <StatItem label="고점 가격" value={formatPrice(portfolio.params.peakPrice, portfolio.market)} />
+            <StatItem
+              label="고점 가격"
+              value={formatPrice(portfolio.params.peakPrice, portfolio.market)}
+            />
             <StatItem label="매수 강도" value={`${portfolio.params.strength}x`} />
             <StatItem label="시작 하락률" value={`-${portfolio.params.startDrop}%`} />
             <StatItem label="분할 구간" value={`${portfolio.params.steps}구간`} />
-            <StatItem label="목표 예산" value={formatAmountCompact(portfolio.params.targetBudget, portfolio.market)} />
-            <StatItem label="예상 총 투자" value={formatAmountCompact(totalBudget, portfolio.market)} />
+            <StatItem
+              label="목표 예산"
+              value={formatAmountCompact(portfolio.params.targetBudget, portfolio.market)}
+            />
+            <StatItem
+              label="예상 총 투자"
+              value={formatAmountCompact(totalBudget, portfolio.market)}
+            />
           </StatGrid>
           {(portfolio.params.legacyQty > 0 || portfolio.params.legacyAvg > 0) && (
             <div className="mt-4 pt-4 border-t border-border">
               <p className="text-xs text-muted-foreground mb-2">기보유</p>
               <StatGrid columns={2} divided>
                 <StatItem label="수량" value={`${portfolio.params.legacyQty.toLocaleString()}주`} />
-                <StatItem label="평단가" value={formatPrice(portfolio.params.legacyAvg, portfolio.market)} />
+                <StatItem
+                  label="평단가"
+                  value={formatPrice(portfolio.params.legacyAvg, portfolio.market)}
+                />
               </StatGrid>
             </div>
           )}
@@ -408,6 +503,15 @@ export function PortfolioDetail() {
         />
       </Section>
 
+      {/* Next Action Banner */}
+      <Section>
+        <NextActionBanner
+          nextActionStep={nextActionStep}
+          pendingExecutionCount={pendingSteps.length}
+          market={portfolio.market}
+        />
+      </Section>
+
       {/* Trade Table */}
       <Section title="매매 체결 리스트">
         <TradeTable
@@ -421,8 +525,20 @@ export function PortfolioDetail() {
           onDateChange={handleDateChange}
           onMemoChange={handleMemoChangeByStep}
           market={portfolio.market}
+          highlightStep={nextActionStep?.step}
         />
       </Section>
+
+      {/* Execution Timeline */}
+      {executedSteps.length > 0 && (
+        <Section title="체결 이력">
+          <ExecutionTimeline
+            trades={calculatedTrades}
+            executionDates={portfolio.params.executionDates || {}}
+            market={portfolio.market}
+          />
+        </Section>
+      )}
 
       {/* Exit Simulator */}
       <Section title="목표가 시뮬레이션">

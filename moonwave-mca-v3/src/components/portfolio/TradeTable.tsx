@@ -24,6 +24,7 @@ interface TradeTableProps {
   onDateChange?: (step: number, date: string) => void;
   onMemoChange?: (step: number, memo: string) => void;
   market?: string;
+  highlightStep?: number;
 }
 
 export function TradeTable({
@@ -37,6 +38,7 @@ export function TradeTable({
   onDateChange,
   onMemoChange,
   market,
+  highlightStep,
 }: TradeTableProps) {
   const trades = useMemo(
     () => calculateTrades(params, orderedSteps, executedSteps, market),
@@ -91,6 +93,7 @@ export function TradeTable({
             onToggleExecuted={() => onToggleExecuted(trade.step)}
             onDateChange={(date) => handleDateChange(trade.step, date)}
             onMemoChange={(memo) => handleMemoChange(trade.step, memo)}
+            isHighlighted={trade.step === highlightStep}
           />
         ))}
         {/* Mobile Summary Card */}
@@ -205,6 +208,7 @@ export function TradeTable({
                 onDateChange={(date) => handleDateChange(trade.step, date)}
                 onMemoChange={(memo) => handleMemoChange(trade.step, memo)}
                 market={market}
+                isHighlighted={trade.step === highlightStep}
               />
             ))}
           </tbody>
@@ -253,6 +257,7 @@ interface TradeRowProps {
   onDateChange: (date: string) => void;
   onMemoChange: (memo: string) => void;
   market?: string;
+  isHighlighted?: boolean;
 }
 
 function TradeRow({
@@ -264,15 +269,17 @@ function TradeRow({
   onToggleExecuted,
   onDateChange,
   onMemoChange,
+  isHighlighted,
 }: TradeRowProps) {
   const getRowClass = () => {
+    const highlight = isHighlighted ? ' ring-2 ring-inset ring-primary-500/30' : '';
     if (trade.isExecuted) {
-      return 'bg-success-50/50 dark:bg-success-900/20';
+      return `bg-success-50/50 dark:bg-success-900/20${highlight}`;
     }
     if (trade.isOrdered) {
-      return 'bg-warning-50/50 dark:bg-warning-900/20';
+      return `bg-warning-50/50 dark:bg-warning-900/20${highlight}`;
     }
-    return '';
+    return highlight;
   };
 
   const getGapColor = () => {

@@ -17,7 +17,15 @@ import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { EmptyState, Grid, PageContainer, PageHeader, Section } from '@/components/layout';
-import { Button, Card, PortfolioStatusBadge, StatsCard, StockLogo } from '@/components/ui';
+import {
+  Button,
+  Card,
+  PortfolioHealthBadge,
+  PortfolioStatusBadge,
+  StatsCard,
+  StockLogo,
+} from '@/components/ui';
+import { calculateHealthScore } from '@/services/portfolioHealth';
 import { useExchangeRateStore } from '@/stores/exchangeRateStore';
 import { usePortfolioStore, useSortedPortfolios } from '@/stores/portfolioStore';
 import { useSettingsStore } from '@/stores/settingsStore';
@@ -30,6 +38,8 @@ import {
 } from '@/utils/format';
 import { getCurrency, isUSMarket } from '@/utils/market';
 import { TEXTS } from '@/utils/texts';
+import { AllocationChart } from './AllocationChart';
+import { PortfolioFilters } from './PortfolioFilters';
 
 export function Dashboard() {
   const navigate = useNavigate();
@@ -42,6 +52,8 @@ export function Dashboard() {
   const exchangeLastFetched = useExchangeRateStore((state) => state.lastFetched);
   const isManualRate = useExchangeRateStore((state) => state.isManual);
   const openStockSearch = useUIStore((state) => state.openStockSearch);
+  const dashboardFilter = useUIStore((state) => state.dashboardFilter);
+  const dashboardSort = useUIStore((state) => state.dashboardSort);
 
   // Check if any US portfolios exist
   const hasUSPortfolios = portfolios.some((p) => isUSMarket(p.market));
@@ -78,6 +90,52 @@ export function Dashboard() {
     };
   }, [portfolios, portfolioStats, initialCash, exchangeRate]);
 
+  // Health scores for all portfolios
+  const healthScores = useMemo(() => {
+    const scores = new Map<number, ReturnType<typeof calculateHealthScore>>();
+    for (const p of portfolios) {
+      const stats = portfolioStats.get(p.id!);
+      if (stats) {
+        scores.set(p.id!, calculateHealthScore(p, stats));
+      }
+    }
+    return scores;
+  }, [portfolios, portfolioStats]);
+
+  // Filtered & sorted portfolios
+  const displayedPortfolios = useMemo(() => {
+    let filtered = portfolios;
+
+    if (dashboardFilter === 'kr') {
+      filtered = filtered.filter((p) => !isUSMarket(p.market));
+    } else if (dashboardFilter === 'us') {
+      filtered = filtered.filter((p) => isUSMarket(p.market));
+    } else if (dashboardFilter === 'gap') {
+      filtered = filtered.filter((p) => portfolioStats.get(p.id!)?.hasGap);
+    } else if (dashboardFilter === 'grade-a') {
+      filtered = filtered.filter((p) => p.fundamentalGrade === 'A' || p.fundamentalGrade === 'S');
+    }
+
+    return [...filtered].sort((a, b) => {
+      if (dashboardSort === 'name') return a.name.localeCompare(b.name);
+      if (dashboardSort === 'progress') {
+        const pa = (portfolioStats.get(a.id!)?.executedStepsCount ?? 0) / (a.params.steps || 1);
+        const pb = (portfolioStats.get(b.id!)?.executedStepsCount ?? 0) / (b.params.steps || 1);
+        return pb - pa;
+      }
+      if (dashboardSort === 'investment') {
+        return (
+          (portfolioStats.get(b.id!)?.totalInvestment ?? 0) -
+          (portfolioStats.get(a.id!)?.totalInvestment ?? 0)
+        );
+      }
+      if (dashboardSort === 'updated') {
+        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+      }
+      return 0;
+    });
+  }, [portfolios, portfolioStats, dashboardFilter, dashboardSort]);
+
   const handleAddPortfolio = () => {
     openStockSearch();
   };
@@ -87,9 +145,9 @@ export function Dashboard() {
     navigate(`/portfolio/${id}`);
   };
 
-  // Split portfolios into favorites and others
-  const favoritePortfolios = portfolios.filter((p) => p.isFavorite);
-  const otherPortfolios = portfolios.filter((p) => !p.isFavorite);
+  // Split displayed (filtered/sorted) portfolios into favorites and others
+  const favoritePortfolios = displayedPortfolios.filter((p) => p.isFavorite);
+  const otherPortfolios = displayedPortfolios.filter((p) => !p.isFavorite);
 
   return (
     <PageContainer>
@@ -147,7 +205,11 @@ export function Dashboard() {
               <span>환율 $1 = ₩{Math.round(exchangeRate).toLocaleString()}</span>
               {exchangeLastFetched && (
                 <span className="text-muted-foreground/60">
-                  ({isManualRate ? '수동 설정' : `${Math.round((Date.now() - exchangeLastFetched.getTime()) / 60000)}분 전 갱신`})
+                  (
+                  {isManualRate
+                    ? '수동 설정'
+                    : `${Math.round((Date.now() - exchangeLastFetched.getTime()) / 60000)}분 전 갱신`}
+                  )
                 </span>
               )}
             </div>
@@ -171,6 +233,20 @@ export function Dashboard() {
               </div>
             </div>
           </Card>
+        </Section>
+      )}
+
+      {/* Portfolio Filters */}
+      {portfolios.length > 0 && <PortfolioFilters />}
+
+      {/* Allocation Chart */}
+      {portfolios.length >= 3 && (
+        <Section title={TEXTS.DASHBOARD.ALLOCATION_TITLE}>
+          <AllocationChart
+            portfolios={portfolios}
+            portfolioStats={portfolioStats}
+            exchangeRate={exchangeRate}
+          />
         </Section>
       )}
 
@@ -205,6 +281,7 @@ export function Dashboard() {
                       <PortfolioCard
                         portfolio={portfolio}
                         stats={portfolioStats.get(portfolio.id!)}
+                        healthScore={healthScores.get(portfolio.id!)}
                         onClick={() => handlePortfolioClick(portfolio.id!)}
                       />
                     </motion.div>
@@ -234,6 +311,7 @@ export function Dashboard() {
                       <PortfolioCard
                         portfolio={portfolio}
                         stats={portfolioStats.get(portfolio.id!)}
+                        healthScore={healthScores.get(portfolio.id!)}
                         onClick={() => handlePortfolioClick(portfolio.id!)}
                       />
                     </motion.div>
@@ -248,16 +326,18 @@ export function Dashboard() {
   );
 }
 
+import type { HealthScore } from '@/services/portfolioHealth';
 // Portfolio Card Component
 import type { Portfolio, PortfolioStats } from '@/types';
 
 interface PortfolioCardProps {
   portfolio: Portfolio;
   stats?: PortfolioStats;
+  healthScore?: HealthScore;
   onClick: () => void;
 }
 
-function PortfolioCard({ portfolio, stats, onClick }: PortfolioCardProps) {
+function PortfolioCard({ portfolio, stats, healthScore, onClick }: PortfolioCardProps) {
   const progress = stats ? (stats.executedStepsCount / portfolio.params.steps) * 100 : 0;
 
   return (
@@ -291,12 +371,15 @@ function PortfolioCard({ portfolio, stats, onClick }: PortfolioCardProps) {
             )}
           </div>
         </div>
-        <PortfolioStatusBadge
-          orderedCount={stats?.orderedStepsCount ?? 0}
-          executedCount={stats?.executedStepsCount ?? 0}
-          totalSteps={portfolio.params.steps}
-          hasGap={stats?.hasGap ?? false}
-        />
+        <div className="flex items-center gap-2">
+          {healthScore && <PortfolioHealthBadge score={healthScore} size="sm" />}
+          <PortfolioStatusBadge
+            orderedCount={stats?.orderedStepsCount ?? 0}
+            executedCount={stats?.executedStepsCount ?? 0}
+            totalSteps={portfolio.params.steps}
+            hasGap={stats?.hasGap ?? false}
+          />
+        </div>
       </div>
 
       {/* Progress Bar */}

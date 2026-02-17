@@ -285,6 +285,74 @@ export function getCurrentInvestment(
   return { amount: 0, quantity: 0, avgPrice: 0 };
 }
 
+// ============================================
+// Portfolio Insight Utilities
+// ============================================
+
+/**
+ * Get the next step that is neither ordered nor executed.
+ * This is the next step the user should place an order for.
+ */
+export function getNextActionStep(
+  trades: CalculatedTrade[]
+): CalculatedTrade | null {
+  return trades.find((t) => !t.isOrdered && !t.isExecuted) ?? null;
+}
+
+/**
+ * Get all steps that are ordered but not yet executed (pending execution).
+ * These represent steps the user should check for execution in their broker.
+ */
+export function getPendingExecutionSteps(
+  trades: CalculatedTrade[]
+): CalculatedTrade[] {
+  return trades.filter((t) => t.isOrdered && !t.isExecuted);
+}
+
+/**
+ * Budget utilization breakdown for BudgetGauge visualization
+ */
+export interface BudgetUtilization {
+  executedAmount: number;
+  orderedPendingAmount: number;
+  remainingAmount: number;
+  totalBudget: number;
+  executedPct: number;
+  orderedPct: number;
+  remainingPct: number;
+  isOverBudget: boolean;
+}
+
+/**
+ * Calculate budget utilization breakdown.
+ * executedAmount = legacy + executed steps (totalInvestment)
+ * orderedPendingAmount = ordered but not executed steps
+ * remainingAmount = targetBudget - executedAmount - orderedPendingAmount
+ */
+export function calculateBudgetUtilization(
+  params: PortfolioParams,
+  stats: PortfolioStats
+): BudgetUtilization {
+  const { targetBudget } = params;
+  const executedAmount = stats.totalInvestment;
+  const orderedPendingAmount = stats.orderedAmount;
+  const totalUsed = executedAmount + orderedPendingAmount;
+  const remainingAmount = Math.max(0, targetBudget - totalUsed);
+  const isOverBudget = totalUsed > targetBudget;
+
+  const displayTotal = Math.max(totalUsed, targetBudget, 1);
+  return {
+    executedAmount,
+    orderedPendingAmount,
+    remainingAmount,
+    totalBudget: targetBudget,
+    executedPct: (executedAmount / displayTotal) * 100,
+    orderedPct: (orderedPendingAmount / displayTotal) * 100,
+    remainingPct: (remainingAmount / displayTotal) * 100,
+    isOverBudget,
+  };
+}
+
 /**
  * Calculate total budget required for all steps
  */
