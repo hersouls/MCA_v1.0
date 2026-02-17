@@ -20,6 +20,8 @@ export interface UseStockFundamentalOptions {
   useCache?: boolean;
   /** 자동 조회 여부 */
   autoFetch?: boolean;
+  /** 검색 시장 ('kr' | 'us') */
+  searchMarket?: 'kr' | 'us';
   /** 데이터 로드 시 콜백 */
   onDataLoaded?: (data: StockFundamentalData) => void;
   /** 에러 발생 시 콜백 */
@@ -91,7 +93,7 @@ function useDebouncedSearch(
 export function useStockFundamental(
   options: UseStockFundamentalOptions = {}
 ): UseStockFundamentalReturn {
-  const { debounceMs = 500, useCache = true, onDataLoaded, onError } = options;
+  const { debounceMs = 500, useCache = true, searchMarket = 'kr', onDataLoaded, onError } = options;
 
   const [stockData, setStockData] = useState<StockFundamentalData | null>(null);
   const [searchResults, setSearchResults] = useState<StockSearchResult[]>([]);
@@ -103,7 +105,7 @@ export function useStockFundamental(
   // 종목코드로 데이터 조회
   const fetchByTicker = useCallback(
     async (ticker: string) => {
-      if (!ticker || ticker.length < 4) return;
+      if (!ticker || ticker.length < 1) return;
 
       setIsLoading(true);
       setError(null);
@@ -134,14 +136,14 @@ export function useStockFundamental(
     setIsSearching(true);
 
     try {
-      const results = await searchStocks(query, 10);
+      const results = await searchStocks(query, 10, searchMarket);
       setSearchResults(results);
     } catch {
       setSearchResults([]);
     } finally {
       setIsSearching(false);
     }
-  }, []);
+  }, [searchMarket]);
 
   const searchByQuery = useDebouncedSearch(searchByQueryInternal, debounceMs);
 

@@ -20,6 +20,7 @@ export const STORAGE_KEYS = {
   BROADCAST_MESSAGE: 'mca-broadcast-message',
   ANALYTICS: 'mca-analytics',
   SESSION_START: 'mca-session-start',
+  EXCHANGE_RATE: 'mca_exchange_rate',
   // Onboarding
   ONBOARDING_COMPLETED: 'mca-onboarding-completed',
   ONBOARDING_DECLINED: 'mca-onboarding-declined',
@@ -40,6 +41,22 @@ export const DEFAULT_PORTFOLIO_PARAMS = {
   legacyQty: 0,
   legacyAvg: 0,
 } as const;
+
+// US Market Defaults
+export const DEFAULT_US_PORTFOLIO_PARAMS = {
+  peakPrice: 100,
+  strength: 1.0,
+  startDrop: 12,
+  steps: 20,
+  targetBudget: 10000,
+  legacyQty: 0,
+  legacyAvg: 0,
+} as const;
+
+// Exchange Rate
+export const DEFAULT_EXCHANGE_RATE = 1400;
+export const EXCHANGE_RATE_CACHE_TTL = 4 * 60 * 60 * 1000; // 4 hours
+export const US_MARKET_TYPES = ['NYSE', 'NASDAQ', 'AMEX'] as const;
 
 export const DEFAULT_NOTIFICATION_PREFERENCES = {
   gapWarning: true,

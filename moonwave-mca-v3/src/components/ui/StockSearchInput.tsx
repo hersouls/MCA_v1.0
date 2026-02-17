@@ -4,6 +4,8 @@
 // ============================================
 
 import { type StockFundamentalData, useStockFundamental } from '@/hooks';
+import { isUSMarket } from '@/utils/market';
+import { cn } from '@/utils/cn';
 import { Loader2, Search, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -27,6 +29,7 @@ export function StockSearchInput({
   const [searchQuery, setSearchQuery] = useState(value);
   const [isEditing, setIsEditing] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [searchMarket, setSearchMarket] = useState<'kr' | 'us'>('kr');
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const prevValueRef = useRef(value);
@@ -42,6 +45,7 @@ export function StockSearchInput({
     clearSearch,
   } = useStockFundamental({
     debounceMs: 300,
+    searchMarket,
     onDataLoaded: (data) => {
       onFundamentalLoaded?.(data);
     },
@@ -180,6 +184,30 @@ export function StockSearchInput({
 
   return (
     <div ref={containerRef} className={`relative ${className}`}>
+      {/* Market Toggle */}
+      <div className="flex mb-2 rounded-lg bg-surface-hover p-0.5">
+        <button
+          type="button"
+          className={cn(
+            'flex-1 text-xs font-medium py-1.5 rounded-md transition-all',
+            searchMarket === 'kr' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
+          )}
+          onClick={() => { setSearchMarket('kr'); clearSearch(); setSearchQuery(''); }}
+        >
+          국내 (KRX)
+        </button>
+        <button
+          type="button"
+          className={cn(
+            'flex-1 text-xs font-medium py-1.5 rounded-md transition-all',
+            searchMarket === 'us' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
+          )}
+          onClick={() => { setSearchMarket('us'); clearSearch(); setSearchQuery(''); }}
+        >
+          미국 (US)
+        </button>
+      </div>
+
       <div className="relative">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <input
@@ -190,7 +218,7 @@ export function StockSearchInput({
           onKeyDown={handleKeyDown}
           onFocus={handleFocus}
           autoFocus={autoFocus}
-          placeholder={placeholder}
+          placeholder={searchMarket === 'us' ? 'Ticker or company name (e.g. AAPL)' : placeholder}
           className="w-full rounded-lg border border-border bg-card py-2 pl-9 pr-10 text-sm font-medium text-foreground focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
         />
         {(isSearching || isLoading) && (
@@ -252,7 +280,10 @@ export function StockSearchInput({
       {/* 현재 로드된 종목 정보 표시 */}
       {stockData && !isEditing && (
         <div className="mt-1 text-xs text-muted-foreground">
-          {stockData.market} · 현재가 {stockData.currentPrice?.toLocaleString()}원
+          {stockData.market} · 현재가{' '}
+          {isUSMarket(stockData.market)
+            ? `$${stockData.currentPrice?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+            : `${stockData.currentPrice?.toLocaleString()}원`}
         </div>
       )}
     </div>

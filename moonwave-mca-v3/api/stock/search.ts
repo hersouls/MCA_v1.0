@@ -8,7 +8,69 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 export interface StockSearchResult {
   ticker: string;
   name: string;
-  market: 'KOSPI' | 'KOSDAQ';
+  market: 'KOSPI' | 'KOSDAQ' | 'NYSE' | 'NASDAQ' | 'AMEX';
+}
+
+// Built-in US major stocks for search
+const US_MAJOR_STOCKS: StockSearchResult[] = [
+  { ticker: 'AAPL', name: 'Apple Inc.', market: 'NASDAQ' },
+  { ticker: 'MSFT', name: 'Microsoft Corp.', market: 'NASDAQ' },
+  { ticker: 'NVDA', name: 'NVIDIA Corp.', market: 'NASDAQ' },
+  { ticker: 'AMZN', name: 'Amazon.com Inc.', market: 'NASDAQ' },
+  { ticker: 'GOOGL', name: 'Alphabet Inc.', market: 'NASDAQ' },
+  { ticker: 'META', name: 'Meta Platforms', market: 'NASDAQ' },
+  { ticker: 'TSLA', name: 'Tesla Inc.', market: 'NASDAQ' },
+  { ticker: 'JPM', name: 'JPMorgan Chase', market: 'NYSE' },
+  { ticker: 'V', name: 'Visa Inc.', market: 'NYSE' },
+  { ticker: 'UNH', name: 'UnitedHealth Group', market: 'NYSE' },
+  { ticker: 'HD', name: 'Home Depot Inc.', market: 'NYSE' },
+  { ticker: 'PG', name: 'Procter & Gamble', market: 'NYSE' },
+  { ticker: 'JNJ', name: 'Johnson & Johnson', market: 'NYSE' },
+  { ticker: 'CRM', name: 'Salesforce Inc.', market: 'NYSE' },
+  { ticker: 'MRK', name: 'Merck & Co.', market: 'NYSE' },
+  { ticker: 'CVX', name: 'Chevron Corp.', market: 'NYSE' },
+  { ticker: 'KO', name: 'Coca-Cola Co.', market: 'NYSE' },
+  { ticker: 'CSCO', name: 'Cisco Systems', market: 'NASDAQ' },
+  { ticker: 'MCD', name: "McDonald's Corp.", market: 'NYSE' },
+  { ticker: 'AXP', name: 'American Express', market: 'NYSE' },
+  { ticker: 'IBM', name: 'IBM Corp.', market: 'NYSE' },
+  { ticker: 'GS', name: 'Goldman Sachs', market: 'NYSE' },
+  { ticker: 'DIS', name: 'Walt Disney Co.', market: 'NYSE' },
+  { ticker: 'BA', name: 'Boeing Co.', market: 'NYSE' },
+  { ticker: 'NKE', name: 'Nike Inc.', market: 'NYSE' },
+  { ticker: 'WMT', name: 'Walmart Inc.', market: 'NYSE' },
+  { ticker: 'INTC', name: 'Intel Corp.', market: 'NASDAQ' },
+  { ticker: 'NFLX', name: 'Netflix Inc.', market: 'NASDAQ' },
+  { ticker: 'AMD', name: 'Advanced Micro Devices', market: 'NASDAQ' },
+  { ticker: 'AVGO', name: 'Broadcom Inc.', market: 'NASDAQ' },
+  { ticker: 'COST', name: 'Costco Wholesale', market: 'NASDAQ' },
+  { ticker: 'ADBE', name: 'Adobe Inc.', market: 'NASDAQ' },
+  { ticker: 'PEP', name: 'PepsiCo Inc.', market: 'NASDAQ' },
+  { ticker: 'QCOM', name: 'Qualcomm Inc.', market: 'NASDAQ' },
+  { ticker: 'BRK.B', name: 'Berkshire Hathaway B', market: 'NYSE' },
+  { ticker: 'LLY', name: 'Eli Lilly & Co.', market: 'NYSE' },
+  { ticker: 'ABBV', name: 'AbbVie Inc.', market: 'NYSE' },
+  { ticker: 'XOM', name: 'Exxon Mobil Corp.', market: 'NYSE' },
+  { ticker: 'MU', name: 'Micron Technology', market: 'NASDAQ' },
+  { ticker: 'PYPL', name: 'PayPal Holdings', market: 'NASDAQ' },
+  { ticker: 'PANW', name: 'Palo Alto Networks', market: 'NASDAQ' },
+  { ticker: 'MRVL', name: 'Marvell Technology', market: 'NASDAQ' },
+  { ticker: 'SNPS', name: 'Synopsys Inc.', market: 'NASDAQ' },
+  { ticker: 'ISRG', name: 'Intuitive Surgical', market: 'NASDAQ' },
+  { ticker: 'BKNG', name: 'Booking Holdings', market: 'NASDAQ' },
+  { ticker: 'TXN', name: 'Texas Instruments', market: 'NASDAQ' },
+  { ticker: 'PFE', name: 'Pfizer Inc.', market: 'NYSE' },
+  { ticker: 'T', name: 'AT&T Inc.', market: 'NYSE' },
+  { ticker: 'LOW', name: "Lowe's Companies", market: 'NYSE' },
+  { ticker: 'UPS', name: 'United Parcel Service', market: 'NYSE' },
+];
+
+// US 종목 검색 (내장 리스트 매칭)
+function searchUSStocks(query: string, limit: number): StockSearchResult[] {
+  const q = query.toUpperCase();
+  return US_MAJOR_STOCKS.filter(
+    (s) => s.ticker.includes(q) || s.name.toUpperCase().includes(q)
+  ).slice(0, limit);
 }
 
 // 네이버 금융 통합검색 API (메인)
@@ -154,7 +216,7 @@ export default async function handler(
     return;
   }
 
-  const { q, limit = '10' } = req.query;
+  const { q, limit = '10', market: marketParam = 'kr' } = req.query;
 
   if (!q || typeof q !== 'string' || q.length < 1) {
     res.status(400).json({ error: 'Query parameter "q" is required (min 1 char)' });
@@ -163,26 +225,33 @@ export default async function handler(
 
   try {
     const maxLimit = parseInt(limit as string, 10) || 10;
+    const marketFilter = typeof marketParam === 'string' ? marketParam.toLowerCase() : 'kr';
     let results: StockSearchResult[] = [];
 
-    // 6자리 숫자면 직접 종목코드 조회
-    const normalizedQuery = q.trim();
-    if (/^\d{6}$/.test(normalizedQuery) || /^\d{1,5}$/.test(normalizedQuery)) {
-      const ticker = normalizedQuery.padStart(6, '0');
-      const directResult = await fetchStockByCode(ticker);
-      if (directResult) {
-        results = [directResult];
+    if (marketFilter === 'us') {
+      // US 종목 검색 (내장 리스트)
+      results = searchUSStocks(q.trim(), maxLimit);
+    } else {
+      // KR 종목 검색 (기존 로직)
+      const normalizedQuery = q.trim();
+      // 6자리 숫자면 직접 종목코드 조회
+      if (/^\d{6}$/.test(normalizedQuery) || /^\d{1,5}$/.test(normalizedQuery)) {
+        const ticker = normalizedQuery.padStart(6, '0');
+        const directResult = await fetchStockByCode(ticker);
+        if (directResult) {
+          results = [directResult];
+        }
       }
-    }
 
-    // 직접 조회 결과가 없으면 검색
-    if (results.length === 0) {
-      results = await searchNaverStocks(normalizedQuery, maxLimit);
-    }
+      // 직접 조회 결과가 없으면 검색
+      if (results.length === 0) {
+        results = await searchNaverStocks(normalizedQuery, maxLimit);
+      }
 
-    // 결과가 없으면 대체 API 시도
-    if (results.length === 0) {
-      results = await searchNaverStocksAlt(normalizedQuery, maxLimit);
+      // 결과가 없으면 대체 API 시도
+      if (results.length === 0) {
+        results = await searchNaverStocksAlt(normalizedQuery, maxLimit);
+      }
     }
 
     res.status(200).json({

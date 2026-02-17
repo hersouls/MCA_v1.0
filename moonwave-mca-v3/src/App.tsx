@@ -23,6 +23,7 @@ import { ToastContainer } from '@/components/ui';
 
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { migrateFromV2 } from '@/services/migration';
+import { useExchangeRateStore } from '@/stores/exchangeRateStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { usePortfolioStore } from '@/stores/portfolioStore';
 import { useSettingsStore } from '@/stores/settingsStore';
@@ -66,6 +67,7 @@ export function App() {
         await Promise.all([
           useSettingsStore.getState().initialize(),
           usePortfolioStore.getState().initialize(),
+          useExchangeRateStore.getState().initialize(),
         ]);
 
         // Cleanup expired notifications first

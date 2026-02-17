@@ -8,7 +8,7 @@ import { calculateTrades } from '@/services/calculation';
 import { useSettingsStore } from '@/stores/settingsStore';
 import type { PortfolioParams } from '@/types';
 import { CHART_COLORS, CHART_CONFIG, getCSSVar, hexToRgba } from '@/utils/constants';
-import { formatKoreanUnit } from '@/utils/format';
+import { formatAmountCompact } from '@/utils/format';
 import { TEXTS } from '@/utils/texts';
 import {
   CategoryScale,
@@ -46,6 +46,7 @@ interface MCAChartProps {
   orderedSteps: number[];
   executedSteps: number[];
   height?: number;
+  market?: string;
 }
 
 export function MCAChart({
@@ -53,6 +54,7 @@ export function MCAChart({
   orderedSteps,
   executedSteps,
   height = CHART_CONFIG.DEFAULT_HEIGHT,
+  market,
 }: MCAChartProps) {
   const chartRef = useRef<ChartJS<'line'>>(null);
   const theme = useSettingsStore((state) => state.settings.theme);
@@ -68,7 +70,7 @@ export function MCAChart({
   }, [theme]);
 
   const rawTrades = useMemo(
-    () => calculateTrades(params, orderedSteps, executedSteps),
+    () => calculateTrades(params, orderedSteps, executedSteps, market),
     [params, orderedSteps, executedSteps]
   );
 
@@ -226,8 +228,7 @@ export function MCAChart({
               const label = context.dataset.label || '';
               const value = context.raw as number;
               if (context.datasetIndex === 0) {
-                // 평균단가: 한국식 단위 사용
-                return `${label}: ${formatKoreanUnit(value)}`;
+                return `${label}: ${formatAmountCompact(value, market)}`;
               }
               return `${label}: ${value.toFixed(2)}%`;
             },
@@ -278,8 +279,7 @@ export function MCAChart({
             font: {
               size: axisFontSize,
             },
-            // 한국식 단위 사용 (만, 억)
-            callback: (value) => formatKoreanUnit(Number(value)),
+            callback: (value) => formatAmountCompact(Number(value), market),
           },
         },
         y1: {
@@ -338,7 +338,7 @@ export function MCAChart({
     const gaps = chartTrades.map((t) => t.gap);
     const minGap = Math.min(...gaps);
     const maxGap = Math.max(...gaps);
-    return `${chartTrades.length}개 구간 MCA 차트: 최저 괴리율 ${minGap.toFixed(1)}%, 최고 괴리율 ${maxGap.toFixed(1)}%, 최종 평균단가 ${formatKoreanUnit(lastTrade.avgPrice)}`;
+    return `${chartTrades.length}개 구간 MCA 차트: 최저 괴리율 ${minGap.toFixed(1)}%, 최고 괴리율 ${maxGap.toFixed(1)}%, 최종 평균단가 ${formatAmountCompact(lastTrade.avgPrice, market)}`;
   }, [chartTrades]);
 
   return (
@@ -375,7 +375,7 @@ export function MCAChart({
           {chartTrades.map((trade) => (
             <tr key={trade.step}>
               <td>{trade.step}구간</td>
-              <td>{formatKoreanUnit(trade.avgPrice)}</td>
+              <td>{formatAmountCompact(trade.avgPrice, market)}</td>
               <td>{trade.gap.toFixed(2)}%</td>
               <td>
                 {trade.isExecuted ? '체결됨' : trade.isOrdered ? '주문됨' : '미주문'}

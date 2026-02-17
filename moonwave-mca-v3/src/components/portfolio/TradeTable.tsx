@@ -7,7 +7,7 @@ import { Card, DateInput, Tooltip } from '@/components/ui';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { calculateTrades } from '@/services/calculation';
 import type { CalculatedTrade, PortfolioParams } from '@/types';
-import { formatCurrency, formatKoreanUnit, formatPercent } from '@/utils/format';
+import { formatAmountCompact, formatPercent, formatPrice } from '@/utils/format';
 import { clsx } from 'clsx';
 import { AlertTriangle, Check, Clock } from 'lucide-react';
 import { useCallback, useMemo } from 'react';
@@ -23,6 +23,7 @@ interface TradeTableProps {
   stepMemos?: Record<number, string>;
   onDateChange?: (step: number, date: string) => void;
   onMemoChange?: (step: number, memo: string) => void;
+  market?: string;
 }
 
 export function TradeTable({
@@ -35,10 +36,11 @@ export function TradeTable({
   stepMemos = {},
   onDateChange,
   onMemoChange,
+  market,
 }: TradeTableProps) {
   const trades = useMemo(
-    () => calculateTrades(params, orderedSteps, executedSteps),
-    [params, orderedSteps, executedSteps]
+    () => calculateTrades(params, orderedSteps, executedSteps, market),
+    [params, orderedSteps, executedSteps, market]
   );
 
   // Calculate totals
@@ -103,13 +105,13 @@ export function TradeTable({
             <div>
               <span className="text-muted-foreground text-xs block">체결 금액</span>
               <p className="font-bold text-foreground tabular-nums">
-                {formatKoreanUnit(totals.realAmount)}
+                {formatAmountCompact(totals.realAmount, market)}
               </p>
             </div>
             <div className="col-span-2">
               <span className="text-muted-foreground text-xs block">평균 단가</span>
               <p className="font-bold text-primary-600 dark:text-primary-400 tabular-nums text-lg">
-                {totals.avgPrice > 0 ? formatCurrency(totals.avgPrice) : '-'}
+                {totals.avgPrice > 0 ? formatPrice(totals.avgPrice, market) : '-'}
               </p>
             </div>
           </div>
@@ -202,6 +204,7 @@ export function TradeTable({
                 onToggleExecuted={() => onToggleExecuted(trade.step)}
                 onDateChange={(date) => handleDateChange(trade.step, date)}
                 onMemoChange={(memo) => handleMemoChange(trade.step, memo)}
+                market={market}
               />
             ))}
           </tbody>
@@ -217,17 +220,17 @@ export function TradeTable({
                 {totals.executedQty.toLocaleString()}주
               </td>
               <td className="px-3 py-3 text-right font-bold text-foreground tabular-nums whitespace-nowrap">
-                {formatKoreanUnit(totals.executedAmt)}
+                {formatAmountCompact(totals.executedAmt, market)}
               </td>
               {/* Real totals */}
               <td className="px-3 py-3 text-right font-bold text-foreground tabular-nums border-l border-border whitespace-nowrap">
                 {totals.realQty.toLocaleString()}주
               </td>
               <td className="px-3 py-3 text-right font-bold text-foreground tabular-nums whitespace-nowrap">
-                {formatKoreanUnit(totals.realAmount)}
+                {formatAmountCompact(totals.realAmount, market)}
               </td>
               <td className="px-3 py-3 text-right font-bold text-primary-600 dark:text-primary-400 tabular-nums whitespace-nowrap">
-                {totals.avgPrice > 0 ? formatCurrency(totals.avgPrice) : '-'}
+                {totals.avgPrice > 0 ? formatPrice(totals.avgPrice, market) : '-'}
               </td>
               <td className="px-3 py-3"></td>
               <td className="px-3 py-3 border-l border-border"></td>
@@ -249,12 +252,14 @@ interface TradeRowProps {
   onToggleExecuted: () => void;
   onDateChange: (date: string) => void;
   onMemoChange: (memo: string) => void;
+  market?: string;
 }
 
 function TradeRow({
   trade,
   executionDate,
   memo,
+  market,
   onToggleOrdered,
   onToggleExecuted,
   onDateChange,
@@ -342,7 +347,7 @@ function TradeRow({
 
       {/* Buy Price */}
       <td className="px-3 py-2.5 text-right tabular-nums font-medium text-foreground whitespace-nowrap">
-        {formatCurrency(trade.buyPrice)}
+        {formatPrice(trade.buyPrice, market)}
       </td>
 
       {/* Quantity */}
@@ -352,7 +357,7 @@ function TradeRow({
 
       {/* Amount */}
       <td className="px-3 py-2.5 text-right tabular-nums text-foreground whitespace-nowrap">
-        {formatKoreanUnit(trade.amount)}
+        {formatAmountCompact(trade.amount, market)}
       </td>
 
       {/* Real Quantity (new) */}
@@ -370,7 +375,7 @@ function TradeRow({
       <td className="px-3 py-2.5 text-right tabular-nums whitespace-nowrap">
         {trade.isExecuted ? (
           <span className="font-bold text-foreground">
-            {formatKoreanUnit(trade.realAmount)}
+            {formatAmountCompact(trade.realAmount, market)}
           </span>
         ) : (
           <span className="text-muted-foreground">-</span>
@@ -381,7 +386,7 @@ function TradeRow({
       <td className="px-3 py-2.5 text-right tabular-nums whitespace-nowrap">
         {trade.isExecuted ? (
           <span className="font-medium text-primary-600 dark:text-primary-400">
-            {formatCurrency(trade.avgPrice)}
+            {formatPrice(trade.avgPrice, market)}
           </span>
         ) : (
           <span className="text-muted-foreground">-</span>

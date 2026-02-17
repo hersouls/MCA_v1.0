@@ -6,6 +6,7 @@ import {
   AlertTriangle,
   Bell,
   Database,
+  DollarSign,
   Download,
   Info,
   Monitor,
@@ -24,6 +25,7 @@ import { useEffect, useState } from 'react';
 import { PageContainer, PageHeader, Section } from '@/components/layout';
 import { Button, Card, ConfirmDialog, NumericInput, StatGrid, StatItem } from '@/components/ui';
 import { useToast } from '@/components/ui/Toast';
+import { useExchangeRateStore } from '@/stores/exchangeRateStore';
 import { usePortfolioStore } from '@/stores/portfolioStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import type { ThemeMode } from '@/types';
@@ -250,6 +252,9 @@ export function Settings() {
         </Card>
       </Section>
 
+      {/* Exchange Rate Settings */}
+      <ExchangeRateSection />
+
       {/* Data Management */}
       <Section title="데이터 관리" icon={<Database className="w-5 h-5" />}>
         <Card>
@@ -385,6 +390,83 @@ interface NotificationToggleProps {
   description: string;
   enabled: boolean;
   onChange: () => void;
+}
+
+// Exchange Rate Settings Section
+function ExchangeRateSection() {
+  const rate = useExchangeRateStore((state) => state.rate);
+  const lastFetched = useExchangeRateStore((state) => state.lastFetched);
+  const isManual = useExchangeRateStore((state) => state.isManual);
+  const isLoading = useExchangeRateStore((state) => state.isLoading);
+  const fetchRate = useExchangeRateStore((state) => state.fetchRate);
+  const setManualRate = useExchangeRateStore((state) => state.setManualRate);
+  const clearManualRate = useExchangeRateStore((state) => state.clearManualRate);
+
+  const [manualInput, setManualInput] = useState('');
+
+  const handleSetManual = () => {
+    const value = Number(manualInput);
+    if (value > 0) {
+      setManualRate(value);
+    }
+  };
+
+  return (
+    <Section title="환율 설정" icon={<DollarSign className="w-5 h-5" />}>
+      <Card>
+        <div className="space-y-4">
+          {/* Current Rate Display */}
+          <div className="flex items-center justify-between p-3 bg-surface-hover rounded-lg">
+            <div>
+              <p className="text-sm font-medium text-foreground">
+                현재 환율: $1 = ₩{Math.round(rate).toLocaleString()}
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {isManual
+                  ? '수동 설정'
+                  : lastFetched
+                    ? `${Math.round((Date.now() - lastFetched.getTime()) / 60000)}분 전 갱신`
+                    : '기본값 사용 중'}
+              </p>
+            </div>
+            <Button
+              color="secondary"
+              leftIcon={<RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />}
+              onClick={fetchRate}
+              isLoading={isLoading}
+              disabled={isManual}
+            >
+              갱신
+            </Button>
+          </div>
+
+          {/* Manual Override */}
+          <div className="flex items-end gap-3">
+            <div className="flex-1">
+              <NumericInput
+                label="수동 환율 설정"
+                value={manualInput}
+                onChange={(value) => setManualInput(String(value))}
+                placeholder={`현재: ${Math.round(rate)}`}
+              />
+            </div>
+            <Button color="primary" onClick={handleSetManual} disabled={!manualInput}>
+              적용
+            </Button>
+            {isManual && (
+              <Button color="secondary" onClick={clearManualRate}>
+                자동으로 전환
+              </Button>
+            )}
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            미국 주식 포트폴리오의 대시보드 합산 시 사용됩니다. 수동 설정 시 자동 갱신이 중지됩니다.
+          </p>
+        </div>
+      </Card>
+    </Section>
+  );
 }
 
 function NotificationToggle({ icon, label, description, enabled, onChange }: NotificationToggleProps) {

@@ -18,14 +18,16 @@ import { useNavigate } from 'react-router-dom';
 
 import { EmptyState, Grid, PageContainer, PageHeader, Section } from '@/components/layout';
 import { Button, Card, PortfolioStatusBadge, StatsCard, StockLogo } from '@/components/ui';
+import { useExchangeRateStore } from '@/stores/exchangeRateStore';
 import { usePortfolioStore, useSortedPortfolios } from '@/stores/portfolioStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import {
-  formatCurrency,
+  formatAmountCompact,
   formatKoreanCurrency,
-  formatKoreanUnit,
   formatPercent,
+  formatPrice,
 } from '@/utils/format';
+import { getCurrency, isUSMarket } from '@/utils/market';
 import { TEXTS } from '@/utils/texts';
 
 export function Dashboard() {
@@ -36,8 +38,14 @@ export function Dashboard() {
   const portfolioStats = usePortfolioStore((state) => state.portfolioStats);
   const isInitialized = usePortfolioStore((state) => state.isInitialized);
   const initialCash = useSettingsStore((state) => state.settings.initialCash);
+  const exchangeRate = useExchangeRateStore((state) => state.rate);
+  const exchangeLastFetched = useExchangeRateStore((state) => state.lastFetched);
+  const isManualRate = useExchangeRateStore((state) => state.isManual);
 
-  // Calculate dashboard stats
+  // Check if any US portfolios exist
+  const hasUSPortfolios = portfolios.some((p) => isUSMarket(p.market));
+
+  // Calculate dashboard stats (USD portfolios converted to KRW)
   const dashboardStats = useMemo(() => {
     let totalOrdered = 0;
     let totalExecuted = 0;
@@ -46,8 +54,11 @@ export function Dashboard() {
     portfolios.forEach((p) => {
       const stats = portfolioStats.get(p.id!);
       if (stats) {
-        totalOrdered += stats.totalOrderedAmount;
-        totalExecuted += stats.totalInvestment;
+        const currency = getCurrency(p.market);
+        const multiplier = currency === 'USD' ? exchangeRate : 1;
+
+        totalOrdered += stats.totalOrderedAmount * multiplier;
+        totalExecuted += stats.totalInvestment * multiplier;
         if (stats.hasGap) alertCount++;
       }
     });
@@ -64,7 +75,7 @@ export function Dashboard() {
       alertCount,
       portfolioCount: portfolios.length,
     };
-  }, [portfolios, portfolioStats, initialCash]);
+  }, [portfolios, portfolioStats, initialCash, exchangeRate]);
 
   const handleAddPortfolio = async () => {
     const id = await addPortfolio();
@@ -130,6 +141,17 @@ export function Dashboard() {
               loading={!isInitialized}
             />
           </Grid>
+          {/* Exchange Rate Indicator */}
+          {hasUSPortfolios && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-3 px-1">
+              <span>환율 $1 = ₩{Math.round(exchangeRate).toLocaleString()}</span>
+              {exchangeLastFetched && (
+                <span className="text-muted-foreground/60">
+                  ({isManualRate ? '수동 설정' : `${Math.round((Date.now() - exchangeLastFetched.getTime()) / 60000)}분 전 갱신`})
+                </span>
+              )}
+            </div>
+          )}
         </Section>
       </div>
 
@@ -246,6 +268,7 @@ function PortfolioCard({ portfolio, stats, onClick }: PortfolioCardProps) {
             <StockLogo
               code={portfolio.stockCode}
               name={portfolio.name}
+              market={portfolio.market}
               size={40}
               className="shadow-sm"
             />
@@ -298,13 +321,13 @@ function PortfolioCard({ portfolio, stats, onClick }: PortfolioCardProps) {
           <div>
             <span className="text-muted-foreground">투입금액</span>
             <p className="font-medium text-foreground text-right tabular-nums">
-              {formatKoreanUnit(stats.totalInvestment)}
+              {formatAmountCompact(stats.totalInvestment, portfolio.market)}
             </p>
           </div>
           <div>
             <span className="text-muted-foreground">평균단가</span>
             <p className="font-medium text-foreground text-right tabular-nums">
-              {stats.averagePrice ? formatCurrency(stats.averagePrice) : '-'}
+              {stats.averagePrice ? formatPrice(stats.averagePrice, portfolio.market) : '-'}
             </p>
           </div>
         </div>

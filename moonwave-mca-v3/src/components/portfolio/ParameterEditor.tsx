@@ -7,7 +7,8 @@ import { Button, Input, NumericInput, Tooltip, TooltipTriggerButton } from '@/co
 import { Dialog, DialogBody, DialogFooter, DialogHeader } from '@/components/ui/Dialog';
 import { autoFitParams, calculateTotalBudget } from '@/services/calculation';
 import type { Portfolio, PortfolioParams } from '@/types';
-import { formatKoreanUnit, formatNumber } from '@/utils/format';
+import { formatAmountCompact, formatNumber } from '@/utils/format';
+import { getCurrencyUnit } from '@/utils/market';
 import { clsx } from 'clsx';
 import { AlertTriangle, CheckCircle2, HelpCircle, Info, Plus, X, Zap } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -120,9 +121,11 @@ function ParameterEditorContent({
   });
 
   // Calculate estimated budget
+  const market = portfolio.market;
+
   const estimatedBudget = useMemo(() => {
-    return calculateTotalBudget(params);
-  }, [params]);
+    return calculateTotalBudget(params, market);
+  }, [params, market]);
 
   // Handle parameter change
   const handleChange = (key: keyof PortfolioParams, value: number) => {
@@ -142,7 +145,8 @@ function ParameterEditorContent({
       params.peakPrice,
       params.startDrop,
       params.steps,
-      params.targetBudget
+      params.targetBudget,
+      market
     );
 
     setParams((prev) => ({
@@ -218,7 +222,7 @@ function ParameterEditorContent({
               }
               value={formatNumber(params.peakPrice)}
               onChange={(value) => handleChange('peakPrice', Number(value))}
-              unit="원"
+              unit={getCurrencyUnit(market)}
             />
             <NumericInput
               label={
@@ -229,7 +233,7 @@ function ParameterEditorContent({
               }
               value={formatNumber(params.targetBudget)}
               onChange={(value) => handleChange('targetBudget', Number(value))}
-              unit="원"
+              unit={getCurrencyUnit(market)}
             />
           </div>
 
@@ -304,7 +308,7 @@ function ParameterEditorContent({
               <span className="text-sm text-muted-foreground">예상 총 투자금</span>
               <div className="flex items-center gap-2">
                 <span className="text-lg font-bold text-foreground tabular-nums">
-                  {formatKoreanUnit(estimatedBudget)}
+                  {formatAmountCompact(estimatedBudget, market)}
                 </span>
                 {params.targetBudget > 0 && (
                   <span
@@ -395,7 +399,7 @@ function ParameterEditorContent({
                       label={`${index + 1}차 평단가`}
                       value={holding.avg > 0 ? formatNumber(holding.avg) : ''}
                       onChange={(value) => handleLegacyChange(index, 'avg', Number(value))}
-                      unit="원"
+                      unit={getCurrencyUnit(market)}
                     />
                     <Input
                       label="비고"
@@ -425,7 +429,7 @@ function ParameterEditorContent({
                     <div>
                       <span className="text-xs text-primary-600 dark:text-primary-400">가중평균</span>
                       <p className="font-bold text-primary-800 dark:text-primary-200 tabular-nums">
-                        {formatKoreanUnit(legacyTotals.weightedAvg)}
+                        {formatAmountCompact(legacyTotals.weightedAvg, market)}
                       </p>
                     </div>
                   </div>

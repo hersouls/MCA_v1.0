@@ -2,6 +2,8 @@
 // Number & Date Formatting Utilities
 // ============================================
 
+import { isUSMarket } from './market';
+
 /**
  * Format number with thousand separators (Korean style)
  */
@@ -104,4 +106,70 @@ export function formatInputValue(value: string): string {
   const numericValue = value.replace(/[^0-9]/g, '');
   if (!numericValue) return '';
   return Number.parseInt(numericValue, 10).toLocaleString('ko-KR');
+}
+
+// ============================================
+// USD Formatting Utilities
+// ============================================
+
+/**
+ * Format number as USD: "$1,234.56"
+ */
+export function formatUSD(num: number): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(num);
+}
+
+/**
+ * Format USD compact: "$1.2K", "$3.5M"
+ */
+export function formatUSDCompact(num: number): string {
+  const absNum = Math.abs(num);
+  const sign = num < 0 ? '-' : '';
+  if (absNum >= 1_000_000_000) return `${sign}$${(absNum / 1_000_000_000).toFixed(1)}B`;
+  if (absNum >= 1_000_000) return `${sign}$${(absNum / 1_000_000).toFixed(1)}M`;
+  if (absNum >= 1_000) return `${sign}$${(absNum / 1_000).toFixed(1)}K`;
+  return formatUSD(num);
+}
+
+// ============================================
+// Market-Aware Formatting
+// ============================================
+
+/**
+ * Market-aware price formatter (native currency)
+ * KR: "123,456원", US: "$123.45"
+ */
+export function formatPrice(num: number, market?: string): string {
+  return isUSMarket(market) ? formatUSD(num) : formatCurrency(num);
+}
+
+/**
+ * Market-aware compact amount formatter
+ * KR: "1.2억원", US: "$1.2M"
+ */
+export function formatAmountCompact(num: number, market?: string): string {
+  return isUSMarket(market) ? formatUSDCompact(num) : formatKoreanCurrency(num);
+}
+
+/**
+ * Market-aware input value formatter
+ * USD allows decimal point, KRW integers only
+ */
+export function formatInputValueForMarket(value: string, market?: string): string {
+  if (isUSMarket(market)) {
+    const numericValue = value.replace(/[^0-9.]/g, '');
+    if (!numericValue) return '';
+    const parts = numericValue.split('.');
+    const intPart = Number.parseInt(parts[0], 10).toLocaleString('en-US');
+    if (parts.length > 1) {
+      return `${intPart}.${parts[1].slice(0, 2)}`;
+    }
+    return intPart;
+  }
+  return formatInputValue(value);
 }

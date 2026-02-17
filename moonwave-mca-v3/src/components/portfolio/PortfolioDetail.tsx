@@ -34,7 +34,8 @@ import type {
   StockFundamentalData,
   Trade,
 } from '@/types';
-import { formatCurrency, formatKoreanUnit, formatPercent } from '@/utils/format';
+import { formatAmountCompact, formatPercent, formatPrice } from '@/utils/format';
+import { isUSMarket } from '@/utils/market';
 import { TEXTS } from '@/utils/texts';
 import { getBlogUrl } from '@/data/stockBlogUrls';
 import { ExitSimulator } from './ExitSimulator';
@@ -107,14 +108,14 @@ export function PortfolioDetail() {
   // Calculate current investment from trades (includes legacy holdings)
   const currentInvestment = useMemo(() => {
     if (!portfolio) return { amount: 0, quantity: 0, avgPrice: 0 };
-    const calculatedTrades = calculateTrades(portfolio.params, orderedSteps, executedSteps);
+    const calculatedTrades = calculateTrades(portfolio.params, orderedSteps, executedSteps, portfolio.market);
     return getCurrentInvestment(calculatedTrades, portfolio.params);
   }, [portfolio, orderedSteps, executedSteps]);
 
   // Total budget
   const totalBudget = useMemo(() => {
     if (!portfolio) return 0;
-    return calculateTotalBudget(portfolio.params);
+    return calculateTotalBudget(portfolio.params, portfolio.market);
   }, [portfolio]);
 
   // Handlers
@@ -267,6 +268,7 @@ export function PortfolioDetail() {
                 <StockLogo
                   code={portfolio.stockCode}
                   name={portfolio.name}
+                  market={portfolio.market}
                   size={40}
                   className="shadow-sm"
                 />
@@ -351,20 +353,20 @@ export function PortfolioDetail() {
           />
           <StatsCard
             label={TEXTS.PORTFOLIO.INVESTED_AMOUNT}
-            value={formatKoreanUnit(currentInvestment.amount)}
-            subValue={`예산: ${formatKoreanUnit(portfolio.params.targetBudget)}`}
+            value={formatAmountCompact(currentInvestment.amount, portfolio.market)}
+            subValue={`예산: ${formatAmountCompact(portfolio.params.targetBudget, portfolio.market)}`}
             tooltip={TEXTS.PORTFOLIO.INVESTED_AMOUNT_TOOLTIP}
           />
           <StatsCard
             label={TEXTS.PORTFOLIO.AVG_PRICE}
-            value={currentInvestment.avgPrice ? formatCurrency(currentInvestment.avgPrice) : '-'}
+            value={currentInvestment.avgPrice ? formatPrice(currentInvestment.avgPrice, portfolio.market) : '-'}
             subValue={`보유: ${currentInvestment.quantity.toLocaleString()}주`}
             tooltip={TEXTS.PORTFOLIO.AVG_PRICE_TOOLTIP}
             valueColor="primary"
           />
           <StatsCard
             label={TEXTS.PORTFOLIO.PENDING_ORDERS}
-            value={formatKoreanUnit(stats?.totalOrderedAmount ?? 0)}
+            value={formatAmountCompact(stats?.totalOrderedAmount ?? 0, portfolio.market)}
             subValue={`${(stats?.orderedStepsCount ?? 0) - (stats?.executedStepsCount ?? 0)}개 구간`}
             tooltip={TEXTS.PORTFOLIO.PENDING_ORDERS_TOOLTIP}
             valueColor="warning"
@@ -376,19 +378,19 @@ export function PortfolioDetail() {
       <Section title="매매 파라미터" tooltip="상단의 설정 아이콘을 클릭하면 설정할 수 있습니다">
         <Card>
           <StatGrid columns={6} responsive>
-            <StatItem label="고점 가격" value={formatCurrency(portfolio.params.peakPrice)} />
+            <StatItem label="고점 가격" value={formatPrice(portfolio.params.peakPrice, portfolio.market)} />
             <StatItem label="매수 강도" value={`${portfolio.params.strength}x`} />
             <StatItem label="시작 하락률" value={`-${portfolio.params.startDrop}%`} />
             <StatItem label="분할 구간" value={`${portfolio.params.steps}구간`} />
-            <StatItem label="목표 예산" value={formatKoreanUnit(portfolio.params.targetBudget)} />
-            <StatItem label="예상 총 투자" value={formatKoreanUnit(totalBudget)} />
+            <StatItem label="목표 예산" value={formatAmountCompact(portfolio.params.targetBudget, portfolio.market)} />
+            <StatItem label="예상 총 투자" value={formatAmountCompact(totalBudget, portfolio.market)} />
           </StatGrid>
           {(portfolio.params.legacyQty > 0 || portfolio.params.legacyAvg > 0) && (
             <div className="mt-4 pt-4 border-t border-border">
               <p className="text-xs text-muted-foreground mb-2">기보유</p>
               <StatGrid columns={2} divided>
                 <StatItem label="수량" value={`${portfolio.params.legacyQty.toLocaleString()}주`} />
-                <StatItem label="평단가" value={formatCurrency(portfolio.params.legacyAvg)} />
+                <StatItem label="평단가" value={formatPrice(portfolio.params.legacyAvg, portfolio.market)} />
               </StatGrid>
             </div>
           )}
@@ -402,6 +404,7 @@ export function PortfolioDetail() {
           orderedSteps={orderedSteps}
           executedSteps={executedSteps}
           height={320}
+          market={portfolio.market}
         />
       </Section>
 
@@ -417,6 +420,7 @@ export function PortfolioDetail() {
           stepMemos={portfolio.params.stepMemos || {}}
           onDateChange={handleDateChange}
           onMemoChange={handleMemoChangeByStep}
+          market={portfolio.market}
         />
       </Section>
 
@@ -428,18 +432,21 @@ export function PortfolioDetail() {
           currentQty={currentInvestment.quantity}
           avgPrice={currentInvestment.avgPrice}
           onUpdateParams={handleSaveParams}
+          market={portfolio.market}
         />
       </Section>
 
-      {/* Fundamental Grade */}
-      <Section title="Fundamental Grade">
-        <FundamentalGradeInput
-          key={portfolio.id}
-          initialData={portfolio.fundamentalData}
-          stockData={stockFundamentalData}
-          onSave={handleSaveFundamental}
-        />
-      </Section>
+      {/* Fundamental Grade - KR stocks only */}
+      {!isUSMarket(portfolio.market) && (
+        <Section title="Fundamental Grade">
+          <FundamentalGradeInput
+            key={portfolio.id}
+            initialData={portfolio.fundamentalData}
+            stockData={stockFundamentalData}
+            onSave={handleSaveFundamental}
+          />
+        </Section>
+      )}
 
       {/* Memo */}
       <Section title="메모">

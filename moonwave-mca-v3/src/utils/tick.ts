@@ -2,11 +2,16 @@
 // Stock Price Tick (호가 단위) Utilities
 // ============================================
 
+import { isUSMarket } from './market';
+
 /**
- * Get the tick size (호가 단위) based on price
- * Korean stock market tick rules
+ * Get the tick size (호가 단위) based on price and market
+ * Korean stock market tick rules / US = $0.01
  */
-function getTickSize(price: number): number {
+function getTickSize(price: number, market?: string): number {
+  if (isUSMarket(market)) return 0.01;
+
+  // Korean market tick rules
   if (price < 2_000) return 1;
   if (price < 5_000) return 5;
   if (price < 20_000) return 10;
@@ -19,17 +24,17 @@ function getTickSize(price: number): number {
 /**
  * Round price to nearest tick
  */
-function roundToTick(price: number): number {
-  const tick = getTickSize(price);
+function roundToTick(price: number, market?: string): number {
+  const tick = getTickSize(price, market);
   return Math.floor(price / tick) * tick;
 }
 
 /**
  * Calculate buy price from peak price and drop rate
  */
-export function calculateBuyPrice(peakPrice: number, dropRate: number): number {
+export function calculateBuyPrice(peakPrice: number, dropRate: number, market?: string): number {
   const rawPrice = peakPrice * (1 - dropRate / 100);
-  return roundToTick(rawPrice);
+  return roundToTick(rawPrice, market);
 }
 
 /**

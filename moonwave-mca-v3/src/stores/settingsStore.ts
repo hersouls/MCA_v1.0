@@ -23,6 +23,7 @@ interface SettingsState {
   toggleNotificationPreference: (key: keyof NotificationPreferences) => Promise<void>;
   toggleMusicPlayer: () => Promise<void>;
   setLastBackupDate: (date: Date) => Promise<void>;
+  setManualExchangeRate: (rate: number | undefined) => Promise<void>;
 }
 
 // Apply theme to document
@@ -157,6 +158,27 @@ export const useSettingsStore = create<SettingsState>()(
 
           // Dismiss backup reminder notification after successful backup
           useNotificationStore.getState().dismissByType('backup-reminder');
+        },
+
+        setManualExchangeRate: async (rate) => {
+          const settings = {
+            ...get().settings,
+            manualExchangeRate: rate,
+            useManualExchangeRate: rate !== undefined,
+          };
+          await db.updateSettings({
+            manualExchangeRate: rate,
+            useManualExchangeRate: rate !== undefined,
+          });
+          set({ settings });
+
+          // Sync with exchange rate store
+          const { useExchangeRateStore } = await import('./exchangeRateStore');
+          if (rate !== undefined) {
+            useExchangeRateStore.getState().setManualRate(rate);
+          } else {
+            useExchangeRateStore.getState().clearManualRate();
+          }
         },
       }),
       {

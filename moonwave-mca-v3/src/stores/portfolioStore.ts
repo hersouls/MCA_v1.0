@@ -5,7 +5,8 @@
 import { calculatePortfolioStats } from '@/services/calculation';
 import * as db from '@/services/database';
 import type { Portfolio, PortfolioStats, Trade } from '@/types';
-import { DEFAULT_PORTFOLIO_PARAMS } from '@/utils/constants';
+import { DEFAULT_PORTFOLIO_PARAMS, DEFAULT_US_PORTFOLIO_PARAMS } from '@/utils/constants';
+import { isUSMarket } from '@/utils/market';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { useNotificationStore } from './notificationStore';
@@ -110,6 +111,11 @@ export const usePortfolioStore = create<PortfolioState>()(
           market = stockOrName.market;
         }
 
+        // Choose defaults based on market
+        const defaultParams = isUSMarket(market)
+          ? { ...DEFAULT_US_PORTFOLIO_PARAMS }
+          : { ...DEFAULT_PORTFOLIO_PARAMS };
+
         const newPortfolio: Omit<Portfolio, 'id'> = {
           name,
           stockCode,
@@ -117,7 +123,7 @@ export const usePortfolioStore = create<PortfolioState>()(
           isFavorite: false,
           createdAt: new Date(),
           updatedAt: new Date(),
-          params: { ...DEFAULT_PORTFOLIO_PARAMS },
+          params: defaultParams,
         };
 
         // If we want to support storing ticker, we need to update types/index.ts first.
@@ -333,7 +339,7 @@ export const usePortfolioStore = create<PortfolioState>()(
           .map((t) => t.step);
         const executedSteps = trades.filter((t) => t.status === 'executed').map((t) => t.step);
 
-        const stats = calculatePortfolioStats(portfolio.params, orderedSteps, executedSteps);
+        const stats = calculatePortfolioStats(portfolio.params, orderedSteps, executedSteps, portfolio.market);
 
         set((state) => {
           const newStats = new Map(state.portfolioStats);
@@ -374,7 +380,7 @@ export const usePortfolioStore = create<PortfolioState>()(
             .filter((t) => t.status === 'executed')
             .map((t) => t.step);
 
-          const stats = calculatePortfolioStats(portfolio.params, orderedSteps, executedSteps);
+          const stats = calculatePortfolioStats(portfolio.params, orderedSteps, executedSteps, portfolio.market);
           newStats.set(portfolio.id, stats);
         }
 

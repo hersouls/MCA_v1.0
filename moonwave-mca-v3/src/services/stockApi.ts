@@ -6,7 +6,7 @@
 export interface StockFundamentalData {
   ticker: string;
   name: string;
-  market: 'KOSPI' | 'KOSDAQ';
+  market: 'KOSPI' | 'KOSDAQ' | 'NYSE' | 'NASDAQ' | 'AMEX';
   per: number | null;
   pbr: number | null;
   dividendYield: number | null;
@@ -21,7 +21,7 @@ export interface StockFundamentalData {
 export interface StockSearchResult {
   ticker: string;
   name: string;
-  market: 'KOSPI' | 'KOSDAQ';
+  market: 'KOSPI' | 'KOSDAQ' | 'NYSE' | 'NASDAQ' | 'AMEX';
 }
 
 export interface StockSearchResponse {
@@ -95,8 +95,9 @@ export async function fetchStockFundamental(
   ticker: string,
   useCache = true
 ): Promise<StockFundamentalData> {
-  // 6자리로 정규화
-  const normalizedTicker = ticker.padStart(6, '0');
+  // US 티커 감지: 알파벳으로만 구성
+  const isUS = /^[A-Za-z.]{1,6}$/.test(ticker.trim());
+  const normalizedTicker = isUS ? ticker.toUpperCase() : ticker.padStart(6, '0');
 
   // 캐시 확인
   if (useCache) {
@@ -126,13 +127,17 @@ export async function fetchStockFundamental(
  * @param query 검색어 (종목명 또는 종목코드)
  * @param limit 최대 결과 수 (기본값: 10)
  */
-export async function searchStocks(query: string, limit = 10): Promise<StockSearchResult[]> {
+export async function searchStocks(
+  query: string,
+  limit = 10,
+  market: 'kr' | 'us' = 'kr'
+): Promise<StockSearchResult[]> {
   if (!query || query.length < 1) {
     return [];
   }
 
   const response = await fetch(
-    `${API_BASE_URL}/stock/search?q=${encodeURIComponent(query)}&limit=${limit}`
+    `${API_BASE_URL}/stock/search?q=${encodeURIComponent(query)}&limit=${limit}&market=${market}`
   );
 
   if (!response.ok) {

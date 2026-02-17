@@ -4,6 +4,17 @@
 
 export * from './ui';
 
+// Market & Currency Types
+export type MarketType = 'KOSPI' | 'KOSDAQ' | 'NYSE' | 'NASDAQ' | 'AMEX';
+export type CurrencyType = 'KRW' | 'USD';
+
+export interface ExchangeRateData {
+  rate: number;
+  lastFetched: Date;
+  isManual: boolean;
+  source: 'api' | 'cache' | 'manual' | 'fallback';
+}
+
 // Portfolio Types
 export interface Portfolio {
   id?: number;
@@ -95,6 +106,8 @@ export interface Settings {
   notificationPreferences: NotificationPreferences;
   isMusicPlayerEnabled: boolean;
   lastBackupDate?: Date;
+  manualExchangeRate?: number;
+  useManualExchangeRate?: boolean;
 }
 
 export type ThemeMode = 'light' | 'dark' | 'system';
@@ -414,7 +427,7 @@ export interface ExcelExportOptions {
 export interface StockFundamentalData {
   ticker: string;
   name: string;
-  market: 'KOSPI' | 'KOSDAQ';
+  market: MarketType;
   per: number | null;
   pbr: number | null;
   dividendYield: number | null;

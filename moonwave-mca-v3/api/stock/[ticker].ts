@@ -8,7 +8,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 export interface StockFundamentalData {
   ticker: string;
   name: string;
-  market: 'KOSPI' | 'KOSDAQ';
+  market: 'KOSPI' | 'KOSDAQ' | 'NYSE' | 'NASDAQ' | 'AMEX';
   per: number | null;
   pbr: number | null;
   dividendYield: number | null;
@@ -18,6 +18,56 @@ export interface StockFundamentalData {
   currentPrice: number | null;
   marketCap: number | null;
   fetchedAt: string;
+}
+
+// Yahoo Finance에서 미국 종목 조회
+async function fetchYahooStock(ticker: string): Promise<StockFundamentalData | null> {
+  try {
+    const end = Math.floor(Date.now() / 1000);
+    const start = end - 5 * 24 * 60 * 60; // 5 days
+
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?period1=${start}&period2=${end}&interval=1d`;
+
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+      },
+    });
+
+    if (!response.ok) return null;
+
+    const json = await response.json();
+    const result = json.chart?.result?.[0];
+    if (!result) return null;
+
+    const meta = result.meta;
+    const closes = result.indicators?.quote?.[0]?.close || [];
+    const currentPrice =
+      closes.filter((c: number | null) => c !== null).pop() ?? meta.regularMarketPrice;
+
+    const exchangeName = (meta.exchangeName || meta.fullExchangeName || '').toUpperCase();
+    const market: StockFundamentalData['market'] = exchangeName.includes('NAS')
+      ? 'NASDAQ'
+      : 'NYSE';
+
+    return {
+      ticker,
+      name: meta.shortName || meta.longName || ticker,
+      market,
+      per: null,
+      pbr: null,
+      dividendYield: null,
+      eps: null,
+      bps: null,
+      dps: null,
+      currentPrice: currentPrice ? Number(Number(currentPrice).toFixed(2)) : null,
+      marketCap: null,
+      fetchedAt: new Date().toISOString(),
+    };
+  } catch (error) {
+    console.error('Yahoo Finance error:', error);
+    return null;
+  }
 }
 
 // 네이버 금융 API에서 종목 정보 조회
@@ -137,6 +187,29 @@ export default async function handler(
     return;
   }
 
+  // 미국 종목 감지: 알파벳으로만 구성 (1-5자)
+  const isUSTicker = /^[A-Za-z.]{1,6}$/.test(ticker.trim());
+
+  if (isUSTicker) {
+    // --- US Stock: Yahoo Finance ---
+    try {
+      const usData = await fetchYahooStock(ticker.toUpperCase());
+      if (!usData) {
+        res.status(404).json({ error: 'US stock not found', ticker: ticker.toUpperCase() });
+        return;
+      }
+      res.status(200).json(usData);
+    } catch (error) {
+      console.error('Yahoo Finance API Error:', error);
+      res.status(500).json({
+        error: 'Failed to fetch US stock data',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+    return;
+  }
+
+  // --- KR Stock: 기존 네이버 로직 ---
   // 6자리 종목코드 정규화
   const normalizedTicker = ticker.padStart(6, '0');
 

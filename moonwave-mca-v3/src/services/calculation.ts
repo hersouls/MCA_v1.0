@@ -10,6 +10,7 @@ import type {
   SimulationResult,
 } from '@/types';
 import { GAP_WARNING_THRESHOLD } from '@/utils/constants';
+import { isUSMarket } from '@/utils/market';
 import { calculateBuyPrice, calculateQuantity } from '@/utils/tick';
 
 /**
@@ -18,9 +19,11 @@ import { calculateBuyPrice, calculateQuantity } from '@/utils/tick';
 export function calculateTrades(
   params: PortfolioParams,
   orderedSteps: number[],
-  executedSteps: number[]
+  executedSteps: number[],
+  market?: string
 ): CalculatedTrade[] {
   const { peakPrice, strength, startDrop, steps, legacyQty, legacyAvg } = params;
+  const isUS = isUSMarket(market);
 
   const trades: CalculatedTrade[] = [];
   let cumulativeQty = legacyQty;
@@ -32,7 +35,7 @@ export function calculateTrades(
 
   for (let i = 1; i <= steps; i++) {
     const dropRate = startDrop + (i - 1);
-    const buyPrice = calculateBuyPrice(peakPrice, dropRate);
+    const buyPrice = calculateBuyPrice(peakPrice, dropRate, market);
     const quantity = calculateQuantity(strength, i);
     const amount = buyPrice * quantity;
 
@@ -47,7 +50,11 @@ export function calculateTrades(
       realAmount += amount;
     }
 
-    const avgPrice = cumulativeQty > 0 ? Math.round(cumulativeAmt / cumulativeQty) : 0;
+    const avgPrice = cumulativeQty > 0
+      ? (isUS
+        ? Number((cumulativeAmt / cumulativeQty).toFixed(2))
+        : Math.round(cumulativeAmt / cumulativeQty))
+      : 0;
     const gap = avgPrice > 0 ? ((buyPrice - avgPrice) / avgPrice) * 100 : 0;
 
     trades.push({
@@ -76,9 +83,11 @@ export function calculateTrades(
 export function calculatePortfolioStats(
   params: PortfolioParams,
   orderedSteps: number[],
-  executedSteps: number[]
+  executedSteps: number[],
+  market?: string
 ): PortfolioStats {
   const { peakPrice, strength, startDrop, steps, legacyQty, legacyAvg } = params;
+  const isUS = isUSMarket(market);
 
   let executedAmount = 0;
   let orderedAmount = 0;
@@ -89,7 +98,7 @@ export function calculatePortfolioStats(
 
   for (let i = 1; i <= steps; i++) {
     const dropRate = startDrop + (i - 1);
-    const buyPrice = calculateBuyPrice(peakPrice, dropRate);
+    const buyPrice = calculateBuyPrice(peakPrice, dropRate, market);
     const quantity = calculateQuantity(strength, i);
     const amount = buyPrice * quantity;
 
@@ -117,7 +126,11 @@ export function calculatePortfolioStats(
     status = 'gap-warning';
   }
 
-  const averagePrice = totalShares > 0 ? Math.round(totalAmount / totalShares) : 0;
+  const averagePrice = totalShares > 0
+    ? (isUS
+      ? Number((totalAmount / totalShares).toFixed(2))
+      : Math.round(totalAmount / totalShares))
+    : 0;
 
   return {
     executedAmount,
@@ -186,13 +199,14 @@ export function autoFitParams(
   peakPrice: number,
   startDrop: number,
   steps: number,
-  targetBudget: number
+  targetBudget: number,
+  market?: string
 ): { strength: number; steps: number } {
   const simulate = (s: number, st: number, sd: number): number => {
     let sum = 0;
     for (let i = 1; i <= s; i++) {
       const dropRate = sd + (i - 1);
-      const buyPrice = calculateBuyPrice(peakPrice, dropRate);
+      const buyPrice = calculateBuyPrice(peakPrice, dropRate, market);
       const quantity = calculateQuantity(st, i);
       sum += buyPrice * quantity;
     }
@@ -274,13 +288,13 @@ export function getCurrentInvestment(
 /**
  * Calculate total budget required for all steps
  */
-export function calculateTotalBudget(params: PortfolioParams): number {
+export function calculateTotalBudget(params: PortfolioParams, market?: string): number {
   const { peakPrice, strength, startDrop, steps } = params;
   let total = 0;
 
   for (let i = 1; i <= steps; i++) {
     const dropRate = startDrop + (i - 1);
-    const buyPrice = calculateBuyPrice(peakPrice, dropRate);
+    const buyPrice = calculateBuyPrice(peakPrice, dropRate, market);
     const quantity = calculateQuantity(strength, i);
     total += buyPrice * quantity;
   }

@@ -6,7 +6,8 @@
 import { Card, NumericInput } from '@/components/ui';
 import { calculateAutoTargetPrice, calculateSimulation } from '@/services/calculation';
 import type { PortfolioParams } from '@/types';
-import { formatCurrency, formatKoreanUnit, formatNumber, formatPercent } from '@/utils/format';
+import { formatAmountCompact, formatNumber, formatPercent, formatPrice } from '@/utils/format';
+import { getCurrencyUnit } from '@/utils/market';
 import { clsx } from 'clsx';
 import { Calculator, TrendingUp } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -17,6 +18,7 @@ interface ExitSimulatorProps {
   currentQty: number;
   avgPrice: number;
   onUpdateParams?: (updates: Partial<PortfolioParams>) => void;
+  market?: string;
 }
 
 export function ExitSimulator({
@@ -25,6 +27,7 @@ export function ExitSimulator({
   currentQty,
   avgPrice,
   onUpdateParams,
+  market,
 }: ExitSimulatorProps) {
   // 로컬 상태로 입력값 관리 (props를 초기값으로 사용)
   // key prop을 사용하여 params 변경 시 컴포넌트를 리셋하거나,
@@ -76,7 +79,7 @@ export function ExitSimulator({
             }}
             onBlur={handleUpdateParams}
             placeholder="0"
-            unit="원"
+            unit={getCurrencyUnit(market)}
           />
           <NumericInput
             label="목표 배수"
@@ -98,7 +101,7 @@ export function ExitSimulator({
               자동 계산 목표가
             </span>
             <span className="font-semibold text-foreground">
-              {formatCurrency(autoTargetPrice)}
+              {formatPrice(autoTargetPrice, market)}
             </span>
           </div>
         )}
@@ -112,7 +115,7 @@ export function ExitSimulator({
           }}
           onBlur={handleUpdateParams}
           placeholder="직접 입력"
-          unit="원"
+          unit={getCurrencyUnit(market)}
           hint="입력하면 자동 계산 목표가를 대체합니다"
         />
 
@@ -133,7 +136,7 @@ export function ExitSimulator({
                   목표 매도가
                 </p>
                 <p className="mt-1 text-2xl font-bold text-primary-700 dark:text-primary-300 text-right tabular-nums">
-                  {formatCurrency(effectiveTargetPrice)}
+                  {formatPrice(effectiveTargetPrice, market)}
                 </p>
                 {avgPrice > 0 && (
                   <p className="mt-1 text-sm text-primary-600 dark:text-primary-400">
@@ -194,11 +197,11 @@ export function ExitSimulator({
                   )}
                 >
                   {simulation.expectedProfit >= 0 ? '+' : ''}
-                  {formatKoreanUnit(simulation.expectedProfit)}
+                  {formatAmountCompact(simulation.expectedProfit, market)}
                 </span>
               </div>
               <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-                <span className="tabular-nums">투입금액: {formatKoreanUnit(currentAmount)}</span>
+                <span className="tabular-nums">투입금액: {formatAmountCompact(currentAmount, market)}</span>
                 <span>보유수량: {currentQty.toLocaleString()}주</span>
               </div>
             </div>

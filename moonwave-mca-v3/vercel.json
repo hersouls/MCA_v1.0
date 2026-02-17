@@ -3,6 +3,7 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "rewrites": [
+    { "source": "/api/exchange-rate", "destination": "/api/exchange-rate" },
     { "source": "/api/stock/search", "destination": "/api/stock/search" },
     { "source": "/api/stock/:ticker", "destination": "/api/stock/[ticker]" },
     { "source": "/((?!api|assets|favicon|logo|icons|manifest|sw).*)", "destination": "/index.html" }
